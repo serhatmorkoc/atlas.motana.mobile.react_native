@@ -1,6 +1,6 @@
 import React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import { UtensilsCrossed } from "lucide-react-native";
+import { ShoppingBag } from "lucide-react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
@@ -24,13 +24,12 @@ export default function WelcomeScreen() {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <UtensilsCrossed size={56} color="#FF6B35" strokeWidth={2} />
+              <ShoppingBag size={56} color="#FF6B35" strokeWidth={2} />
             </LinearGradient>
           </View>
 
           <View style={styles.brandContainer}>
             <Text style={styles.title}>motana</Text>
-            <Text style={styles.subtitle}>Food Delivery at Your Doorstep</Text>
             <Text style={styles.versionText}>v{Constants.expoConfig?.version || "1.0.0"}</Text>
           </View>
         </View>
@@ -92,14 +91,7 @@ const styles = StyleSheet.create({
     textTransform: "lowercase" as const,
     fontFamily: "Droid Sans",
   },
-  subtitle: {
-    fontSize: 12,
-    color: "#FFFFFF",
-    opacity: 0.85,
-    textAlign: "center" as const,
-    fontFamily: "Droid Sans",
-    letterSpacing: 0.5,
-  },
+
   bottomContainer: {
     paddingHorizontal: 40,
     paddingBottom: 40,
