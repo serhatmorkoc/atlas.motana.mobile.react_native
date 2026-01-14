@@ -19,6 +19,7 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { formatPrice, parsePrice } from "@/utils/formatters";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -41,7 +42,7 @@ export default function OrderConfirmationScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     orderId: string;
-    restaurantName: string;
+    storeName: string;
     total: string;
     subtotal: string;
     deliveryFee: string;
@@ -78,7 +79,7 @@ export default function OrderConfirmationScreen() {
       pathname: "/order/tracking" as any,
       params: {
         orderId: params.orderId,
-        restaurantName: params.restaurantName,
+        storeName: params.storeName,
         total: params.total,
         address: params.address,
         estimatedTime: String(estimatedTime),
@@ -115,7 +116,7 @@ export default function OrderConfirmationScreen() {
       await Notifications.scheduleNotificationAsync({
         content: {
           title: "Order Confirmed! 🎉",
-          body: `Motana Food - Your order from ${params.restaurantName} has been received. Estimated delivery: ${estimatedTime}-${estimatedTime + 10} minutes`,
+          body: `Motana Food - Your order from ${params.storeName} has been received. Estimated delivery: ${estimatedTime}-${estimatedTime + 10} minutes`,
           sound: true,
         },
         trigger: {
@@ -128,8 +129,8 @@ export default function OrderConfirmationScreen() {
 
       await Notifications.scheduleNotificationAsync({
         content: {
-          title: "Restaurant Accepted! 👨‍🍳",
-          body: `Motana Food - ${params.restaurantName} has accepted your order and started preparing.`,
+          title: "Store Accepted! 👨‍🍳",
+          body: `Motana Food - ${params.storeName} has accepted your order and started preparing.`,
           sound: true,
         },
         trigger: {
@@ -189,9 +190,9 @@ export default function OrderConfirmationScreen() {
 
           <View style={styles.divider} />
 
-          <View style={styles.restaurantSection}>
-            <Text style={styles.sectionLabel}>Restaurant</Text>
-            <Text style={styles.restaurantName}>{params.restaurantName}</Text>
+          <View style={styles.storeSection}>
+            <Text style={styles.sectionLabel}>Store</Text>
+            <Text style={styles.storeName}>{params.storeName}</Text>
           </View>
 
           <View style={styles.divider} />
@@ -207,7 +208,7 @@ export default function OrderConfirmationScreen() {
                 {item.extras && (
                   <Text style={styles.orderItemExtras}>{item.extras}</Text>
                 )}
-                <Text style={styles.orderItemPrice}>₺{item.price.toFixed(2)}</Text>
+                <Text style={styles.orderItemPrice}>{formatPrice(typeof item.price === 'string' ? parsePrice(item.price) : item.price)}</Text>
               </View>
             ))}
           </View>
@@ -377,7 +378,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#6B7280",
     fontWeight: "500" as const,
-    st: "uppercase" as const,
+    textTransform: "uppercase" as const,
   },
   orderId: {
     fontSize: 18,
@@ -390,7 +391,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#F3F4F6",
     marginVertical: 16,
   },
-  restaurantSection: {
+  storeSection: {
     gap: 6,
   },
   sectionLabel: {
@@ -400,7 +401,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase" as const,
     letterSpacing: 0.5,
   },
-  restaurantName: {
+  storeName: {
     fontSize: 18,
     fontWeight: "700" as const,
     color: "#1F2937",

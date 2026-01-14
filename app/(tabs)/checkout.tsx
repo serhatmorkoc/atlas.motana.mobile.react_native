@@ -13,24 +13,25 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { useCart, CartItem, CartRestaurantGroup } from "@/contexts/CartContext";
+import { useCart, CartItem, CartStoreGroup } from "@/contexts/CartContext";
+import { formatPrice, DELIVERY_FEE, SERVICE_FEE } from "@/utils";
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
   const {
-    groupedByRestaurant,
+    groupedByStore,
     totalItems,
     updateQuantity,
-    clearRestaurantItems,
+    clearStoreItems,
     getItemPrice,
   } = useCart();
 
   const [clearModalVisible, setClearModalVisible] = useState(false);
-  const [restaurantToClear, setRestaurantToClear] = useState<{ id: string; name: string } | null>(null);
+  const [storeToClear, setStoreToClear] = useState<{ id: string; name: string } | null>(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
 
-  const handleClearPress = (restaurantId: string, restaurantName: string) => {
-    setRestaurantToClear({ id: restaurantId, name: restaurantName });
+  const handleClearPress = (storeId: string, storeName: string) => {
+    setStoreToClear({ id: storeId, name: storeName });
     setClearModalVisible(true);
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -40,8 +41,8 @@ export default function CheckoutScreen() {
   };
 
   const handleConfirmClear = () => {
-    if (restaurantToClear) {
-      clearRestaurantItems(restaurantToClear.id);
+    if (storeToClear) {
+      clearStoreItems(storeToClear.id);
     }
     handleCloseClearModal();
   };
@@ -53,7 +54,7 @@ export default function CheckoutScreen() {
       useNativeDriver: true,
     }).start(() => {
       setClearModalVisible(false);
-      setRestaurantToClear(null);
+      setStoreToClear(null);
     });
   };
 
@@ -76,7 +77,7 @@ export default function CheckoutScreen() {
               +{item.selectedExtras.map(e => e.name).join(", ")}
             </Text>
           )}
-          <Text style={styles.itemPrice}>₺{itemTotal.toFixed(2)}</Text>
+          <Text style={styles.itemPrice}>{formatPrice(itemTotal)}</Text>
         </View>
         <View style={styles.itemActions}>
           <View style={styles.quantityControl}>
@@ -103,11 +104,9 @@ export default function CheckoutScreen() {
     );
   };
 
-  const DELIVERY_FEE = 9.90;
-  const SERVICE_FEE = 4.90;
 
-  const handlePlaceOrder = (group: CartRestaurantGroup) => {
-    const restaurantTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE;
+  const handlePlaceOrder = (group: CartStoreGroup) => {
+    const storeTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE;
     const orderId = Math.floor(100000 + Math.random() * 900000).toString();
     
     const orderItems = group.items.map(item => ({
@@ -119,17 +118,17 @@ export default function CheckoutScreen() {
         : undefined,
     }));
 
-    clearRestaurantItems(group.restaurantId);
+    clearStoreItems(group.storeId);
 
     router.push({
       pathname: '/order/confirmation' as any,
       params: {
         orderId,
-        restaurantName: group.restaurantName,
-        total: restaurantTotal.toFixed(2),
-        subtotal: group.subtotal.toFixed(2),
-        deliveryFee: DELIVERY_FEE.toFixed(2),
-        serviceFee: SERVICE_FEE.toFixed(2),
+        storeName: group.storeName,
+        total: formatPrice(storeTotal).replace('₺', ''),
+        subtotal: formatPrice(group.subtotal).replace('₺', ''),
+        deliveryFee: formatPrice(DELIVERY_FEE).replace('₺', ''),
+        serviceFee: formatPrice(SERVICE_FEE).replace('₺', ''),
         itemCount: group.items.reduce((sum, i) => sum + i.quantity, 0).toString(),
         items: JSON.stringify(orderItems),
         address: 'Atatürk Mah. Cumhuriyet Cad. No: 45/3, Kadıköy, İstanbul',
@@ -137,20 +136,20 @@ export default function CheckoutScreen() {
     });
   };
 
-  const renderRestaurantGroup = (group: CartRestaurantGroup) => {
-    const restaurantTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE;
+  const renderStoreGroup = (group: CartStoreGroup) => {
+    const storeTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE;
     const itemCount = group.items.reduce((sum, i) => sum + i.quantity, 0);
 
     return (
-      <View key={group.restaurantId} style={styles.restaurantGroup}>
-        <View style={styles.restaurantHeader}>
-          <View style={styles.restaurantInfo}>
-            <Text style={styles.restaurantName}>{group.restaurantName}</Text>
+      <View key={group.storeId} style={styles.storeGroup}>
+        <View style={styles.storeHeader}>
+          <View style={styles.storeInfo}>
+            <Text style={styles.storeName}>{group.storeName}</Text>
             <Text style={styles.itemCount}>{itemCount} items</Text>
           </View>
           <TouchableOpacity
             style={styles.clearButton}
-            onPress={() => handleClearPress(group.restaurantId, group.restaurantName)}
+            onPress={() => handleClearPress(group.storeId, group.storeName)}
           >
             <X size={16} color="#6B7280" strokeWidth={2} />
           </TouchableOpacity>
@@ -163,19 +162,19 @@ export default function CheckoutScreen() {
         <View style={styles.orderSummary}>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Subtotal</Text>
-            <Text style={styles.summaryValue}>₺{group.subtotal.toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>{formatPrice(group.subtotal)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Delivery Fee</Text>
-            <Text style={styles.summaryValue}>₺{DELIVERY_FEE.toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>{formatPrice(DELIVERY_FEE)}</Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Service Fee</Text>
-            <Text style={styles.summaryValue}>₺{SERVICE_FEE.toFixed(2)}</Text>
+            <Text style={styles.summaryValue}>{formatPrice(SERVICE_FEE)}</Text>
           </View>
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>₺{restaurantTotal.toFixed(2)}</Text>
+            <Text style={styles.totalValue}>{formatPrice(storeTotal)}</Text>
           </View>
         </View>
 
@@ -184,7 +183,7 @@ export default function CheckoutScreen() {
           activeOpacity={0.8}
           onPress={() => handlePlaceOrder(group)}
         >
-          <Text style={styles.placeOrderButtonText}>Place Order • ₺{restaurantTotal.toFixed(2)}</Text>
+          <Text style={styles.placeOrderButtonText}>Place Order • {formatPrice(storeTotal)}</Text>
         </TouchableOpacity>
       </View>
     );
@@ -197,7 +196,7 @@ export default function CheckoutScreen() {
       </View>
       <Text style={styles.emptyTitle}>Your cart is empty</Text>
       <Text style={styles.emptyDescription}>
-        Add items from restaurants to start your order
+        Add items from stores to start your order
       </Text>
     </View>
   );
@@ -215,7 +214,7 @@ export default function CheckoutScreen() {
         </View>
       </View>
 
-      {groupedByRestaurant.length === 0 ? (
+      {groupedByStore.length === 0 ? (
         renderEmptyCart()
       ) : (
         <ScrollView
@@ -226,7 +225,7 @@ export default function CheckoutScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {groupedByRestaurant.map(renderRestaurantGroup)}
+          {groupedByStore.map(renderStoreGroup)}
           <View style={styles.screenLabel}>
             <Text style={styles.screenLabelText}>Checkout Screen</Text>
           </View>
@@ -263,9 +262,9 @@ export default function CheckoutScreen() {
             <View style={styles.clearModalIcon}>
               <Trash2 size={28} color="#EF4444" />
             </View>
-            <Text style={styles.clearModalTitle}>Remove Restaurant</Text>
+            <Text style={styles.clearModalTitle}>Remove Store</Text>
             <Text style={styles.clearModalMessage}>
-              Are you sure you want to remove all items from &quot;{restaurantToClear?.name}&quot;? This action cannot be undone.
+              Are you sure you want to remove all items from &quot;{storeToClear?.name}&quot;? This action cannot be undone.
             </Text>
             <View style={styles.clearModalButtons}>
               <TouchableOpacity
@@ -332,7 +331,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     paddingTop: 16,
   },
-  restaurantGroup: {
+  storeGroup: {
     backgroundColor: "#FFFFFF",
     marginHorizontal: 16,
     marginBottom: 16,
@@ -344,7 +343,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 2,
   },
-  restaurantHeader: {
+  storeHeader: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     padding: 16,
@@ -353,10 +352,10 @@ const styles = StyleSheet.create({
     borderBottomColor: "#F3F4F6",
     backgroundColor: "#FAFAFA",
   },
-  restaurantInfo: {
+  storeInfo: {
     flex: 1,
   },
-  restaurantName: {
+  storeName: {
     fontSize: 18,
     fontWeight: "700" as const,
     color: "#1F2937",

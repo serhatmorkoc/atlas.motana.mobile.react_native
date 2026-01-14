@@ -58,7 +58,7 @@ const notifications: Notification[] = [
   {
     id: "5",
     type: "promo",
-    title: "New Restaurant Alert!",
+    title: "New Store Alert!",
     description: "Taco Fiesta just joined Motana. Get 20% off on first order.",
     time: "1 day ago",
     read: true,

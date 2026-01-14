@@ -21,8 +21,8 @@ interface ProductDetailModalProps {
   item: MenuItem | null;
   onClose: () => void;
   onAddToCart: (item: MenuItem, quantity: number, extras: Set<string>) => void;
-  restaurantName: string;
-  restaurantImage: string;
+  storeName: string;
+  storeImage: string;
 }
 
 export default function ProductDetailModal({
@@ -30,8 +30,8 @@ export default function ProductDetailModal({
   item,
   onClose,
   onAddToCart,
-  restaurantName,
-  restaurantImage,
+  storeName,
+  storeImage,
 }: ProductDetailModalProps) {
   const insets = useSafeAreaInsets();
   const [quantity, setQuantity] = useState(1);
@@ -539,3 +539,4 @@ const styles = StyleSheet.create({
     fontWeight: "500" as const,
   },
 });
+

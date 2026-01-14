@@ -1,6 +1,7 @@
-import { restaurants } from "@/mocks/restaurants";
+import { stores } from "@/mocks/stores";
 import { menuItems } from "@/mocks/menu-items";
-import { RestaurantCard, RestaurantListCard } from "@/components/home";
+import { StoreCard, StoreListCard } from "@/components/home";
+import { formatPrice } from "@/utils/formatters";
 import { router, Stack, useLocalSearchParams } from "expo-router";
 import React, { useMemo, useState } from "react";
 import {
@@ -19,16 +20,16 @@ const { width } = Dimensions.get("window");
 
 type MenuItem = {
   id: string;
-  restaurantId: string;
+  storeId: string;
   name: string;
   description: string;
   price: number;
   image: string;
   category: string;
-  restaurantName?: string;
+  storeName?: string;
 };
 
-type Restaurant = {
+type Store = {
   id: string;
   name: string;
   image: string;
@@ -41,7 +42,7 @@ type Restaurant = {
 
 const getCategoryMapping = (categoryName: string): { cuisineKeywords: string[]; menuKeywords: string[] } => {
   const mappings: Record<string, { cuisineKeywords: string[]; menuKeywords: string[] }> = {
-    "Restaurants": { cuisineKeywords: ["italian", "pizza", "fast food", "burgers", "japanese", "sushi", "turkish", "kebab", "mexican", "tacos", "asian", "noodles", "steakhouse", "bbq"], menuKeywords: [] },
+    "Stores": { cuisineKeywords: ["italian", "pizza", "fast food", "burgers", "japanese", "sushi", "turkish", "kebab", "mexican", "tacos", "asian", "noodles", "steakhouse", "bbq"], menuKeywords: [] },
     "Cafe & Bakery": { cuisineKeywords: ["coffee", "cafe", "bakery"], menuKeywords: ["coffee", "pastry", "cake", "croissant"] },
     "Bakery": { cuisineKeywords: ["bakery", "bread"], menuKeywords: ["bread", "pastry", "cake", "croissant"] },
     "Groceries": { cuisineKeywords: ["grocery", "market"], menuKeywords: [] },
@@ -65,19 +66,19 @@ export default function SearchResultsScreen() {
   const params = useLocalSearchParams<{ query?: string; category?: string }>();
   const [sortBy, setSortBy] = useState<"relevance" | "rating" | "distance">("relevance");
 
-  const isRestaurantsCategory = params.category === "Restaurants";
+  const isStoresCategory = params.category === "Stores";
 
-  const { matchingRestaurants, matchingMenuItems, restaurantMenuItemsMap } = useMemo(() => {
+  const { matchingStores, matchingMenuItems, storeMenuItemsMap } = useMemo(() => {
     const searchTerm = (params.query || "").toLowerCase();
     const categoryFilter = params.category;
 
-    let filteredRestaurants: Restaurant[] = [];
+    let filteredStores: Store[] = [];
     let filteredMenuItems: MenuItem[] = [];
 
     if (categoryFilter) {
       const { cuisineKeywords, menuKeywords } = getCategoryMapping(categoryFilter);
       
-      filteredRestaurants = restaurants.filter(r => {
+      filteredStores = stores.filter(r => {
         const cuisineLower = r.cuisine.toLowerCase();
         return cuisineKeywords.some(keyword => cuisineLower.includes(keyword));
       });
@@ -92,7 +93,7 @@ export default function SearchResultsScreen() {
         }).slice(0, 20);
       }
     } else if (searchTerm) {
-      filteredRestaurants = restaurants.filter(r =>
+      filteredStores = stores.filter(r =>
         r.name.toLowerCase().includes(searchTerm) ||
         r.cuisine.toLowerCase().includes(searchTerm)
       );
@@ -106,13 +107,13 @@ export default function SearchResultsScreen() {
 
     filteredMenuItems = filteredMenuItems.map(item => ({
       ...item,
-      restaurantName: restaurants.find(r => r.id === item.restaurantId)?.name,
+      storeName: stores.find(r => r.id === item.storeId)?.name,
     }));
 
     if (sortBy === "rating") {
-      filteredRestaurants.sort((a, b) => b.rating - a.rating);
+      filteredStores.sort((a, b) => b.rating - a.rating);
     } else if (sortBy === "distance") {
-      filteredRestaurants.sort((a, b) => {
+      filteredStores.sort((a, b) => {
         const distA = parseFloat(a.distance.replace(" km", ""));
         const distB = parseFloat(b.distance.replace(" km", ""));
         return distA - distB;
@@ -120,9 +121,9 @@ export default function SearchResultsScreen() {
     }
 
     const menuItemsMap: Record<string, { id: string; name: string; image: string; price: number }[]> = {};
-    filteredRestaurants.forEach(restaurant => {
-      const restaurantMenuItems = menuItems
-        .filter(item => item.restaurantId === restaurant.id)
+    filteredStores.forEach(store => {
+      const storeMenuItems = menuItems
+        .filter(item => item.storeId === store.id)
         .slice(0, 5)
         .map(item => ({
           id: item.id,
@@ -130,20 +131,20 @@ export default function SearchResultsScreen() {
           image: item.image,
           price: item.price,
         }));
-      menuItemsMap[restaurant.id] = restaurantMenuItems;
+      menuItemsMap[store.id] = storeMenuItems;
     });
 
     return { 
-      matchingRestaurants: filteredRestaurants, 
+      matchingStores: filteredStores, 
       matchingMenuItems: filteredMenuItems,
-      restaurantMenuItemsMap: menuItemsMap,
+      storeMenuItemsMap: menuItemsMap,
     };
   }, [params.query, params.category, sortBy]);
 
-  const totalResults = matchingRestaurants.length + matchingMenuItems.length;
+  const totalResults = matchingStores.length + matchingMenuItems.length;
 
   const handleMenuItemPress = (item: MenuItem) => {
-    router.push(`/restaurant/${item.restaurantId}` as any);
+    router.push(`/store/${item.storeId}` as any);
   };
 
   return (
@@ -210,19 +211,19 @@ export default function SearchResultsScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
-          {matchingRestaurants.length > 0 && (
+          {matchingStores.length > 0 && (
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
-                <Text style={styles.sectionTitle}>Restaurants</Text>
-                <Text style={styles.sectionCount}>{matchingRestaurants.length}</Text>
+                <Text style={styles.sectionTitle}>Stores</Text>
+                <Text style={styles.sectionCount}>{matchingStores.length}</Text>
               </View>
-              {isRestaurantsCategory ? (
+              {isStoresCategory ? (
                 <View style={styles.verticalList}>
-                  {matchingRestaurants.map((restaurant) => (
-                    <View key={restaurant.id} style={styles.verticalListItem}>
-                      <RestaurantListCard 
-                        restaurant={restaurant} 
-                        menuItems={restaurantMenuItemsMap[restaurant.id] || []}
+                  {matchingStores.map((store) => (
+                    <View key={store.id} style={styles.verticalListItem}>
+                      <StoreListCard 
+                        store={store} 
+                        menuItems={storeMenuItemsMap[store.id] || []}
                       />
                     </View>
                   ))}
@@ -233,9 +234,9 @@ export default function SearchResultsScreen() {
                   showsHorizontalScrollIndicator={false}
                   contentContainerStyle={styles.horizontalScroll}
                 >
-                  {matchingRestaurants.map((restaurant) => (
-                    <View key={restaurant.id} style={styles.cardWrapper}>
-                      <RestaurantCard restaurant={restaurant} />
+                  {matchingStores.map((store) => (
+                    <View key={store.id} style={styles.cardWrapper}>
+                      <StoreCard store={store} />
                     </View>
                   ))}
                 </ScrollView>
@@ -263,14 +264,14 @@ export default function SearchResultsScreen() {
                         <Text style={styles.menuItemName} numberOfLines={2}>
                           {item.name}
                         </Text>
-                        {item.restaurantName && (
-                          <Text style={styles.restaurantName} numberOfLines={1}>
-                            {item.restaurantName}
+                        {item.storeName && (
+                          <Text style={styles.storeName} numberOfLines={1}>
+                            {item.storeName}
                           </Text>
                         )}
                       </View>
                       <View style={styles.priceTag}>
-                        <Text style={styles.price}>₺{item.price.toFixed(2)}</Text>
+                        <Text style={styles.price}>{formatPrice(item.price)}</Text>
                       </View>
                     </View>
                   </TouchableOpacity>
@@ -418,7 +419,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     marginBottom: 4,
   },
-  restaurantName: {
+  storeName: {
     fontSize: 12,
     fontWeight: "500" as const,
     color: "rgba(255,255,255,0.8)",

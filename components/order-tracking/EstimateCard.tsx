@@ -9,8 +9,8 @@ interface EstimateCardProps {
   pulseAnim: Animated.Value;
   progressAnim: Animated.Value;
   estimatedMinutes: number;
-  restaurantName: string;
-  restaurantImage?: string;
+  storeName: string;
+  storeImage?: string;
   itemCount: string;
   total: string;
 }
@@ -21,8 +21,8 @@ export function EstimateCard({
   pulseAnim,
   progressAnim,
   estimatedMinutes,
-  restaurantName,
-  restaurantImage,
+  storeName,
+  storeImage,
   itemCount,
   total,
 }: EstimateCardProps) {
@@ -64,19 +64,19 @@ export function EstimateCard({
         />
       </View>
       
-      <View style={styles.restaurantRow}>
-        {restaurantImage ? (
+      <View style={styles.storeRow}>
+        {storeImage ? (
           <Image
-            source={{ uri: restaurantImage }}
-            style={styles.restaurantThumb}
+            source={{ uri: storeImage }}
+            style={styles.storeThumb}
           />
         ) : (
-          <View style={styles.restaurantThumbPlaceholder}>
+          <View style={styles.storeThumbPlaceholder}>
             <Store size={16} color="#9CA3AF" strokeWidth={2} />
           </View>
         )}
-        <View style={styles.restaurantInfo}>
-          <Text style={styles.restaurantName}>{restaurantName}</Text>
+        <View style={styles.storeInfo}>
+          <Text style={styles.storeName}>{storeName}</Text>
           <Text style={styles.itemCount}>{itemCount} items • ₺{total}</Text>
         </View>
       </View>
@@ -142,7 +142,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#10B981",
     borderRadius: 3,
   },
-  restaurantRow: {
+  storeRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
@@ -150,12 +150,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     padding: 12,
   },
-  restaurantThumb: {
+  storeThumb: {
     width: 48,
     height: 48,
     borderRadius: 10,
   },
-  restaurantThumbPlaceholder: {
+  storeThumbPlaceholder: {
     width: 48,
     height: 48,
     borderRadius: 10,
@@ -163,10 +163,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  restaurantInfo: {
+  storeInfo: {
     flex: 1,
   },
-  restaurantName: {
+  storeName: {
     fontSize: 15,
     fontWeight: "700",
     color: "#1F2937",

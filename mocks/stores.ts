@@ -1,4 +1,4 @@
-export interface Restaurant {
+export interface Store {
   id: string;
   name: string;
   image: string;
@@ -9,7 +9,7 @@ export interface Restaurant {
   distance: string;
 }
 
-export const restaurants: Restaurant[] = [
+export const stores: Store[] = [
   {
     id: '1',
     name: 'Pizza Palace',
@@ -112,7 +112,7 @@ export const restaurants: Restaurant[] = [
   }
 ];
 
-export const brandRestaurants: Restaurant[] = [
+export const brandStores: Store[] = [
   {
     id: 'b1',
     name: "McDonald's",
@@ -214,3 +214,4 @@ export const brandRestaurants: Restaurant[] = [
     distance: '1.0 km'
   }
 ];
+

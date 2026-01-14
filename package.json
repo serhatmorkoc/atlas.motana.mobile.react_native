@@ -6,6 +6,8 @@
     "start": "bunx rork start -p gfc6ktqy24r0g6luyuyh6 --tunnel",
     "start-web": "bunx rork start -p gfc6ktqy24r0g6luyuyh6 --web --tunnel",
     "start-web-dev": "DEBUG=expo* bunx rork start -p gfc6ktqy24r0g6luyuyh6 --web --tunnel",
+    "expo:start": "npx expo start",
+    "expo:start-tunnel": "npx expo start --tunnel",
     "lint": "expo lint"
   },
   "dependencies": {

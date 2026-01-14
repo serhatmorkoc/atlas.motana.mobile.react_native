@@ -7,15 +7,15 @@ export interface CartItem {
   menuItem: MenuItem;
   quantity: number;
   selectedExtras: MenuItemExtra[];
-  restaurantId: string;
-  restaurantName: string;
-  restaurantImage: string;
+  storeId: string;
+  storeName: string;
+  storeImage: string;
 }
 
-export interface CartRestaurantGroup {
-  restaurantId: string;
-  restaurantName: string;
-  restaurantImage: string;
+export interface CartStoreGroup {
+  storeId: string;
+  storeName: string;
+  storeImage: string;
   items: CartItem[];
   subtotal: number;
 }
@@ -27,8 +27,8 @@ export const [CartProvider, useCart] = createContextHook(() => {
     menuItem: MenuItem,
     quantity: number,
     selectedExtras: Set<string>,
-    restaurantName: string,
-    restaurantImage: string
+    storeName: string,
+    storeImage: string
   ) => {
     const extras = menuItem.extras?.filter(e => selectedExtras.has(e.id)) ?? [];
     
@@ -37,9 +37,9 @@ export const [CartProvider, useCart] = createContextHook(() => {
       menuItem,
       quantity,
       selectedExtras: extras,
-      restaurantId: menuItem.restaurantId,
-      restaurantName,
-      restaurantImage,
+      storeId: menuItem.storeId,
+      storeName,
+      storeImage,
     };
 
     setCartItems(prev => [...prev, newItem]);
@@ -68,9 +68,9 @@ export const [CartProvider, useCart] = createContextHook(() => {
     console.log('Cart cleared');
   }, []);
 
-  const clearRestaurantItems = useCallback((restaurantId: string) => {
-    setCartItems(prev => prev.filter(item => item.restaurantId !== restaurantId));
-    console.log('Cleared items for restaurant:', restaurantId);
+  const clearStoreItems = useCallback((storeId: string) => {
+    setCartItems(prev => prev.filter(item => item.storeId !== storeId));
+    console.log('Cleared items for store:', storeId);
   }, []);
 
   const getItemPrice = useCallback((item: CartItem): number => {
@@ -82,21 +82,21 @@ export const [CartProvider, useCart] = createContextHook(() => {
     return basePrice + extrasPrice;
   }, []);
 
-  const groupedByRestaurant = useMemo((): CartRestaurantGroup[] => {
-    const groups: Record<string, CartRestaurantGroup> = {};
+  const groupedByStore = useMemo((): CartStoreGroup[] => {
+    const groups: Record<string, CartStoreGroup> = {};
 
     cartItems.forEach(item => {
-      if (!groups[item.restaurantId]) {
-        groups[item.restaurantId] = {
-          restaurantId: item.restaurantId,
-          restaurantName: item.restaurantName,
-          restaurantImage: item.restaurantImage,
+      if (!groups[item.storeId]) {
+        groups[item.storeId] = {
+          storeId: item.storeId,
+          storeName: item.storeName,
+          storeImage: item.storeImage,
           items: [],
           subtotal: 0,
         };
       }
-      groups[item.restaurantId].items.push(item);
-      groups[item.restaurantId].subtotal += getItemPrice(item);
+      groups[item.storeId].items.push(item);
+      groups[item.storeId].subtotal += getItemPrice(item);
     });
 
     return Object.values(groups);
@@ -116,8 +116,8 @@ export const [CartProvider, useCart] = createContextHook(() => {
     removeFromCart,
     updateQuantity,
     clearCart,
-    clearRestaurantItems,
-    groupedByRestaurant,
+    clearStoreItems,
+    groupedByStore,
     totalItems,
     totalPrice,
     getItemPrice,

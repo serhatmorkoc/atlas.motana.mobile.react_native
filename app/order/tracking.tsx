@@ -44,8 +44,8 @@ export default function OrderTrackingScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     orderId: string;
-    restaurantName: string;
-    restaurantImage?: string;
+    storeName: string;
+    storeImage?: string;
     total: string;
     address: string;
     estimatedTime: string;
@@ -75,8 +75,8 @@ export default function OrderTrackingScreen() {
     },
     {
       id: "accepted",
-      title: "Restaurant Accepted",
-      subtitle: "The restaurant is preparing to cook",
+      title: "Store Accepted",
+      subtitle: "The store is preparing your order",
       icon: <Store size={20} color="#FFFFFF" strokeWidth={2} />,
       time: currentStepIndex >= 1 ? "2 min ago" : undefined,
       isCompleted: currentStepIndex > 1,
@@ -249,8 +249,8 @@ export default function OrderTrackingScreen() {
           pulseAnim={pulseAnim}
           progressAnim={progressAnim}
           estimatedMinutes={estimatedMinutes}
-          restaurantName={params.restaurantName}
-          restaurantImage={params.restaurantImage}
+          storeName={params.storeName}
+          storeImage={params.storeImage}
           itemCount={params.itemCount}
           total={params.total}
         />

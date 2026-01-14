@@ -7,8 +7,8 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
-  restaurantName: string;
-  restaurantImage: string;
+  storeName: string;
+  storeImage: string;
   items: OrderItem[];
   totalPrice: string;
   status: 'delivered' | 'in_progress' | 'cancelled';
@@ -20,8 +20,8 @@ export interface Order {
 export const orders: Order[] = [
   {
     id: 'ord-001',
-    restaurantName: 'Pizza Palace',
-    restaurantImage: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop',
+    storeName: 'Pizza Palace',
+    storeImage: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop',
     items: [
       { id: 'i1', name: 'Margherita Pizza', quantity: 1, price: '₺85' },
       { id: 'i2', name: 'Pepperoni Pizza', quantity: 1, price: '₺95' },
@@ -35,8 +35,8 @@ export const orders: Order[] = [
   },
   {
     id: 'ord-002',
-    restaurantName: 'Burger House',
-    restaurantImage: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
+    storeName: 'Burger House',
+    storeImage: 'https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=400&h=300&fit=crop',
     items: [
       { id: 'i4', name: 'Classic Burger', quantity: 2, price: '₺120' },
       { id: 'i5', name: 'French Fries', quantity: 1, price: '₺35' },
@@ -48,8 +48,8 @@ export const orders: Order[] = [
   },
   {
     id: 'ord-003',
-    restaurantName: 'Sushi Master',
-    restaurantImage: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=300&fit=crop',
+    storeName: 'Sushi Master',
+    storeImage: 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351?w=400&h=300&fit=crop',
     items: [
       { id: 'i6', name: 'Salmon Roll Set', quantity: 1, price: '₺180' },
       { id: 'i7', name: 'Miso Soup', quantity: 2, price: '₺40' },
@@ -62,8 +62,8 @@ export const orders: Order[] = [
   },
   {
     id: 'ord-004',
-    restaurantName: 'Turkish Delight',
-    restaurantImage: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400&h=300&fit=crop',
+    storeName: 'Turkish Delight',
+    storeImage: 'https://images.unsplash.com/photo-1529006557810-274b9b2fc783?w=400&h=300&fit=crop',
     items: [
       { id: 'i9', name: 'Adana Kebab', quantity: 2, price: '₺160' },
       { id: 'i10', name: 'Lahmacun', quantity: 3, price: '₺75' },
@@ -76,8 +76,8 @@ export const orders: Order[] = [
   },
   {
     id: 'ord-005',
-    restaurantName: 'Asian Wok',
-    restaurantImage: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&h=300&fit=crop',
+    storeName: 'Asian Wok',
+    storeImage: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=400&h=300&fit=crop',
     items: [
       { id: 'i12', name: 'Pad Thai', quantity: 1, price: '₺95' },
       { id: 'i13', name: 'Spring Rolls', quantity: 1, price: '₺45' },
@@ -89,8 +89,8 @@ export const orders: Order[] = [
   },
   {
     id: 'ord-006',
-    restaurantName: 'Vegan Garden',
-    restaurantImage: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
+    storeName: 'Vegan Garden',
+    storeImage: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=400&h=300&fit=crop',
     items: [
       { id: 'i14', name: 'Buddha Bowl', quantity: 1, price: '₺85' },
       { id: 'i15', name: 'Green Smoothie', quantity: 1, price: '₺45' },
@@ -102,7 +102,7 @@ export const orders: Order[] = [
   },
 ];
 
-export const favoriteRestaurants = [
+export const favoriteStores = [
   {
     id: '1',
     name: 'Pizza Palace',

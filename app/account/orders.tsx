@@ -20,6 +20,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { orders, Order } from "@/mocks/orders";
+import { formatDate } from "@/utils/formatters";
 
 type FilterType = "all" | "in_progress" | "delivered" | "cancelled";
 
@@ -72,15 +73,7 @@ export default function OrdersScreen() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    const options: Intl.DateTimeFormatOptions = {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-    };
-    return date.toLocaleDateString("en-US", options);
-  };
+  // formatDate moved to @/utils/formatters
 
   const handleOrderClick = (order: Order) => {
     if (order.status === "in_progress") {
@@ -88,8 +81,8 @@ export default function OrdersScreen() {
         pathname: "/order/tracking" as any,
         params: {
           orderId: order.id,
-          restaurantName: order.restaurantName,
-          restaurantImage: order.restaurantImage,
+          storeName: order.storeName,
+          storeImage: order.storeImage,
           total: order.totalPrice.replace("₺", ""),
           address: "Delivery address here",
           estimatedTime: order.estimatedTime?.replace(" min", "") || "30",
@@ -110,13 +103,13 @@ export default function OrdersScreen() {
       >
         <View style={styles.orderHeader}>
           <Image
-            source={{ uri: order.restaurantImage }}
-            style={styles.restaurantImage}
+            source={{ uri: order.storeImage }}
+            style={styles.storeImage}
             contentFit="cover"
           />
           <View style={styles.orderHeaderInfo}>
-            <Text style={styles.restaurantName}>{order.restaurantName}</Text>
-            <Text style={styles.orderDate}>{formatDate(order.date)}</Text>
+            <Text style={styles.storeName}>{order.storeName}</Text>
+            <Text style={styles.orderDate}>{formatDate(order.date, 'en-US')}</Text>
             <View
               style={[
                 styles.statusBadge,
@@ -315,7 +308,7 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
   },
-  restaurantImage: {
+  storeImage: {
     width: 56,
     height: 56,
     borderRadius: 12,
@@ -324,7 +317,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
-  restaurantName: {
+  storeName: {
     fontSize: 16,
     fontWeight: "700" as const,
     color: "#1F2937",

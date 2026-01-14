@@ -24,15 +24,16 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import MenuItemCard from "@/components/restaurant/MenuItemCard";
-import ProductDetailModal from "@/components/restaurant/ProductDetailModal";
+import MenuItemCard from "@/components/store/MenuItemCard";
+import ProductDetailModal from "@/components/store/ProductDetailModal";
 import { useCart, CartItem } from "@/contexts/CartContext";
-import { getMenuItemsByRestaurant, MenuItem } from "@/mocks/menu-items";
-import { brandRestaurants, restaurants } from "@/mocks/restaurants";
+import { getMenuItemsByStore, MenuItem } from "@/mocks/menu-items";
+import { brandStores, stores } from "@/mocks/stores";
+import { formatPrice } from "@/utils/formatters";
 
 const HEADER_HEIGHT = 260;
 
-export default function RestaurantScreen() {
+export default function StoreScreen() {
   const { id } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { addToCart, cartItems, getItemPrice } = useCart();
@@ -41,9 +42,9 @@ export default function RestaurantScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const allRestaurants = [...restaurants, ...brandRestaurants];
-  const restaurant = allRestaurants.find((r) => r.id === id);
-  const allMenuItems = getMenuItemsByRestaurant(id as string);
+  const allStores = [...stores, ...brandStores];
+  const store = allStores.find((r) => r.id === id);
+  const allMenuItems = getMenuItemsByStore(id as string);
   const menuItems = searchQuery
     ? allMenuItems.filter(
         (item) =>
@@ -55,13 +56,13 @@ export default function RestaurantScreen() {
     new Set(menuItems.map((item) => item.category))
   );
 
-  if (!restaurant) {
+  if (!store) {
     return null;
   }
 
-  const restaurantCartItems = cartItems.filter((item: CartItem) => item.restaurantId === id);
-  const restaurantCartTotal = restaurantCartItems.reduce((sum: number, item: CartItem) => sum + getItemPrice(item), 0);
-  const restaurantCartCount = restaurantCartItems.reduce((sum: number, item: CartItem) => sum + item.quantity, 0);
+  const storeCartItems = cartItems.filter((item: CartItem) => item.storeId === id);
+  const storeCartTotal = storeCartItems.reduce((sum: number, item: CartItem) => sum + getItemPrice(item), 0);
+  const storeCartCount = storeCartItems.reduce((sum: number, item: CartItem) => sum + item.quantity, 0);
 
   const openProductModal = (item: MenuItem) => {
     setSelectedItem(item);
@@ -73,8 +74,8 @@ export default function RestaurantScreen() {
   };
 
   const handleAddToCart = (item: MenuItem, quantity: number, extras: Set<string>) => {
-    if (restaurant) {
-      addToCart(item, quantity, extras, restaurant.name, restaurant.image);
+    if (store) {
+      addToCart(item, quantity, extras, store.name, store.image);
       console.log('Added to cart:', item.name, 'qty:', quantity);
     }
     closeProductModal();
@@ -114,14 +115,14 @@ export default function RestaurantScreen() {
 
           <View style={styles.compactTitleContainer}>
             <Text style={styles.compactTitle} numberOfLines={1}>
-              {restaurant.name}
+              {store.name}
             </Text>
             <View style={styles.compactInfo}>
               <Star size={11} color="#FFB800" fill="#FFB800" />
-              <Text style={styles.compactInfoText}>{restaurant.rating}</Text>
+              <Text style={styles.compactInfoText}>{store.rating}</Text>
               <Text style={styles.compactDot}>•</Text>
               <Text style={styles.compactInfoText}>
-                {restaurant.deliveryTime} min
+                {store.deliveryTime} min
               </Text>
             </View>
           </View>
@@ -152,7 +153,7 @@ export default function RestaurantScreen() {
       >
         <View style={styles.header}>
           <Image
-            source={{ uri: restaurant.image }}
+            source={{ uri: store.image }}
             style={styles.headerImage}
             contentFit="cover"
           />
@@ -180,23 +181,23 @@ export default function RestaurantScreen() {
           </View>
 
           <View style={styles.headerBottom}>
-            <Text style={styles.restaurantName}>{restaurant.name}</Text>
-            <Text style={styles.cuisine}>{restaurant.cuisine}</Text>
+            <Text style={styles.storeName}>{store.name}</Text>
+            <Text style={styles.cuisine}>{store.cuisine}</Text>
 
             <View style={styles.headerInfo}>
               <View style={styles.infoBadge}>
                 <Star size={13} color="#FFD700" fill="#FFD700" />
-                <Text style={styles.infoBadgeText}>{restaurant.rating}</Text>
+                <Text style={styles.infoBadgeText}>{store.rating}</Text>
               </View>
               <View style={styles.infoBadge}>
                 <Clock size={13} color="#FFFFFF" />
                 <Text style={styles.infoBadgeText}>
-                  {restaurant.deliveryTime} min
+                  {store.deliveryTime} min
                 </Text>
               </View>
               <View style={styles.infoBadge}>
                 <MapPin size={13} color="#FFFFFF" />
-                <Text style={styles.infoBadgeText}>{restaurant.distance}</Text>
+                <Text style={styles.infoBadgeText}>{store.distance}</Text>
               </View>
             </View>
           </View>
@@ -209,7 +210,7 @@ export default function RestaurantScreen() {
             </View>
             <View style={styles.deliveryCardContent}>
               <Text style={styles.deliveryLabel}>Delivery</Text>
-              <Text style={styles.deliveryValue} numberOfLines={1}>{restaurant.deliveryFee}</Text>
+              <Text style={styles.deliveryValue} numberOfLines={1}>{store.deliveryFee}</Text>
             </View>
           </View>
           <View style={styles.deliveryCard}>
@@ -218,7 +219,7 @@ export default function RestaurantScreen() {
             </View>
             <View style={styles.deliveryCardContent}>
               <Text style={styles.deliveryLabel}>Time</Text>
-              <Text style={styles.deliveryValue}>{restaurant.deliveryTime} min</Text>
+              <Text style={styles.deliveryValue}>{store.deliveryTime} min</Text>
             </View>
           </View>
           <View style={styles.deliveryCard}>
@@ -245,7 +246,7 @@ export default function RestaurantScreen() {
           </View>
         </View>
 
-        {restaurant.rating >= 4.5 && (
+        {store.rating >= 4.5 && (
           <View style={styles.promoContainer}>
             <LinearGradient
               colors={["#FEF3C7", "#FDE68A"]}
@@ -256,7 +257,7 @@ export default function RestaurantScreen() {
               <View style={styles.promoIconWrap}>
                 <Zap size={16} color="#D97706" fill="#D97706" />
               </View>
-              <Text style={styles.promoText}>Top Rated Restaurant</Text>
+              <Text style={styles.promoText}>Top Rated Store</Text>
             </LinearGradient>
           </View>
         )}
@@ -280,7 +281,7 @@ export default function RestaurantScreen() {
         })}
 
         <View style={styles.screenLabel}>
-          <Text style={styles.screenLabelText}>Restaurant Screen</Text>
+          <Text style={styles.screenLabelText}>Store Screen</Text>
         </View>
       </Animated.ScrollView>
 
@@ -289,11 +290,11 @@ export default function RestaurantScreen() {
         item={selectedItem}
         onClose={closeProductModal}
         onAddToCart={handleAddToCart}
-        restaurantName={restaurant.name}
-        restaurantImage={restaurant.image}
+        storeName={store.name}
+        storeImage={store.image}
       />
 
-      {restaurantCartCount > 0 && (
+      {storeCartCount > 0 && (
         <TouchableOpacity
           style={[styles.cartFloatingBar, { bottom: insets.bottom + 16 }]}
           activeOpacity={0.9}
@@ -301,11 +302,11 @@ export default function RestaurantScreen() {
         >
           <View style={styles.cartBarLeft}>
             <View style={styles.cartBadge}>
-              <Text style={styles.cartBadgeText}>{restaurantCartCount}</Text>
+              <Text style={styles.cartBadgeText}>{storeCartCount}</Text>
             </View>
             <Text style={styles.cartBarText}>View Cart</Text>
           </View>
-          <Text style={styles.cartBarPrice}>₺{restaurantCartTotal.toFixed(2)}</Text>
+          <Text style={styles.cartBarPrice}>{formatPrice(storeCartTotal)}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
     left: 16,
     right: 16,
   },
-  restaurantName: {
+  storeName: {
     fontSize: 26,
     fontWeight: "700" as const,
     color: "#FFFFFF",
@@ -652,3 +653,4 @@ const styles = StyleSheet.create({
     color: "#FFFFFF",
   },
 });
+

@@ -18,11 +18,11 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { favoriteRestaurants } from "@/mocks/orders";
+import { favoriteStores } from "@/mocks/orders";
 
 const { width } = Dimensions.get("window");
 
-interface FavoriteRestaurant {
+interface FavoriteStore {
   id: string;
   name: string;
   image: string;
@@ -36,13 +36,13 @@ interface FavoriteRestaurant {
 
 export default function FavoritesScreen() {
   const insets = useSafeAreaInsets();
-  const [favorites, setFavorites] = useState<FavoriteRestaurant[]>(favoriteRestaurants);
+  const [favorites, setFavorites] = useState<FavoriteStore[]>(favoriteStores);
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [restaurantToDelete, setRestaurantToDelete] = useState<FavoriteRestaurant | null>(null);
+  const [storeToDelete, setStoreToDelete] = useState<FavoriteStore | null>(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
 
-  const handleRemoveFavoritePress = (restaurant: FavoriteRestaurant) => {
-    setRestaurantToDelete(restaurant);
+  const handleRemoveFavoritePress = (store: FavoriteStore) => {
+    setStoreToDelete(store);
     setDeleteModalVisible(true);
     Animated.timing(fadeAnim, {
       toValue: 1,
@@ -52,8 +52,8 @@ export default function FavoritesScreen() {
   };
 
   const handleConfirmDelete = () => {
-    if (restaurantToDelete) {
-      setFavorites(favorites.filter((fav) => fav.id !== restaurantToDelete.id));
+    if (storeToDelete) {
+      setFavorites(favorites.filter((fav) => fav.id !== storeToDelete.id));
     }
     handleCloseDeleteModal();
   };
@@ -65,29 +65,29 @@ export default function FavoritesScreen() {
       useNativeDriver: true,
     }).start(() => {
       setDeleteModalVisible(false);
-      setRestaurantToDelete(null);
+      setStoreToDelete(null);
     });
   };
 
-  const renderFavoriteCard = (restaurant: FavoriteRestaurant) => (
-    <TouchableOpacity key={restaurant.id} style={styles.restaurantCard} activeOpacity={0.7}>
+  const renderFavoriteCard = (store: FavoriteStore) => (
+    <TouchableOpacity key={store.id} style={styles.storeCard} activeOpacity={0.7}>
       <Image
-        source={{ uri: restaurant.image }}
-        style={styles.restaurantImage}
+        source={{ uri: store.image }}
+        style={styles.storeImage}
         contentFit="cover"
       />
       <TouchableOpacity
         style={styles.removeButton}
-        onPress={() => handleRemoveFavoritePress(restaurant)}
+        onPress={() => handleRemoveFavoritePress(store)}
       >
         <Heart size={16} color="#FFFFFF" fill="#EF4444" />
       </TouchableOpacity>
-      <View style={styles.restaurantInfo}>
-        <Text style={styles.restaurantName} numberOfLines={1}>
-          {restaurant.name}
+      <View style={styles.storeInfo}>
+        <Text style={styles.storeName} numberOfLines={1}>
+          {store.name}
         </Text>
         <Text style={styles.cuisine} numberOfLines={1}>
-          {restaurant.cuisine}
+          {store.cuisine}
         </Text>
       </View>
     </TouchableOpacity>
@@ -107,7 +107,7 @@ export default function FavoritesScreen() {
           <View style={styles.headerSpacer} />
         </View>
         <Text style={styles.subtitle}>
-          {favorites.length} {favorites.length === 1 ? "restaurant" : "restaurants"} saved
+          {favorites.length} {favorites.length === 1 ? "store" : "stores"} saved
         </Text>
       </View>
 
@@ -136,13 +136,13 @@ export default function FavoritesScreen() {
             <Heart size={64} color="#D1D5DB" />
             <Text style={styles.emptyTitle}>No favorites yet</Text>
             <Text style={styles.emptyText}>
-              Start adding restaurants to your favorites list
+              Start adding stores to your favorites list
             </Text>
             <TouchableOpacity
               style={styles.exploreButton}
               onPress={() => router.back()}
             >
-              <Text style={styles.exploreButtonText}>Explore Restaurants</Text>
+              <Text style={styles.exploreButtonText}>Explore Stores</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -184,7 +184,7 @@ export default function FavoritesScreen() {
             </View>
             <Text style={styles.deleteModalTitle}>Remove from Favorites</Text>
             <Text style={styles.deleteModalMessage}>
-              Are you sure you want to remove &quot;{restaurantToDelete?.name}&quot; from your favorites?
+              Are you sure you want to remove &quot;{storeToDelete?.name}&quot; from your favorites?
             </Text>
             <View style={styles.deleteModalButtons}>
               <TouchableOpacity
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     flexWrap: "wrap" as const,
     gap: 12,
   },
-  restaurantCard: {
+  storeCard: {
     width: (width - 44) / 2,
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
@@ -270,7 +270,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  restaurantImage: {
+  storeImage: {
     width: "100%",
     height: 120,
   },
@@ -285,10 +285,10 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
-  restaurantInfo: {
+  storeInfo: {
     padding: 12,
   },
-  restaurantName: {
+  storeName: {
     fontSize: 14,
     fontWeight: "600" as const,
     color: "#1F2937",

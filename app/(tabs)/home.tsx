@@ -13,12 +13,12 @@ import { router } from "expo-router";
 import { Bike } from "lucide-react-native";
 
 import { offers } from "@/mocks/offers";
-import { brandRestaurants, restaurants } from "@/mocks/restaurants";
+import { brandStores, stores } from "@/mocks/stores";
 import { categories } from "@/constants/categories";
 
 import { 
   CategoryCard, 
-  RestaurantCard, 
+  StoreCard, 
   OfferCard, 
   HomeHeader
 } from "@/components/home";
@@ -36,27 +36,27 @@ export default function HomeScreen() {
   const loopedOffers = [...offers, ...offers, ...offers];
   const initialScrollIndex = offers.length;
 
-  const popularRestaurants = restaurants.slice(0, 10);
-  const newRestaurants = [...restaurants].reverse().slice(0, 10);
-  const topRatedRestaurants = [...restaurants]
+  const popularStores = stores.slice(0, 10);
+  const newStores = [...stores].reverse().slice(0, 10);
+  const topRatedStores = [...stores]
     .sort((a, b) => b.rating - a.rating)
     .slice(0, 10);
-  const fastestRestaurants = [...restaurants]
+  const fastestStores = [...stores]
     .sort(
       (a, b) =>
         parseInt(a.deliveryTime.split("-")[0]) -
         parseInt(b.deliveryTime.split("-")[0])
     )
     .slice(0, 10);
-  const budgetFriendly = [...restaurants]
+  const budgetFriendly = [...stores]
     .sort((a, b) => parseInt(a.deliveryFee.replace('₺', '')) - parseInt(b.deliveryFee.replace('₺', '')))
     .slice(0, 10);
-  const fineDining = [...restaurants]
+  const fineDining = [...stores]
     .filter(r => r.rating >= 4.7)
     .slice(0, 10);
   const reorderedBrands = [
-    ...brandRestaurants.slice(2),
-    ...brandRestaurants.slice(0, 2)
+    ...brandStores.slice(2),
+    ...brandStores.slice(0, 2)
   ];
 
   useEffect(() => {
@@ -178,8 +178,8 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {reorderedBrands.slice(0, 10).map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            {reorderedBrands.slice(0, 10).map((store) => (
+              <StoreCard key={store.id} store={store} />
             ))}
           </ScrollView>
         </View>
@@ -196,8 +196,8 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {popularRestaurants.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            {popularStores.map((store) => (
+              <StoreCard key={store.id} store={store} />
             ))}
           </ScrollView>
         </View>
@@ -214,8 +214,8 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {newRestaurants.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            {newStores.map((store) => (
+              <StoreCard key={store.id} store={store} />
             ))}
           </ScrollView>
         </View>
@@ -232,8 +232,8 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {topRatedRestaurants.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            {topRatedStores.map((store) => (
+              <StoreCard key={store.id} store={store} />
             ))}
           </ScrollView>
         </View>
@@ -250,8 +250,8 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {fastestRestaurants.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            {fastestStores.map((store) => (
+              <StoreCard key={store.id} store={store} />
             ))}
           </ScrollView>
         </View>
@@ -268,8 +268,8 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {budgetFriendly.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            {budgetFriendly.map((store) => (
+              <StoreCard key={store.id} store={store} />
             ))}
           </ScrollView>
         </View>
@@ -286,8 +286,8 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.horizontalScroll}
           >
-            {fineDining.map((restaurant) => (
-              <RestaurantCard key={restaurant.id} restaurant={restaurant} />
+            {fineDining.map((store) => (
+              <StoreCard key={store.id} store={store} />
             ))}
           </ScrollView>
         </View>
@@ -300,8 +300,8 @@ export default function HomeScreen() {
             </View>
           </View>
           <View style={styles.gridContainer}>
-            {restaurants.slice(3, 9).map((restaurant) => (
-               <GridRestaurantCard key={restaurant.id} restaurant={restaurant} />
+            {stores.slice(3, 9).map((store) => (
+               <GridStoreCard key={store.id} store={store} />
             ))}
           </View>
         </View>
@@ -315,36 +315,36 @@ export default function HomeScreen() {
   );
 }
 
-function GridRestaurantCard({ restaurant }: { restaurant: typeof restaurants[0] }) {
+function GridStoreCard({ store }: { store: typeof stores[0] }) {
   return (
     <TouchableOpacity 
       style={styles.gridCard}
-      onPress={() => router.push(`/restaurant/${restaurant.id}` as any)}
+      onPress={() => router.push(`/store/${store.id}` as any)}
       activeOpacity={0.7}
     >
       <Image
-        source={{ uri: restaurant.image }}
+        source={{ uri: store.image }}
         style={styles.gridImage}
         contentFit="cover"
         placeholder="|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj["
       />
       <View style={styles.gridContent}>
         <Text style={styles.gridName} numberOfLines={1}>
-          {restaurant.name}
+          {store.name}
         </Text>
         <Text style={styles.gridCuisine} numberOfLines={1}>
-          {restaurant.cuisine}
+          {store.cuisine}
         </Text>
         <View style={styles.gridMetaRow}>
-          <Text style={styles.gridRating}>⭐ {restaurant.rating}</Text>
+          <Text style={styles.gridRating}>⭐ {store.rating}</Text>
           <View style={styles.gridTimeContainer}>
             <Bike size={10} color="#6B7280" strokeWidth={2} />
-            <Text style={styles.gridTime}>{restaurant.deliveryTime}</Text>
+            <Text style={styles.gridTime}>{store.deliveryTime}</Text>
           </View>
         </View>
         <View style={styles.gridFooter}>
-          <Text style={styles.gridFee}>{restaurant.deliveryFee}</Text>
-          <Text style={styles.gridDistance}>{restaurant.distance}</Text>
+          <Text style={styles.gridFee}>{store.deliveryFee}</Text>
+          <Text style={styles.gridDistance}>{store.distance}</Text>
         </View>
       </View>
     </TouchableOpacity>

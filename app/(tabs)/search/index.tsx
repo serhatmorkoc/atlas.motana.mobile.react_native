@@ -74,7 +74,7 @@ export default function SearchScreen() {
             <Search color="#9CA3AF" size={20} />
             <TextInput
               style={styles.searchInput}
-              placeholder="Search restaurants, stores, items..."
+              placeholder="Search stores, items..."
               placeholderTextColor="#9CA3AF"
               value={searchQuery}
               onChangeText={setSearchQuery}

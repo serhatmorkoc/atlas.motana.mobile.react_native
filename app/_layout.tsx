@@ -42,7 +42,7 @@ function RootLayoutNav() {
         }}
       />
       <Stack.Screen
-        name="restaurant"
+        name="store"
         options={{
           headerShown: false,
         }}

@@ -12,7 +12,7 @@ interface Offer {
   description: string;
   image: string;
   discount: string;
-  restaurantName: string;
+  storeName: string;
 }
 
 interface OfferCardProps {
@@ -37,7 +37,7 @@ export function OfferCard({ offer }: OfferCardProps) {
           <Text style={styles.offerBadgeText}>{offer.discount}</Text>
         </View>
         <View style={styles.offerOverlayContent}>
-          <Text style={styles.offerRestaurantOverlay}>{offer.restaurantName}</Text>
+          <Text style={styles.offerStoreOverlay}>{offer.storeName}</Text>
         </View>
       </View>
       <View style={styles.offerContent}>
@@ -104,7 +104,7 @@ const styles = StyleSheet.create({
     left: 12,
     right: 12,
   },
-  offerRestaurantOverlay: {
+  offerStoreOverlay: {
     fontSize: 13,
     color: "#FFFFFF",
     fontWeight: "600",

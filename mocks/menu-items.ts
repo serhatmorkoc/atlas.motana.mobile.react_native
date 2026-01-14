@@ -6,7 +6,7 @@ export interface MenuItemExtra {
 
 export interface MenuItem {
   id: string;
-  restaurantId: string;
+  storeId: string;
   name: string;
   description: string;
   price: number;
@@ -19,7 +19,7 @@ export interface MenuItem {
 export const menuItems: MenuItem[] = [
   {
     id: 'm1',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Margherita Pizza',
     description: 'Classic pizza with tomato sauce, mozzarella, and fresh basil',
     price: 89.90,
@@ -55,7 +55,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm2',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Pepperoni Pizza',
     description: 'Loaded with pepperoni slices and extra cheese',
     price: 109.90,
@@ -87,7 +87,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm3',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Vegetarian Pizza',
     description: 'Fresh vegetables, mushrooms, peppers, and olives',
     price: 94.90,
@@ -96,7 +96,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm4',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Four Cheese Pizza',
     description: 'Mozzarella, gorgonzola, parmesan, and fontina',
     price: 119.90,
@@ -105,7 +105,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm5',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Hawaiian Pizza',
     description: 'Ham, pineapple, and mozzarella cheese',
     price: 99.90,
@@ -114,7 +114,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm6',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Caesar Salad',
     description: 'Crisp romaine lettuce with parmesan and croutons',
     price: 54.90,
@@ -123,7 +123,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm7',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Garlic Bread',
     description: 'Fresh baked bread with garlic butter',
     price: 34.90,
@@ -132,7 +132,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm8',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Tiramisu',
     description: 'Classic Italian dessert with coffee and mascarpone',
     price: 64.90,
@@ -141,7 +141,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm9',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Classic Burger',
     description: 'Beef patty, lettuce, tomato, onion, and special sauce',
     price: 79.90,
@@ -183,7 +183,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm10',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Cheese Burger',
     description: 'Double cheese, beef patty, and pickles',
     price: 89.90,
@@ -215,7 +215,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm11',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Bacon Burger',
     description: 'Crispy bacon, beef patty, and cheddar cheese',
     price: 99.90,
@@ -224,7 +224,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm12',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Chicken Burger',
     description: 'Grilled chicken breast with lettuce and mayo',
     price: 74.90,
@@ -233,7 +233,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm13',
-    restaurantId: '2',
+    storeId: '2',
     name: 'French Fries',
     description: 'Crispy golden fries with sea salt',
     price: 29.90,
@@ -242,7 +242,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm14',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Onion Rings',
     description: 'Crispy beer-battered onion rings',
     price: 34.90,
@@ -251,7 +251,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm15',
-    restaurantId: '3',
+    storeId: '3',
     name: 'California Roll',
     description: 'Crab, avocado, and cucumber',
     price: 69.90,
@@ -261,7 +261,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm16',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Spicy Tuna Roll',
     description: 'Fresh tuna with spicy mayo and cucumber',
     price: 84.90,
@@ -271,7 +271,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm17',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Dragon Roll',
     description: 'Eel, cucumber topped with avocado',
     price: 129.90,
@@ -280,7 +280,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm18',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Salmon Nigiri',
     description: 'Fresh salmon over pressed rice (2 pieces)',
     price: 54.90,
@@ -289,7 +289,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm19',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Miso Soup',
     description: 'Traditional Japanese soup with tofu and seaweed',
     price: 24.90,
@@ -298,7 +298,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm20',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Edamame',
     description: 'Steamed soybeans with sea salt',
     price: 29.90,
@@ -307,7 +307,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm21',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Adana Kebab',
     description: 'Spicy minced meat kebab with grilled vegetables',
     price: 89.90,
@@ -317,7 +317,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm22',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Iskender Kebab',
     description: 'Döner on pita bread with tomato sauce and butter',
     price: 99.90,
@@ -327,7 +327,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm23',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Chicken Shish',
     description: 'Grilled chicken cubes with peppers and onions',
     price: 79.90,
@@ -336,7 +336,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm24',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Lahmacun',
     description: 'Turkish flatbread with minced meat and vegetables',
     price: 34.90,
@@ -345,7 +345,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm25',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Mixed Pide',
     description: 'Turkish boat-shaped pizza with cheese and meat',
     price: 69.90,
@@ -354,7 +354,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm26',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Baklava',
     description: 'Sweet pastry made of layers of filo with nuts',
     price: 44.90,
@@ -363,7 +363,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm27',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Carbonara',
     description: 'Creamy pasta with bacon, egg, and parmesan',
     price: 84.90,
@@ -373,7 +373,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm28',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Bolognese',
     description: 'Classic meat sauce pasta with parmesan',
     price: 79.90,
@@ -383,7 +383,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm29',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Pesto Pasta',
     description: 'Fresh basil pesto with pine nuts and parmesan',
     price: 74.90,
@@ -392,7 +392,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm30',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Seafood Linguine',
     description: 'Linguine with mixed seafood in white wine sauce',
     price: 119.90,
@@ -401,7 +401,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm31',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Lasagna',
     description: 'Layered pasta with meat sauce and béchamel',
     price: 89.90,
@@ -410,7 +410,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm32',
-    restaurantId: 'b1',
+    storeId: 'b1',
     name: 'Big Mac',
     description: 'Two beef patties, special sauce, lettuce, cheese',
     price: 54.90,
@@ -420,7 +420,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm33',
-    restaurantId: 'b1',
+    storeId: 'b1',
     name: 'Quarter Pounder',
     description: 'Quarter pound beef patty with cheese',
     price: 49.90,
@@ -429,7 +429,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm34',
-    restaurantId: 'b1',
+    storeId: 'b1',
     name: 'McChicken',
     description: 'Crispy chicken with lettuce and mayo',
     price: 39.90,
@@ -438,7 +438,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm35',
-    restaurantId: 'b1',
+    storeId: 'b1',
     name: 'Chicken McNuggets',
     description: '9 pieces of crispy chicken nuggets',
     price: 34.90,
@@ -448,7 +448,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm36',
-    restaurantId: 'b1',
+    storeId: 'b1',
     name: 'French Fries',
     description: 'Golden crispy fries',
     price: 19.90,
@@ -457,7 +457,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm37',
-    restaurantId: 'b1',
+    storeId: 'b1',
     name: 'McFlurry',
     description: 'Soft serve ice cream with your choice of toppings',
     price: 29.90,
@@ -466,7 +466,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm38',
-    restaurantId: 'b2',
+    storeId: 'b2',
     name: 'Caramel Macchiato',
     description: 'Espresso with vanilla syrup and caramel drizzle',
     price: 42.90,
@@ -476,7 +476,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm39',
-    restaurantId: 'b2',
+    storeId: 'b2',
     name: 'Caffè Latte',
     description: 'Espresso with steamed milk',
     price: 38.90,
@@ -485,7 +485,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm40',
-    restaurantId: 'b2',
+    storeId: 'b2',
     name: 'Frappuccino',
     description: 'Blended coffee drink with ice',
     price: 44.90,
@@ -495,7 +495,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm41',
-    restaurantId: 'b2',
+    storeId: 'b2',
     name: 'Croissant',
     description: 'Buttery flaky pastry',
     price: 24.90,
@@ -504,7 +504,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm42',
-    restaurantId: 'b2',
+    storeId: 'b2',
     name: 'Blueberry Muffin',
     description: 'Fresh baked muffin with blueberries',
     price: 22.90,
@@ -514,7 +514,7 @@ export const menuItems: MenuItem[] = [
 
   {
     id: 'm44',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Zinger Burger',
     description: 'Spicy crispy chicken burger',
     price: 44.90,
@@ -543,7 +543,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm45',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Chicken Wings',
     description: '6 pieces of hot & crispy wings',
     price: 54.90,
@@ -569,7 +569,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm46',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Popcorn Chicken',
     description: 'Bite-sized crispy chicken pieces',
     price: 34.90,
@@ -590,7 +590,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm47',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Coleslaw',
     description: 'Fresh cabbage salad',
     price: 14.90,
@@ -606,7 +606,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m1',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Original Recipe Chicken',
     description: '3 pieces of signature Original Recipe chicken',
     price: 74.90,
@@ -630,7 +630,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m2',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Crispy Strips',
     description: '5 pieces of crispy chicken strips',
     price: 59.90,
@@ -653,7 +653,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m3',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Twister Wrap',
     description: 'Crispy chicken, lettuce, tomato in a tortilla wrap',
     price: 49.90,
@@ -674,7 +674,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m4',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Kentucky Burger',
     description: 'Original Recipe chicken fillet with mayo and lettuce',
     price: 54.90,
@@ -698,7 +698,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m5',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Double Down',
     description: 'Bacon, cheese, and sauce between two chicken fillets',
     price: 79.90,
@@ -716,7 +716,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m6',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Famous Bowl',
     description: 'Mashed potatoes, corn, crispy chicken, gravy, and cheese',
     price: 64.90,
@@ -735,7 +735,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m7',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Mac & Cheese',
     description: 'Creamy macaroni and cheese',
     price: 34.90,
@@ -751,7 +751,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m8',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Corn on the Cob',
     description: 'Buttery corn on the cob',
     price: 19.90,
@@ -766,7 +766,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m9',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'French Fries',
     description: 'Crispy golden fries',
     price: 24.90,
@@ -783,7 +783,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m10',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Chocolate Cake',
     description: 'Rich chocolate layer cake',
     price: 39.90,
@@ -797,7 +797,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m11',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Family Bucket',
     description: '12 pieces of Original Recipe chicken with 3 large sides',
     price: 249.90,
@@ -816,7 +816,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'kfc-m12',
-    restaurantId: 'b3',
+    storeId: 'b3',
     name: 'Spicy Chicken Sandwich',
     description: 'Extra crispy spicy chicken with pickles and spicy mayo',
     price: 52.90,
@@ -834,7 +834,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm48',
-    restaurantId: '6',
+    storeId: '6',
     name: 'Beef Tacos',
     description: 'Three soft corn tortillas with seasoned beef',
     price: 69.90,
@@ -844,7 +844,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm49',
-    restaurantId: '6',
+    storeId: '6',
     name: 'Chicken Quesadilla',
     description: 'Grilled tortilla with chicken and melted cheese',
     price: 59.90,
@@ -854,7 +854,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm50',
-    restaurantId: '6',
+    storeId: '6',
     name: 'Nachos Supreme',
     description: 'Crispy chips with cheese, jalapeños, and guacamole',
     price: 54.90,
@@ -863,7 +863,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm51',
-    restaurantId: '6',
+    storeId: '6',
     name: 'Burrito Bowl',
     description: 'Rice, beans, meat, salsa, and fresh toppings',
     price: 74.90,
@@ -872,7 +872,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm52',
-    restaurantId: '7',
+    storeId: '7',
     name: 'Pad Thai',
     description: 'Stir-fried rice noodles with shrimp and peanuts',
     price: 79.90,
@@ -882,7 +882,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm53',
-    restaurantId: '7',
+    storeId: '7',
     name: 'Chicken Fried Rice',
     description: 'Wok-fried rice with chicken and vegetables',
     price: 64.90,
@@ -892,7 +892,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm54',
-    restaurantId: '7',
+    storeId: '7',
     name: 'Spring Rolls',
     description: 'Crispy vegetable spring rolls with sweet chili',
     price: 39.90,
@@ -901,7 +901,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm55',
-    restaurantId: '7',
+    storeId: '7',
     name: 'Tom Yum Soup',
     description: 'Spicy and sour Thai soup with shrimp',
     price: 49.90,
@@ -910,7 +910,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm56',
-    restaurantId: '8',
+    storeId: '8',
     name: 'Ribeye Steak',
     description: '300g premium ribeye with garlic butter',
     price: 189.90,
@@ -920,7 +920,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm57',
-    restaurantId: '8',
+    storeId: '8',
     name: 'BBQ Ribs',
     description: 'Slow-cooked pork ribs with house BBQ sauce',
     price: 149.90,
@@ -930,7 +930,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm58',
-    restaurantId: '8',
+    storeId: '8',
     name: 'Grilled Salmon',
     description: 'Fresh Atlantic salmon with lemon herb butter',
     price: 139.90,
@@ -939,7 +939,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm59',
-    restaurantId: '8',
+    storeId: '8',
     name: 'Loaded Baked Potato',
     description: 'With sour cream, bacon, and chives',
     price: 34.90,
@@ -948,7 +948,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm60',
-    restaurantId: '9',
+    storeId: '9',
     name: 'Buddha Bowl',
     description: 'Quinoa, roasted vegetables, and tahini dressing',
     price: 74.90,
@@ -958,7 +958,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm61',
-    restaurantId: '9',
+    storeId: '9',
     name: 'Avocado Toast',
     description: 'Sourdough with smashed avocado and seeds',
     price: 54.90,
@@ -968,7 +968,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm62',
-    restaurantId: '9',
+    storeId: '9',
     name: 'Green Smoothie',
     description: 'Spinach, banana, mango, and almond milk',
     price: 39.90,
@@ -977,7 +977,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm63',
-    restaurantId: '9',
+    storeId: '9',
     name: 'Vegan Burger',
     description: 'Plant-based patty with vegan cheese',
     price: 69.90,
@@ -986,7 +986,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm64',
-    restaurantId: '10',
+    storeId: '10',
     name: 'Grilled Sea Bass',
     description: 'Whole grilled sea bass with herbs',
     price: 169.90,
@@ -996,7 +996,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm65',
-    restaurantId: '10',
+    storeId: '10',
     name: 'Shrimp Scampi',
     description: 'Garlic butter shrimp with pasta',
     price: 129.90,
@@ -1006,7 +1006,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm66',
-    restaurantId: '10',
+    storeId: '10',
     name: 'Lobster Tail',
     description: 'Grilled lobster with drawn butter',
     price: 249.90,
@@ -1015,7 +1015,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm67',
-    restaurantId: '10',
+    storeId: '10',
     name: 'Clam Chowder',
     description: 'Creamy New England style soup',
     price: 44.90,
@@ -1024,7 +1024,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm68',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Pepperoni Pizza',
     description: 'Classic pepperoni with extra cheese',
     price: 89.90,
@@ -1058,7 +1058,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm69',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'BBQ Chicken Pizza',
     description: 'BBQ sauce, chicken, and red onions',
     price: 99.90,
@@ -1088,7 +1088,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm70',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Garlic Bread Sticks',
     description: 'With marinara dipping sauce',
     price: 29.90,
@@ -1105,7 +1105,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m1',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Margherita Pizza',
     description: 'Classic tomato sauce, mozzarella, and fresh basil',
     price: 79.90,
@@ -1124,7 +1124,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m2',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Supreme Pizza',
     description: 'Pepperoni, sausage, peppers, onions, mushrooms, and olives',
     price: 119.90,
@@ -1148,7 +1148,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m3',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Meat Lovers Pizza',
     description: 'Pepperoni, ham, Italian sausage, bacon, and ground beef',
     price: 129.90,
@@ -1169,7 +1169,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m4',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Veggie Pizza',
     description: 'Mushrooms, peppers, onions, olives, and tomatoes',
     price: 94.90,
@@ -1189,7 +1189,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m5',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Hawaiian Pizza',
     description: 'Ham and pineapple with mozzarella',
     price: 99.90,
@@ -1209,7 +1209,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m6',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Buffalo Chicken Wings',
     description: '8 pieces of spicy buffalo wings with ranch',
     price: 54.90,
@@ -1228,7 +1228,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m7',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Cheesy Bread',
     description: 'Freshly baked bread topped with melted cheese',
     price: 34.90,
@@ -1245,7 +1245,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m8',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Chicken Alfredo Pasta',
     description: 'Penne pasta with creamy Alfredo sauce and grilled chicken',
     price: 74.90,
@@ -1263,7 +1263,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m9',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Italian Sausage Pasta',
     description: 'Penne pasta with marinara sauce and Italian sausage',
     price: 69.90,
@@ -1281,7 +1281,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m10',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Chocolate Lava Crunch Cakes',
     description: 'Warm chocolate cake with molten center',
     price: 44.90,
@@ -1297,7 +1297,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m11',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Cinnamon Bread Twists',
     description: 'Sweet bread twists with cinnamon and icing',
     price: 29.90,
@@ -1311,7 +1311,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m12',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Stuffed Cheesy Bread',
     description: 'Bread stuffed with cheese, bacon, and jalapeños',
     price: 44.90,
@@ -1328,7 +1328,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m13',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Four Cheese Pizza',
     description: 'Mozzarella, cheddar, parmesan, and provolone',
     price: 109.90,
@@ -1346,7 +1346,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m14',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Philly Cheese Steak Pizza',
     description: 'Steak, peppers, onions, and provolone cheese',
     price: 124.90,
@@ -1364,7 +1364,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'dom-m15',
-    restaurantId: 'b4',
+    storeId: 'b4',
     name: 'Marbled Cookie Brownie',
     description: 'Decadent chocolate brownie swirled with cookie dough',
     price: 39.90,
@@ -1379,7 +1379,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm71',
-    restaurantId: 'b5',
+    storeId: 'b5',
     name: 'Whopper',
     description: 'Flame-grilled beef with fresh vegetables',
     price: 59.90,
@@ -1389,7 +1389,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm72',
-    restaurantId: 'b5',
+    storeId: 'b5',
     name: 'Chicken Royale',
     description: 'Crispy chicken with lettuce and mayo',
     price: 49.90,
@@ -1398,7 +1398,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm73',
-    restaurantId: 'b5',
+    storeId: 'b5',
     name: 'Onion Rings',
     description: 'Crispy battered onion rings',
     price: 24.90,
@@ -1407,7 +1407,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm74',
-    restaurantId: 'b6',
+    storeId: 'b6',
     name: 'Italian BMT',
     description: 'Salami, pepperoni, and ham on fresh bread',
     price: 54.90,
@@ -1417,7 +1417,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm75',
-    restaurantId: 'b6',
+    storeId: 'b6',
     name: 'Chicken Teriyaki',
     description: 'Sweet teriyaki glazed chicken sub',
     price: 49.90,
@@ -1427,7 +1427,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm76',
-    restaurantId: 'b6',
+    storeId: 'b6',
     name: 'Veggie Delight',
     description: 'Fresh vegetables on your choice of bread',
     price: 39.90,
@@ -1436,7 +1436,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm77',
-    restaurantId: 'b7',
+    storeId: 'b7',
     name: 'Spicy Chicken Sandwich',
     description: 'Cajun-style spicy chicken sandwich',
     price: 49.90,
@@ -1446,7 +1446,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm78',
-    restaurantId: 'b7',
+    storeId: 'b7',
     name: 'Chicken Tenders',
     description: '5 pieces of crispy chicken tenders',
     price: 44.90,
@@ -1456,7 +1456,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm79',
-    restaurantId: 'b7',
+    storeId: 'b7',
     name: 'Cajun Fries',
     description: 'Seasoned Cajun-style fries',
     price: 24.90,
@@ -1465,7 +1465,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm80',
-    restaurantId: 'b8',
+    storeId: 'b8',
     name: 'Supreme Pizza',
     description: 'Loaded with meat and vegetables',
     price: 109.90,
@@ -1475,7 +1475,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm81',
-    restaurantId: 'b8',
+    storeId: 'b8',
     name: 'Meat Lovers',
     description: 'Pepperoni, sausage, bacon, and ham',
     price: 119.90,
@@ -1484,7 +1484,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm82',
-    restaurantId: 'b8',
+    storeId: 'b8',
     name: 'Breadsticks',
     description: 'Warm breadsticks with marinara',
     price: 29.90,
@@ -1493,7 +1493,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm83',
-    restaurantId: 'b9',
+    storeId: 'b9',
     name: 'Crunchy Taco',
     description: 'Seasoned beef in a crunchy shell',
     price: 24.90,
@@ -1503,7 +1503,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm84',
-    restaurantId: 'b9',
+    storeId: 'b9',
     name: 'Chalupa Supreme',
     description: 'Crispy flatbread with beef and cheese',
     price: 39.90,
@@ -1513,7 +1513,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm85',
-    restaurantId: 'b9',
+    storeId: 'b9',
     name: 'Nachos BellGrande',
     description: 'Chips with beef, cheese, and toppings',
     price: 49.90,
@@ -1522,7 +1522,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm86',
-    restaurantId: 'b10',
+    storeId: 'b10',
     name: 'Glazed Donut',
     description: 'Classic glazed ring donut',
     price: 14.90,
@@ -1532,7 +1532,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm87',
-    restaurantId: 'b10',
+    storeId: 'b10',
     name: 'Boston Kreme',
     description: 'Filled with vanilla cream and chocolate top',
     price: 19.90,
@@ -1542,7 +1542,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm88',
-    restaurantId: 'b10',
+    storeId: 'b10',
     name: 'Iced Coffee',
     description: 'Cold brewed coffee with ice',
     price: 29.90,
@@ -1551,7 +1551,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm89',
-    restaurantId: 'b10',
+    storeId: 'b10',
     name: 'Munchkins',
     description: '10 assorted donut holes',
     price: 24.90,
@@ -1560,7 +1560,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm90',
-    restaurantId: '1',
+    storeId: '1',
     name: 'BBQ Chicken Pizza',
     description: 'BBQ sauce base with grilled chicken and red onions',
     price: 114.90,
@@ -1569,7 +1569,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm91',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Meat Lovers Pizza',
     description: 'Pepperoni, sausage, bacon, and ground beef',
     price: 129.90,
@@ -1579,7 +1579,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm92',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Greek Salad',
     description: 'Feta cheese, olives, tomatoes, and cucumber',
     price: 59.90,
@@ -1588,7 +1588,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm93',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Caprese Salad',
     description: 'Fresh mozzarella, tomatoes, and basil',
     price: 64.90,
@@ -1597,7 +1597,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm94',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Cheesy Bread',
     description: 'Baked bread topped with melted mozzarella',
     price: 39.90,
@@ -1606,7 +1606,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm95',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Mozzarella Sticks',
     description: 'Crispy breaded mozzarella with marinara',
     price: 44.90,
@@ -1615,7 +1615,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm96',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Panna Cotta',
     description: 'Creamy Italian dessert with berry sauce',
     price: 54.90,
@@ -1624,7 +1624,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm97',
-    restaurantId: '1',
+    storeId: '1',
     name: 'Cannoli',
     description: 'Sicilian pastry filled with sweet ricotta',
     price: 49.90,
@@ -1633,7 +1633,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm98',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Mushroom Swiss Burger',
     description: 'Sautéed mushrooms and Swiss cheese',
     price: 94.90,
@@ -1642,7 +1642,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm99',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Veggie Burger',
     description: 'House-made veggie patty with fresh toppings',
     price: 69.90,
@@ -1651,7 +1651,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm100',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Buffalo Wings',
     description: 'Spicy buffalo sauce wings with ranch',
     price: 54.90,
@@ -1660,7 +1660,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm101',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Sweet Potato Fries',
     description: 'Crispy sweet potato fries with aioli',
     price: 34.90,
@@ -1669,7 +1669,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm102',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Milkshake',
     description: 'Vanilla, chocolate, or strawberry',
     price: 39.90,
@@ -1678,7 +1678,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm103',
-    restaurantId: '2',
+    storeId: '2',
     name: 'Chocolate Brownie',
     description: 'Warm chocolate brownie with ice cream',
     price: 44.90,
@@ -1687,7 +1687,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm104',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Philadelphia Roll',
     description: 'Salmon, cream cheese, and cucumber',
     price: 74.90,
@@ -1696,7 +1696,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm105',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Rainbow Roll',
     description: 'Assorted fish on California roll',
     price: 99.90,
@@ -1706,7 +1706,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm106',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Tuna Nigiri',
     description: 'Fresh tuna over pressed rice (2 pieces)',
     price: 59.90,
@@ -1715,7 +1715,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm107',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Eel Nigiri',
     description: 'Grilled eel over rice (2 pieces)',
     price: 64.90,
@@ -1724,7 +1724,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm108',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Seaweed Salad',
     description: 'Marinated seaweed with sesame',
     price: 34.90,
@@ -1733,7 +1733,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm109',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Gyoza',
     description: 'Pan-fried pork dumplings (6 pieces)',
     price: 39.90,
@@ -1742,7 +1742,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm110',
-    restaurantId: '3',
+    storeId: '3',
     name: 'Green Tea Ice Cream',
     description: 'Traditional Japanese green tea ice cream',
     price: 29.90,
@@ -1751,7 +1751,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm111',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Lamb Shish',
     description: 'Grilled lamb cubes with herbs',
     price: 109.90,
@@ -1760,7 +1760,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm112',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Mixed Grill',
     description: 'Combination of Adana, chicken, and lamb',
     price: 129.90,
@@ -1770,7 +1770,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm113',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Cheese Pide',
     description: 'Turkish flatbread with mixed cheeses',
     price: 59.90,
@@ -1779,7 +1779,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm114',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Sucuklu Pide',
     description: 'Turkish sausage and cheese pide',
     price: 74.90,
@@ -1788,7 +1788,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm115',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Hummus',
     description: 'Creamy chickpea dip with olive oil',
     price: 29.90,
@@ -1797,7 +1797,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm116',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Cacik',
     description: 'Yogurt with cucumber and garlic',
     price: 24.90,
@@ -1806,7 +1806,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm117',
-    restaurantId: '4',
+    storeId: '4',
     name: 'Kunefe',
     description: 'Cheese pastry soaked in sweet syrup',
     price: 54.90,
@@ -1815,7 +1815,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm118',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Arrabiata',
     description: 'Spicy tomato sauce pasta',
     price: 69.90,
@@ -1824,7 +1824,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm119',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Alfredo',
     description: 'Creamy white sauce with parmesan',
     price: 74.90,
@@ -1833,7 +1833,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm120',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Ravioli',
     description: 'Cheese-filled pasta with tomato sauce',
     price: 84.90,
@@ -1842,7 +1842,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm121',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Bruschetta',
     description: 'Toasted bread with tomatoes and basil',
     price: 39.90,
@@ -1851,7 +1851,7 @@ export const menuItems: MenuItem[] = [
   },
   {
     id: 'm122',
-    restaurantId: '5',
+    storeId: '5',
     name: 'Minestrone Soup',
     description: 'Italian vegetable soup',
     price: 34.90,
@@ -1860,12 +1860,12 @@ export const menuItems: MenuItem[] = [
   },
 ];
 
-export function getMenuItemsByRestaurant(restaurantId: string): MenuItem[] {
-  return menuItems.filter(item => item.restaurantId === restaurantId);
+export function getMenuItemsByStore(storeId: string): MenuItem[] {
+  return menuItems.filter(item => item.storeId === storeId);
 }
 
-export function getMenuCategories(restaurantId: string): string[] {
-  const items = getMenuItemsByRestaurant(restaurantId);
+export function getMenuCategories(storeId: string): string[] {
+  const items = getMenuItemsByStore(storeId);
   const categories = Array.from(new Set(items.map(item => item.category)));
   return categories;
 }

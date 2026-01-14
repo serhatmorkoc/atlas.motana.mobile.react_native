@@ -46,7 +46,7 @@ export default function NotificationSettingsScreen() {
     {
       id: "messages",
       title: "Messages",
-      description: "Chat messages from restaurants",
+      description: "Chat messages from stores",
       icon: <MessageSquare size={22} color="#374151" />,
       enabled: true,
     },

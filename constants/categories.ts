@@ -1,7 +1,7 @@
 export const categories = [
   {
     id: 1,
-    name: "Restaurants",
+    name: "Stores",
     icon: "UtensilsCrossed",
     color: "#FF6B35",
   },

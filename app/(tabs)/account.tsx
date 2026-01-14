@@ -94,7 +94,7 @@ export default function AccountScreen() {
             <MenuItem
               icon={<Heart size={20} color="#6B7280" />}
               iconBg="#F3F4F6"
-              title="Favorite Restaurants"
+              title="Favorite Stores"
               subtitle="Your saved places"
               onPress={() => router.push("/account/favorites" as any)}
               isLast
