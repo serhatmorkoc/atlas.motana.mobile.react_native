@@ -1,12 +1,10 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View, Dimensions, ScrollView } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, ScrollView } from "react-native";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Star, MapPin, Clock, ChevronRight } from "lucide-react-native";
-import { MenuItem } from "@/mocks/menu-items";
-import { optimizeImageUrl } from "@/utils/helpers";
 
-const { width } = Dimensions.get("window");
+import { optimizeImageUrl } from "@/utils/helpers";
 
 interface Store {
   id: string;
@@ -19,9 +17,16 @@ interface Store {
   distance: string;
 }
 
+interface SimpleMenuItem {
+  id: string;
+  name: string;
+  image: string;
+  price: number;
+}
+
 interface StoreListCardProps {
   store: Store;
-  menuItems?: MenuItem[];
+  menuItems?: SimpleMenuItem[];
 }
 
 export function StoreListCard({ store, menuItems = [] }: StoreListCardProps) {

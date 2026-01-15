@@ -311,8 +311,6 @@ export default function StoreScreen() {
         item={selectedItem}
         onClose={closeProductModal}
         onAddToCart={handleAddToCart}
-        storeName={store.name}
-        storeImage={store.image}
       />
 
       {storeCartCount > 0 && (
