@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { Bike } from "lucide-react-native";
 
 import { offers } from "@/mocks/offers";
@@ -19,7 +19,6 @@ import { useStores } from "@/hooks/useStores";
 import { Store } from "@/types/store.types";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { useUserAddresses } from "@/hooks/useUserAddresses";
-import { useFocusEffect } from "expo-router";
 
 import { 
   CategoryCard, 
@@ -46,7 +45,7 @@ export default function HomeScreen() {
   });
 
   // Fetch selected address
-  const { addresses, loading: addressesLoading, refetch: refetchAddresses } = useUserAddresses();
+  const { addresses, refetch: refetchAddresses } = useUserAddresses();
   const selectedAddress = React.useMemo(() => {
     const found = addresses.find(addr => addr.selected);
     return found ? { title: found.title, address: found.address } : null;
@@ -56,7 +55,8 @@ export default function HomeScreen() {
   useFocusEffect(
     useCallback(() => {
       refetchAddresses();
-    }, [refetchAddresses])
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
   );
 
   const onRefresh = async () => {
