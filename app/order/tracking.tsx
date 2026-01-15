@@ -1,4 +1,4 @@
-import { router, Stack, useLocalSearchParams } from "expo-router";
+import { router, Stack, useLocalSearchParams, useFocusEffect } from "expo-router";
 import {
   ArrowLeft,
   Bike,
@@ -11,7 +11,7 @@ import {
   Utensils,
   X,
 } from "lucide-react-native";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import {
   Animated,
   ScrollView,
@@ -23,6 +23,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DeliveryCard, EstimateCard, CourierCard, OrderSteps, OrderStep } from "@/components/order-tracking";
+import { useOrder } from "@/hooks/useOrder";
+import { DBOrderStatus } from "@/types/order.types";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 interface CourierInfo {
   name: string;
@@ -40,28 +43,92 @@ const COURIER_INFO: CourierInfo = {
   plateNumber: "34 ABC 123",
 };
 
+/**
+ * Map DB order status to step index
+ * PENDING -> 0 (confirmed)
+ * CONFIRMED -> 1 (accepted)
+ * PREPARING -> 2 (preparing)
+ * READY -> 3 (ready)
+ * ON_WAY -> 5 (on_the_way)
+ * DELIVERED -> 7 (delivered)
+ * CANCELLED -> -1 (show cancelled state)
+ */
+const getStepIndexFromStatus = (status: DBOrderStatus | null): number => {
+  if (!status) return 0;
+  
+  switch (status) {
+    case 'PENDING':
+      return 0; // Order Confirmed
+    case 'CONFIRMED':
+      return 1; // Store Accepted
+    case 'PREPARING':
+      return 2; // Preparing Your Order
+    case 'READY':
+      return 3; // Order Ready
+    case 'ON_WAY':
+      return 5; // On The Way (skip picked_up step 4)
+    case 'DELIVERED':
+      return 7; // Delivered
+    case 'CANCELLED':
+      return -1; // Cancelled
+    default:
+      return 0;
+  }
+};
+
 export default function OrderTrackingScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     orderId: string;
-    storeName: string;
+    storeName?: string;
     storeImage?: string;
-    total: string;
-    address: string;
-    estimatedTime: string;
-    itemCount: string;
+    total?: string;
+    address?: string;
+    estimatedTime?: string;
+    itemCount?: string;
   }>();
 
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [estimatedMinutes, setEstimatedMinutes] = useState(
-    parseInt(params.estimatedTime || "30", 10)
+  // Fetch order data from DB
+  const { order, loading, error, refetch } = useOrder(params.orderId || null);
+
+  // Refetch order when screen comes into focus (e.g., navigating back from another screen)
+  useFocusEffect(
+    useCallback(() => {
+      if (params.orderId) {
+        console.log('[Order Tracking] Screen focused, refetching order...');
+        refetch();
+      }
+    }, [params.orderId, refetch])
   );
+
+  // Calculate step index from order status
+  const currentStepIndex = useMemo(() => {
+    if (!order?.rawStatus) return 0;
+    return getStepIndexFromStatus(order.rawStatus);
+  }, [order?.rawStatus]);
+
+  // Calculate estimated minutes from order data
+  const estimatedMinutes = useMemo(() => {
+    if (order?.estimatedTime) {
+      const minutes = parseInt(order.estimatedTime.replace(' min', ''), 10);
+      return isNaN(minutes) ? 30 : minutes;
+    }
+    return parseInt(params.estimatedTime || "30", 10);
+  }, [order?.estimatedTime, params.estimatedTime]);
   
   const pulseAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(30)).current;
   const courierSlideAnim = useRef(new Animated.Value(50)).current;
+
+  // Use order data from DB, fallback to params
+  const displayOrderCode = order?.orderCode || `ORD-${params.orderId?.slice(-6).toUpperCase() || 'N/A'}`;
+  const displayStoreName = order?.storeName || params.storeName || 'Store';
+  const displayStoreImage = order?.storeImage || params.storeImage || '';
+  const displayTotal = order?.totalPrice?.replace('₺', '') || params.total || '0';
+  const displayAddress = order?.deliveryAddress || params.address || 'Address not available';
+  const displayItemCount = order?.items.length.toString() || params.itemCount || '0';
 
   const orderSteps: OrderStep[] = [
     {
@@ -192,24 +259,50 @@ export default function OrderTrackingScreen() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentStepIndex]);
 
+  // Update estimated minutes countdown
   useEffect(() => {
-    const stepsCount = 8;
     const interval = setInterval(() => {
-      setCurrentStepIndex((prev) => {
-        if (prev < stepsCount - 1) {
-          return prev + 1;
-        }
-        return prev;
-      });
-      
-      setEstimatedMinutes((prev) => Math.max(0, prev - 5));
-    }, 8000);
+      // Countdown is handled by estimated_delivery_time calculation
+      // No need to manually decrement
+    }, 60000); // Check every minute
 
     return () => clearInterval(interval);
   }, []);
 
-  const showCourierInfo = currentStepIndex >= 4;
-  const canCancel = currentStepIndex < 2;
+  const showCourierInfo = currentStepIndex >= 4 && currentStepIndex < 7;
+  const canCancel = currentStepIndex >= 0 && currentStepIndex < 2 && order?.rawStatus !== 'CANCELLED';
+  const isCancelled = order?.rawStatus === 'CANCELLED';
+  const isDelivered = order?.rawStatus === 'DELIVERED';
+
+  if (loading) {
+    return <LoadingScreen title="Loading order..." subtitle="Please wait" />;
+  }
+
+  if (error || !order) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
+          <TouchableOpacity
+            style={styles.headerButton}
+            onPress={() => router.back()}
+            activeOpacity={0.7}
+          >
+            <ArrowLeft size={22} color="#1F2937" strokeWidth={2} />
+          </TouchableOpacity>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle}>Order Tracking</Text>
+          </View>
+          <View style={styles.headerRight} />
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Failed to load order</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -224,10 +317,12 @@ export default function OrderTrackingScreen() {
           <ArrowLeft size={22} color="#1F2937" strokeWidth={2} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Order #ORD-847291</Text>
+          <Text style={styles.headerTitle}>Order #{displayOrderCode}</Text>
           <View style={styles.statusBadge}>
             <View style={styles.statusDot} />
-            <Text style={styles.statusText}>Live Tracking</Text>
+            <Text style={styles.statusText}>
+              {isCancelled ? 'Cancelled' : isDelivered ? 'Delivered' : 'Live Tracking'}
+            </Text>
           </View>
         </View>
         <View style={styles.headerRight} />
@@ -241,7 +336,7 @@ export default function OrderTrackingScreen() {
         ]}
         showsVerticalScrollIndicator={false}
       >
-        <DeliveryCard address="113 Vakthang Gorgasali Street, Batumi" />
+        <DeliveryCard address={displayAddress} />
 
         <EstimateCard 
           fadeAnim={fadeAnim}
@@ -249,10 +344,10 @@ export default function OrderTrackingScreen() {
           pulseAnim={pulseAnim}
           progressAnim={progressAnim}
           estimatedMinutes={estimatedMinutes}
-          storeName={params.storeName}
-          storeImage={params.storeImage}
-          itemCount={params.itemCount}
-          total={params.total}
+          storeName={displayStoreName}
+          storeImage={displayStoreImage}
+          itemCount={displayItemCount}
+          total={displayTotal}
         />
 
         {showCourierInfo && (
@@ -384,5 +479,28 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#D1D5DB",
     fontWeight: "500" as const,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    padding: 32,
+    gap: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#EF4444",
+    textAlign: "center" as const,
+  },
+  retryButton: {
+    backgroundColor: "#FF6B35",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600" as const,
   },
 });

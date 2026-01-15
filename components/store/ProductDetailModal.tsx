@@ -12,7 +12,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { MenuItem } from "@/mocks/menu-items";
+import { MenuItem } from "@/types/menu.types";
+import { useProductVariations } from "@/hooks/useProductVariations";
+import { optimizeImageUrl } from "@/utils/helpers";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -21,8 +23,6 @@ interface ProductDetailModalProps {
   item: MenuItem | null;
   onClose: () => void;
   onAddToCart: (item: MenuItem, quantity: number, extras: Set<string>) => void;
-  storeName: string;
-  storeImage: string;
 }
 
 export default function ProductDetailModal({
@@ -30,12 +30,18 @@ export default function ProductDetailModal({
   item,
   onClose,
   onAddToCart,
-  storeName,
-  storeImage,
 }: ProductDetailModalProps) {
   const insets = useSafeAreaInsets();
   const [quantity, setQuantity] = useState(1);
   const [selectedExtras, setSelectedExtras] = useState<Set<string>>(new Set());
+
+  const {
+    extras: variationExtras,
+    loading: variationsLoading,
+    error: variationsError,
+  } = useProductVariations(item?.id);
+
+  const effectiveExtras = variationExtras.length ? variationExtras : item?.extras ?? [];
 
   const toggleExtra = (extraId: string) => {
     const newExtras = new Set(selectedExtras);
@@ -50,19 +56,23 @@ export default function ProductDetailModal({
   const calculateTotalPrice = () => {
     if (!item) return 0;
     let total = item.price * quantity;
-    if (item.extras) {
-      item.extras.forEach((extra) => {
-        if (selectedExtras.has(extra.id)) {
-          total += extra.price * quantity;
-        }
-      });
-    }
+    effectiveExtras.forEach((extra) => {
+      if (selectedExtras.has(extra.id)) {
+        total += extra.price * quantity;
+      }
+    });
     return total;
   };
 
   const handleAddToCart = () => {
     if (item) {
-      onAddToCart(item, quantity, selectedExtras);
+      // Ensure extras come from DB variations when available
+      const enrichedItem: MenuItem = {
+        ...item,
+        extras: effectiveExtras,
+      };
+
+      onAddToCart(enrichedItem, quantity, selectedExtras);
       setQuantity(1);
       setSelectedExtras(new Set());
       onClose();
@@ -75,64 +85,10 @@ export default function ProductDetailModal({
     onClose();
   };
 
-  const extras = item?.extras ?? [];
-
-  const saucesExtras = extras.filter(
-    (e) =>
-      e.name.toLowerCase().includes("sauce") ||
-      e.name.toLowerCase().includes("ketchup") ||
-      e.name.toLowerCase().includes("mayonnaise") ||
-      e.name.toLowerCase().includes("mustard") ||
-      e.name.toLowerCase().includes("ranch") ||
-      e.name.toLowerCase().includes("bbq")
-  );
-
-  const drinksExtras = extras.filter(
-    (e) =>
-      e.name.toLowerCase().includes("cola") ||
-      e.name.toLowerCase().includes("sprite") ||
-      e.name.toLowerCase().includes("fanta") ||
-      e.name.toLowerCase().includes("ayran") ||
-      e.name.toLowerCase().includes("water") ||
-      e.name.toLowerCase().includes("juice") ||
-      e.name.toLowerCase().includes("tea") ||
-      e.name.toLowerCase().includes("coffee")
-  );
-
-  const sidesExtras = extras.filter(
-    (e) =>
-      e.name.toLowerCase().includes("fries") ||
-      e.name.toLowerCase().includes("rings") ||
-      e.name.toLowerCase().includes("salad") ||
-      e.name.toLowerCase().includes("bread") ||
-      e.name.toLowerCase().includes("rice") ||
-      e.name.toLowerCase().includes("soup")
-  );
-
-  const toppingsExtras = extras.filter(
-    (e) =>
-      e.name.toLowerCase().includes("cheese") ||
-      e.name.toLowerCase().includes("bacon") ||
-      e.name.toLowerCase().includes("patty") ||
-      e.name.toLowerCase().includes("egg") ||
-      e.name.toLowerCase().includes("mushroom") ||
-      e.name.toLowerCase().includes("olive") ||
-      e.name.toLowerCase().includes("jalapeño") ||
-      e.name.toLowerCase().includes("onion") ||
-      e.name.toLowerCase().includes("pickle")
-  );
-
-  const otherExtras = extras.filter(
-    (e) =>
-      !saucesExtras.includes(e) &&
-      !drinksExtras.includes(e) &&
-      !sidesExtras.includes(e) &&
-      !toppingsExtras.includes(e)
-  );
+  const extras = effectiveExtras;
 
   const renderExtraSection = (
     title: string,
-    subtitle: string,
     extras: MenuItem['extras']
   ) => {
     if (!extras || extras.length === 0) return null;
@@ -141,7 +97,6 @@ export default function ProductDetailModal({
       <View style={styles.extrasSection}>
         <View style={styles.extrasSectionHeader}>
           <Text style={styles.extrasSectionTitle}>{title}</Text>
-          <Text style={styles.extrasSectionSubtitle}>{subtitle}</Text>
         </View>
 
         {extras.map((extra) => (
@@ -204,11 +159,20 @@ export default function ProductDetailModal({
               showsVerticalScrollIndicator={false}
               bounces={true}
             >
+              {variationsLoading && (
+                <Text style={styles.variationStatusText}>Loading options…</Text>
+              )}
+              {!variationsLoading && variationsError && (
+                <Text style={styles.variationStatusText}>
+                  Failed to load options (showing base product).
+                </Text>
+              )}
               {item.image ? (
                 <Image
-                  source={{ uri: item.image }}
+                  source={{ uri: optimizeImageUrl(item.image) }}
                   style={styles.productImage}
                   contentFit="cover"
+                  cachePolicy="none"
                 />
               ) : (
                 <View style={styles.noImageContainer}>
@@ -229,49 +193,12 @@ export default function ProductDetailModal({
                 <Text style={styles.productPrice}>₺{item.price.toFixed(2)}</Text>
               </View>
 
-              {toppingsExtras &&
-                toppingsExtras.length > 0 &&
-                renderExtraSection(
-                  "Extra Toppings",
-                  "Add more flavor to your meal",
-                  toppingsExtras
-                )}
-
-              {sidesExtras &&
-                sidesExtras.length > 0 &&
-                renderExtraSection(
-                  "Side Orders",
-                  "Complete your meal",
-                  sidesExtras
-                )}
-
-              {saucesExtras &&
-                saucesExtras.length > 0 &&
-                renderExtraSection(
-                  "Sauces",
-                  "Choose your favorite sauces",
-                  saucesExtras
-                )}
-
-              {drinksExtras &&
-                drinksExtras.length > 0 &&
-                renderExtraSection(
-                  "Beverages",
-                  "Add a refreshing drink",
-                  drinksExtras
-                )}
-
-              {otherExtras &&
-                otherExtras.length > 0 &&
-                renderExtraSection(
-                  "Other Extras",
-                  "Additional options",
-                  otherExtras
-                )}
+              {extras.length > 0 &&
+                renderExtraSection("Options Choose Extras", extras)}
 
               <View style={styles.productModalScreenLabel}>
                 <Text style={styles.productModalScreenLabelText}>
-                  Product Detail Modal
+                  Product Detail Modal Screen
                 </Text>
               </View>
             </ScrollView>
@@ -408,6 +335,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "700" as const,
     color: "#FF6B35",
+  },
+  variationStatusText: {
+    fontSize: 12,
+    color: "#6B7280",
+    paddingHorizontal: 20,
+    paddingTop: 10,
   },
   extrasSection: {
     paddingHorizontal: 20,

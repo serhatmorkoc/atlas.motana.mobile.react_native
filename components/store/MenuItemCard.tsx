@@ -4,7 +4,8 @@ import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 
-import { MenuItem } from "@/mocks/menu-items";
+import { MenuItem } from "@/types/menu.types";
+import { optimizeImageUrl } from "@/utils/helpers";
 
 interface MenuItemCardProps {
   item: MenuItem;
@@ -31,9 +32,10 @@ export default function MenuItemCard({ item, onPress }: MenuItemCardProps) {
           <View style={styles.imageContainer}>
             {hasValidImage ? (
               <Image
-                source={{ uri: item.image }}
+                source={{ uri: optimizeImageUrl(item.image) }}
                 style={styles.menuItemImage}
                 contentFit="cover"
+                cachePolicy="none"
                 onError={() => setImageError(true)}
               />
             ) : (

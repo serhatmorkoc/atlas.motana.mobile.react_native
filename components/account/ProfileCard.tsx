@@ -1,9 +1,20 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
 import { User, Sparkles, Phone, ChevronRight } from "lucide-react-native";
 import { router } from "expo-router";
+import { useUser } from "@/hooks/useUser";
 
 export function ProfileCard() {
+  const { user, loading } = useUser();
+
+  if (loading) {
+    return (
+      <View style={styles.profileCard}>
+        <ActivityIndicator color="#FF6B35" />
+      </View>
+    );
+  }
+
   return (
     <TouchableOpacity 
       style={styles.profileCard}
@@ -20,10 +31,10 @@ export function ProfileCard() {
       </View>
       
       <View style={styles.profileInfo}>
-        <Text style={styles.profileName}>Barlas Ünal</Text>
+        <Text style={styles.profileName}>{user?.name || "User"}</Text>
         <View style={styles.phoneRow}>
           <Phone size={12} color="#9CA3AF" />
-          <Text style={styles.profilePhone}>+90 532 123 45 67</Text>
+          <Text style={styles.profilePhone}>{user?.phone || "No phone number"}</Text>
         </View>
       </View>
       

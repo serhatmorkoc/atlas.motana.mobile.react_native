@@ -16,6 +16,7 @@ import {
 import React, { useRef, useState } from "react";
 import {
   Animated,
+  RefreshControl,
   StyleSheet,
   Text,
   TextInput,
@@ -26,9 +27,11 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import MenuItemCard from "@/components/store/MenuItemCard";
 import ProductDetailModal from "@/components/store/ProductDetailModal";
+import LoadingScreen from "@/components/common/LoadingScreen";
 import { useCart, CartItem } from "@/contexts/CartContext";
-import { getMenuItemsByStore, MenuItem } from "@/mocks/menu-items";
-import { brandStores, stores } from "@/mocks/stores";
+import { useStore } from "@/hooks/useStores";
+import { useStoreMenu } from "@/hooks/useStoreMenu";
+import { MenuItem } from "@/types/menu.types";
 import { formatPrice } from "@/utils/formatters";
 
 const HEADER_HEIGHT = 260;
@@ -40,25 +43,32 @@ export default function StoreScreen() {
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
-  const allStores = [...stores, ...brandStores];
-  const store = allStores.find((r) => r.id === id);
-  const allMenuItems = getMenuItemsByStore(id as string);
-  const menuItems = searchQuery
-    ? allMenuItems.filter(
-        (item) =>
-          item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.description.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : allMenuItems;
-  const categories = Array.from(
-    new Set(menuItems.map((item) => item.category))
-  );
+  // Fetch store from GraphQL
+  const { store, loading: storeLoading, error: storeError, refetch: refetchStore } = useStore(id as string);
+  const {
+    categories,
+    menuItems,
+    loading: menuLoading,
+    error: menuError,
+    refetch: refetchMenu,
+  } = useStoreMenu(id as string, { search: searchQuery });
 
-  if (!store) {
-    return null;
+  if (storeLoading || menuLoading) {
+    return <LoadingScreen title="Loading store…" subtitle="Fetching menu & details" />;
   }
+  if (storeError || menuError || !store) return null;
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await Promise.all([refetchStore(), refetchMenu()]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const storeCartItems = cartItems.filter((item: CartItem) => item.storeId === id);
   const storeCartTotal = storeCartItems.reduce((sum: number, item: CartItem) => sum + getItemPrice(item), 0);
@@ -150,6 +160,13 @@ export default function StoreScreen() {
         contentContainerStyle={{ paddingBottom: insets.bottom + 20 }}
         onScroll={handleScroll}
         scrollEventThrottle={16}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#FF6B35"
+          />
+        }
       >
         <View style={styles.header}>
           <Image
@@ -228,7 +245,11 @@ export default function StoreScreen() {
             </View>
             <View style={styles.deliveryCardContent}>
               <Text style={styles.deliveryLabel} numberOfLines={1}>Min. Order</Text>
-              <Text style={styles.deliveryValue} numberOfLines={1}>₺50</Text>
+              <Text style={styles.deliveryValue} numberOfLines={1}>
+                {typeof store.minimumOrder === "number"
+                  ? formatPrice(store.minimumOrder)
+                  : "-"}
+              </Text>
             </View>
           </View>
         </View>

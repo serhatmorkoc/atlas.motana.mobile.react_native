@@ -3,13 +3,16 @@ import { Tabs } from "expo-router";
 import { Home, Search, ShoppingBag, User, ShoppingCart } from "lucide-react-native";
 import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { orders } from "@/mocks/orders";
 import { useCart } from "@/contexts/CartContext";
+import { useOrders } from "@/hooks/useOrders";
 
 export default function TabLayout() {
+  const { orders } = useOrders();
+  
+  // Count active orders (in_progress status includes: PENDING, CONFIRMED, PREPARING, READY, ON_WAY)
   const activeOrdersCount = useMemo(
     () => orders.filter((order) => order.status === "in_progress").length,
-    []
+    [orders]
   );
 
   const { totalItems } = useCart();

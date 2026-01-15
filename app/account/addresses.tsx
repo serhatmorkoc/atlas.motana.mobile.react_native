@@ -1,5 +1,5 @@
 import { ChevronLeft, MapPin, Plus, Home, Briefcase, Check, Edit2, Navigation, Trash2 } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -9,108 +9,69 @@ import {
   TextInput,
   Modal,
   Animated,
+  Alert,
+  RefreshControl,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
-
-type Address = {
-  id: number;
-  title: string;
-  address: string;
-  type: "home" | "work" | "other";
-  selected: boolean;
-  floor?: string;
-  building?: string;
-  street?: string;
-  landmark?: string;
-  city?: string;
-  district?: string;
-  region?: string;
-  postalCode?: string;
-  country?: string;
-  latitude?: number;
-  longitude?: number;
-};
-
-const mockAddresses: Address[] = [
-  {
-    id: 1,
-    title: "Home",
-    address: "Alemdağ Caddesi No:145, Ümraniye, Istanbul",
-    type: "home",
-    selected: true,
-    floor: "5",
-    building: "A Blok",
-    street: "Alemdağ Caddesi No:145",
-    landmark: "Near Ümraniye State Hospital",
-    city: "Istanbul",
-    district: "Ümraniye",
-    region: "Marmara",
-    postalCode: "34760",
-    country: "Turkey",
-    latitude: 41.0186,
-    longitude: 29.1256,
-  },
-  {
-    id: 2,
-    title: "Work",
-    address: "Büyükdere Caddesi No:193, Şişli, Istanbul",
-    type: "work",
-    selected: false,
-    floor: "12",
-    building: "Maya Akar Center",
-    street: "Büyükdere Caddesi No:193",
-    landmark: "Maya Akar Shopping Mall",
-    city: "Istanbul",
-    district: "Şişli",
-    region: "Marmara",
-    postalCode: "34394",
-    country: "Turkey",
-    latitude: 41.0614,
-    longitude: 28.9892,
-  },
-  {
-    id: 3,
-    title: "My Office",
-    address: "Polonezköy Caddesi No:47, Beykoz, Istanbul",
-    type: "other",
-    selected: false,
-    floor: "2",
-    building: "Villa Polonezkoy",
-    street: "Polonezköy Caddesi No:47",
-    landmark: "Near Polonezkoy Nature Park entrance",
-    city: "Istanbul",
-    district: "Beykoz",
-    region: "Marmara",
-    postalCode: "34829",
-    country: "Turkey",
-    latitude: 41.0667,
-    longitude: 29.0833,
-  },
-];
+import { router, useFocusEffect } from "expo-router";
+import { useUserAddresses, Address } from "@/hooks/useUserAddresses";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 export default function AddressesScreen() {
   const insets = useSafeAreaInsets();
-  const [addresses, setAddresses] = useState<Address[]>(mockAddresses);
+  const { addresses: dbAddresses, loading, error, refetch, deleteAddress, setSelectedAddress } = useUserAddresses();
   const [searchQuery, setSearchQuery] = useState("");
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
   const [addressToDelete, setAddressToDelete] = useState<Address | null>(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
+  const [refreshing, setRefreshing] = useState(false);
+  const [optimisticAddresses, setOptimisticAddresses] = useState<Address[] | null>(null);
+  
+  // Use optimistic addresses if available, otherwise use DB addresses
+  const addresses = optimisticAddresses || dbAddresses;
 
-  const handleSelectAddress = (id: number) => {
-    setAddresses(
+  // Refetch when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refetch();
+    }, [refetch])
+  );
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  const handleSelectAddress = async (id: string) => {
+    // Optimistic update - update UI immediately
+    setOptimisticAddresses(
       addresses.map((addr) => ({
         ...addr,
         selected: addr.id === id,
       }))
     );
+
+    // Then update in database
+    const result = await setSelectedAddress(id);
+    if (!result.success) {
+      // Revert optimistic update on error
+      setOptimisticAddresses(null);
+      Alert.alert("Error", result.error || "Failed to select address");
+    } else {
+      // Clear optimistic state after successful update
+      setOptimisticAddresses(null);
+    }
   };
 
   const handleEdit = (address: Address) => {
     router.push({
       pathname: "/account/edit-address" as any,
       params: {
-        id: address.id.toString(),
+        id: address.id,
         title: address.title,
         floor: address.floor || "",
         building: address.building || "",
@@ -129,7 +90,10 @@ export default function AddressesScreen() {
   };
 
   const handleDeletePress = (address: Address) => {
-    if (address.selected) return;
+    if (address.selected) {
+      Alert.alert("Cannot Delete", "You cannot delete the selected address. Please select another address first.");
+      return;
+    }
     setAddressToDelete(address);
     setDeleteModalVisible(true);
     Animated.timing(fadeAnim, {
@@ -139,11 +103,16 @@ export default function AddressesScreen() {
     }).start();
   };
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = async () => {
     if (addressToDelete) {
-      setAddresses(addresses.filter((a) => a.id !== addressToDelete.id));
+      const result = await deleteAddress(addressToDelete.id);
+      if (result.success) {
+        handleCloseDeleteModal();
+      } else {
+        Alert.alert("Error", result.error || "Failed to delete address");
+        handleCloseDeleteModal();
+      }
     }
-    handleCloseDeleteModal();
   };
 
   const handleCloseDeleteModal = () => {
@@ -179,6 +148,35 @@ export default function AddressesScreen() {
         );
     }
   };
+
+  if (loading && addresses.length === 0) {
+    return <LoadingScreen />;
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              onPress={() => router.back()}
+              style={styles.backButton}
+            >
+              <ChevronLeft color="#1F2937" size={24} />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>Delivery Address</Text>
+            <View style={styles.headerSpacer} />
+          </View>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Failed to load addresses</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
 
   const filteredAddresses = addresses.filter((addr) =>
     addr.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -247,6 +245,9 @@ export default function AddressesScreen() {
           { paddingBottom: insets.bottom + 100 },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         <View style={styles.searchContainer}>
           <MapPin color="#9CA3AF" size={18} />
@@ -261,7 +262,17 @@ export default function AddressesScreen() {
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Saved Addresses</Text>
-          {filteredAddresses.map(renderAddressCard)}
+          {filteredAddresses.length === 0 ? (
+            <View style={styles.emptyContainer}>
+              <MapPin size={48} color="#D1D5DB" />
+              <Text style={styles.emptyText}>No addresses found</Text>
+              <Text style={styles.emptySubtext}>
+                {searchQuery ? "Try a different search" : "Add your first address to get started"}
+              </Text>
+            </View>
+          ) : (
+            filteredAddresses.map(renderAddressCard)
+          )}
         </View>
 
         <TouchableOpacity 
@@ -291,9 +302,6 @@ export default function AddressesScreen() {
           </Text>
         </View>
 
-        <View style={styles.screenLabel}>
-          <Text style={styles.screenLabelText}>Account / Addresses Screen</Text>
-        </View>
       </ScrollView>
 
       <Modal
@@ -642,14 +650,45 @@ const styles = StyleSheet.create({
     fontWeight: "600" as const,
     color: "#FFFFFF",
   },
-  screenLabel: {
-    paddingVertical: 12,
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center" as const,
     alignItems: "center" as const,
-    marginTop: 16,
+    padding: 24,
   },
-  screenLabelText: {
-    fontSize: 10,
-    color: "#D1D5DB",
-    fontWeight: "500" as const,
+  errorText: {
+    fontSize: 16,
+    color: "#6B7280",
+    marginBottom: 16,
+    textAlign: "center" as const,
+  },
+  retryButton: {
+    backgroundColor: "#FF6B35",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600" as const,
+  },
+  emptyContainer: {
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    paddingVertical: 48,
+    paddingHorizontal: 24,
+  },
+  emptyText: {
+    fontSize: 16,
+    fontWeight: "600" as const,
+    color: "#1F2937",
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  emptySubtext: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center" as const,
   },
 });

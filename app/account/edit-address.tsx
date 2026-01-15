@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
 import MapView, { Region } from "react-native-maps";
 import * as Location from "expo-location";
+import { useUserAddresses } from "@/hooks/useUserAddresses";
 
 const addressTypes = [
   { id: "home", label: "Home", icon: Home },
@@ -39,6 +40,8 @@ export default function EditAddressScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams();
   const mapRef = useRef<MapView>(null);
+  const { updateAddress, updating } = useUserAddresses();
+  const addressId = params.id as string;
   
   const [form, setForm] = useState({
     title: (params.title as string) || "",
@@ -53,7 +56,9 @@ export default function EditAddressScreen() {
     country: (params.country as string) || "",
   });
 
-  const [selectedType, setSelectedType] = useState((params.type as string) || "home");
+  const [selectedType, setSelectedType] = useState<"home" | "work" | "other">(
+    (params.type as "home" | "work" | "other") || "home"
+  );
   const [focusedField, setFocusedField] = useState<string | null>(null);
   
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -232,9 +237,32 @@ export default function EditAddressScreen() {
     getCurrentLocation();
   };
 
-  const handleSave = () => {
-    console.log("Saving address:", { ...form, type: selectedType });
-    router.back();
+  const handleSave = async () => {
+    if (!isFormValid || !addressId) return;
+
+    const result = await updateAddress(addressId, {
+      label: form.title,
+      type: selectedType,
+      street: form.street,
+      district: form.district,
+      city: form.city,
+      region: form.region,
+      postalCode: form.postalCode,
+      country: form.country,
+      building: form.building,
+      floor: form.floor,
+      landmark: form.landmark,
+      latitude: selectedLocation?.latitude,
+      longitude: selectedLocation?.longitude,
+    });
+
+    if (result.success) {
+      Alert.alert("Success", "Address updated successfully", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } else {
+      Alert.alert("Error", result.error || "Failed to update address");
+    }
   };
 
   const isFormValid = form.title.trim() !== "" && form.street.trim() !== "" && form.city.trim() !== "";
@@ -579,19 +607,22 @@ export default function EditAddressScreen() {
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.saveButton, !isFormValid && styles.saveButtonDisabled]}
+              style={[styles.saveButton, (!isFormValid || updating) && styles.saveButtonDisabled]}
               onPress={handleSave}
               activeOpacity={0.7}
-              disabled={!isFormValid}
+              disabled={!isFormValid || updating}
             >
-              <Check size={18} color="#FFFFFF" />
-              <Text style={styles.saveButtonText}>Save Address</Text>
+              {updating ? (
+                <ActivityIndicator size="small" color="#FFFFFF" />
+              ) : (
+                <Check size={18} color="#FFFFFF" />
+              )}
+              <Text style={styles.saveButtonText}>
+                {updating ? "Saving..." : "Save Address"}
+              </Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.screenLabel}>
-            <Text style={styles.screenLabelText}>Account / Edit Address Screen</Text>
-          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

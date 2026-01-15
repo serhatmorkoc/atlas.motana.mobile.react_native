@@ -1,6 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import {
   ScrollView,
+  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -13,8 +14,12 @@ import { router } from "expo-router";
 import { Bike } from "lucide-react-native";
 
 import { offers } from "@/mocks/offers";
-import { brandStores, stores } from "@/mocks/stores";
 import { categories } from "@/constants/categories";
+import { useStores } from "@/hooks/useStores";
+import { Store } from "@/types/store.types";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { useUserAddresses } from "@/hooks/useUserAddresses";
+import { useFocusEffect } from "expo-router";
 
 import { 
   CategoryCard, 
@@ -31,33 +36,66 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const offerScrollRef = useRef<ScrollView>(null);
   const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
   const totalOffers = offers.length;
   
-  const loopedOffers = [...offers, ...offers, ...offers];
-  const initialScrollIndex = offers.length;
+  const { stores, loading: storesLoading, error: storesError, refetch } = useStores({
+    limit: 50, // Fetch more stores for filtering
+    isActive: true,
+    isAvailable: true,
+  });
 
-  const popularStores = stores.slice(0, 10);
-  const newStores = [...stores].reverse().slice(0, 10);
-  const topRatedStores = [...stores]
-    .sort((a, b) => b.rating - a.rating)
-    .slice(0, 10);
-  const fastestStores = [...stores]
-    .sort(
+  // Fetch selected address
+  const { addresses, loading: addressesLoading, refetch: refetchAddresses } = useUserAddresses();
+  const selectedAddress = React.useMemo(() => {
+    const found = addresses.find(addr => addr.selected);
+    return found ? { title: found.title, address: found.address } : null;
+  }, [addresses]);
+
+  // Refetch address when screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      refetchAddresses();
+    }, [refetchAddresses])
+  );
+
+  const onRefresh = async () => {
+    try {
+      setRefreshing(true);
+      await Promise.all([refetch(), refetchAddresses()]);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+  
+  // Memoize store lists to prevent unnecessary recalculations
+  const brandStores = useMemo(() => stores.slice(0, 10), [stores]);
+  const popularStores = useMemo(() => stores.slice(0, 10), [stores]);
+  const newStores = useMemo(() => [...stores].reverse().slice(0, 10), [stores]);
+  const topRatedStores = useMemo(() => 
+    [...stores].sort((a, b) => b.rating - a.rating).slice(0, 10), 
+    [stores]
+  );
+  const fastestStores = useMemo(() => 
+    [...stores].sort(
       (a, b) =>
         parseInt(a.deliveryTime.split("-")[0]) -
         parseInt(b.deliveryTime.split("-")[0])
-    )
-    .slice(0, 10);
-  const budgetFriendly = [...stores]
-    .sort((a, b) => parseInt(a.deliveryFee.replace('₺', '')) - parseInt(b.deliveryFee.replace('₺', '')))
-    .slice(0, 10);
-  const fineDining = [...stores]
-    .filter(r => r.rating >= 4.7)
-    .slice(0, 10);
-  const reorderedBrands = [
-    ...brandStores.slice(2),
-    ...brandStores.slice(0, 2)
-  ];
+    ).slice(0, 10),
+    [stores]
+  );
+  const budgetFriendly = useMemo(() => 
+    [...stores].sort((a, b) => parseInt(a.deliveryFee.replace('₺', '')) - parseInt(b.deliveryFee.replace('₺', ''))).slice(0, 10),
+    [stores]
+  );
+  const fineDining = useMemo(() => 
+    stores.filter(r => r.rating >= 4.7).slice(0, 10),
+    [stores]
+  );
+  const reorderedBrands = brandStores;
+  
+  const loopedOffers = useMemo(() => [...offers, ...offers, ...offers], []);
+  const initialScrollIndex = offers.length;
 
   useEffect(() => {
     setTimeout(() => {
@@ -113,9 +151,56 @@ export default function HomeScreen() {
     }
   };
 
+  if (storesLoading) {
+    return (
+      <LoadingScreen title="Loading stores…" />
+    );
+  }
+
+  if (storesError) {
+    return (
+      <View style={styles.container}>
+        <HomeHeader insets={insets} selectedAddress={selectedAddress} />
+        <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
+          <Text style={{ color: "#DC2626", fontWeight: "700" }}>Failed to load stores</Text>
+          <Text style={{ color: "#6B7280", marginTop: 6 }}>
+            {String(storesError.message || storesError)}
+          </Text>
+          <TouchableOpacity
+            onPress={onRefresh}
+            activeOpacity={0.85}
+            style={{
+              marginTop: 14,
+              alignSelf: "flex-start",
+              paddingVertical: 10,
+              paddingHorizontal: 14,
+              borderRadius: 12,
+              backgroundColor: "#FF6B35",
+            }}
+          >
+            <Text style={{ color: "#FFFFFF", fontWeight: "700" }}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  if (stores.length === 0) {
+    return (
+      <View style={styles.container}>
+        <HomeHeader insets={insets} selectedAddress={selectedAddress} />
+        <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
+          <Text style={{ color: "#6B7280", fontWeight: "600" }}>
+            No stores found in DB.
+          </Text>
+        </View>
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <HomeHeader insets={insets} />
+      <HomeHeader insets={insets} selectedAddress={selectedAddress ? { title: selectedAddress.title, address: selectedAddress.address } : null} />
 
       <ScrollView
         style={styles.scrollView}
@@ -124,6 +209,13 @@ export default function HomeScreen() {
           { paddingBottom: 16 },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#FF6B35"
+          />
+        }
       >
         <View style={styles.categoriesSection}>
           <View style={styles.categoriesGrid}>
@@ -305,9 +397,7 @@ export default function HomeScreen() {
             ))}
           </View>
         </View>
-
         <View style={styles.footerLogo}>
-          <Text style={styles.logoText}>motana</Text>
           <Text style={styles.screenLabelText}>Home Screen</Text>
         </View>
       </ScrollView>
@@ -315,7 +405,7 @@ export default function HomeScreen() {
   );
 }
 
-function GridStoreCard({ store }: { store: typeof stores[0] }) {
+function GridStoreCard({ store }: { store: Store }) {
   return (
     <TouchableOpacity 
       style={styles.gridCard}
@@ -401,7 +491,7 @@ const styles = StyleSheet.create({
   },
   horizontalScroll: {
     paddingHorizontal: 16,
-    gap: 16,
+    gap: 2,
   },
   offerScroll: {
     paddingHorizontal: OFFER_SIDE_SPACING,

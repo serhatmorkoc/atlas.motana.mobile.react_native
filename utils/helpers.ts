@@ -9,7 +9,7 @@ export function debounce<T extends (...args: any[]) => any>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
-  let timeout: NodeJS.Timeout | null = null;
+  let timeout: ReturnType<typeof setTimeout> | null = null;
   
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
@@ -83,3 +83,29 @@ export function parseDeliveryTime(timeRange: string): number {
   return match ? parseInt(match[1], 10) : 0;
 }
 
+/**
+ * Optimize Supabase storage image URL with transformation parameters
+ */
+export function optimizeImageUrl(url: string | null | undefined): string {
+  if (!url) return '';
+  
+  // Check if it's a Supabase storage URL (check for both render/image and object/public paths)
+  const isSupabaseStorage = url.includes('supabase.co/storage/v1/');
+  
+  if (isSupabaseStorage) {
+    // Check if optimization parameters already exist
+    if (url.includes('width=') && url.includes('height=') && url.includes('quality=')) {
+      // Already optimized, return as is
+      return url;
+    }
+    
+    // Remove existing query parameters if any to avoid duplicates
+    const urlWithoutParams = url.split('?')[0];
+    
+    // Add transformation parameters (without timestamp to avoid constant re-renders)
+    return `${urlWithoutParams}?width=400&height=300&quality=80&resize=cover`;
+  }
+  
+  // Return original URL if it's not a Supabase storage URL
+  return url;
+}

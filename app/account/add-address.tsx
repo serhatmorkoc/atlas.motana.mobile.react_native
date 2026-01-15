@@ -16,6 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import MapView, { Region } from "react-native-maps";
 import * as Location from "expo-location";
+import { useUserAddresses } from "@/hooks/useUserAddresses";
 
 const addressTypes = [
   { id: "home", label: "Home", icon: Home },
@@ -38,6 +39,7 @@ interface GeocodedAddress {
 export default function AddAddressScreen() {
   const insets = useSafeAreaInsets();
   const mapRef = useRef<MapView>(null);
+  const { createAddress, creating } = useUserAddresses();
   
   const [form, setForm] = useState({
     title: "",
@@ -52,7 +54,7 @@ export default function AddAddressScreen() {
     country: "",
   });
 
-  const [selectedType, setSelectedType] = useState("home");
+  const [selectedType, setSelectedType] = useState<"home" | "work" | "other">("home");
   const [focusedField, setFocusedField] = useState<string | null>(null);
   
   const [selectedLocation, setSelectedLocation] = useState<{
@@ -233,9 +235,44 @@ export default function AddAddressScreen() {
     getCurrentLocation();
   };
 
-  const handleSave = () => {
-    console.log("Saving new address:", { ...form, type: selectedType });
-    router.back();
+  const handleSave = async () => {
+    if (!isFormValid) return;
+
+    const result = await createAddress({
+      label: form.title || mapTypeToLabel(selectedType),
+      type: selectedType,
+      street: form.street,
+      district: form.district,
+      city: form.city,
+      region: form.region,
+      postalCode: form.postalCode,
+      country: form.country,
+      building: form.building,
+      floor: form.floor,
+      landmark: form.landmark,
+      latitude: selectedLocation?.latitude,
+      longitude: selectedLocation?.longitude,
+      is_selected: false, // New addresses are not selected by default
+    });
+
+    if (result.success) {
+      Alert.alert("Success", "Address added successfully", [
+        { text: "OK", onPress: () => router.back() },
+      ]);
+    } else {
+      Alert.alert("Error", result.error || "Failed to add address");
+    }
+  };
+
+  const mapTypeToLabel = (type: "home" | "work" | "other"): string => {
+    switch (type) {
+      case "home":
+        return "Home";
+      case "work":
+        return "Work";
+      default:
+        return "Other";
+    }
   };
 
   const isFormValid = form.title.trim() !== "" && form.street.trim() !== "" && form.city.trim() !== "";
@@ -577,13 +614,19 @@ export default function AddAddressScreen() {
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
-                style={[styles.saveButton, !isFormValid && styles.saveButtonDisabled]}
+                style={[styles.saveButton, (!isFormValid || creating) && styles.saveButtonDisabled]}
                 onPress={handleSave}
                 activeOpacity={0.7}
-                disabled={!isFormValid}
+                disabled={!isFormValid || creating}
               >
-                <Plus size={18} color="#FFFFFF" />
-                <Text style={styles.saveButtonText}>Add Address</Text>
+                {creating ? (
+                  <ActivityIndicator size="small" color="#FFFFFF" />
+                ) : (
+                  <Plus size={18} color="#FFFFFF" />
+                )}
+                <Text style={styles.saveButtonText}>
+                  {creating ? "Adding..." : "Add Address"}
+                </Text>
               </TouchableOpacity>
             </View>
 

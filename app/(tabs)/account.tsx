@@ -1,7 +1,8 @@
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Animated } from "react-native";
+import { StyleSheet, Text, View, ScrollView, TouchableOpacity, Animated, RefreshControl } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
+import { useUser } from "@/hooks/useUser";
 
 import {
   ShoppingBag,
@@ -21,6 +22,17 @@ export default function AccountScreen() {
   const insets = useSafeAreaInsets();
   const [logoutModalVisible, setLogoutModalVisible] = React.useState(false);
   const fadeAnim = React.useState(new Animated.Value(0))[0];
+  const [refreshing, setRefreshing] = useState(false);
+  const { refetch: refetchUser } = useUser();
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetchUser();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const handleLogoutPress = () => {
     setLogoutModalVisible(true);
@@ -59,6 +71,14 @@ export default function AccountScreen() {
           { paddingBottom: insets.bottom + 100 },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            tintColor="#FF6B35"
+            colors={["#FF6B35"]}
+          />
+        }
       >
 
         <ProfileCard />
@@ -75,7 +95,7 @@ export default function AccountScreen() {
               subtitle="Track and view order history"
               showBadge
               badgeCount={2}
-              onPress={() => router.push("/account/orders" as any)}
+              onPress={() => router.push("/(tabs)/orders" as any)}
             />
             <MenuItem
               icon={<CreditCard size={20} color="#6B7280" />}

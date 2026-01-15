@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View, Dimensions } from "react-nati
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Bike } from "lucide-react-native";
+import { optimizeImageUrl } from "@/utils/helpers";
 
 const { width } = Dimensions.get("window");
 const STORE_CARD_WIDTH = width * 0.55;
@@ -31,7 +32,7 @@ export function StoreCard({ store }: StoreCardProps) {
     >
       <View style={styles.storeImageContainer}>
         <Image
-          source={{ uri: store.image }}
+          source={{ uri: optimizeImageUrl(store.image) }}
           style={styles.storeImage}
           contentFit="cover"
           placeholder="|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj["
@@ -73,6 +74,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginRight: 12,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,

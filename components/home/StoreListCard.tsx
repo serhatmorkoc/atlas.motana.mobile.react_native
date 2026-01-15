@@ -4,6 +4,7 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Star, MapPin, Clock, ChevronRight } from "lucide-react-native";
 import { MenuItem } from "@/mocks/menu-items";
+import { optimizeImageUrl } from "@/utils/helpers";
 
 const { width } = Dimensions.get("window");
 
@@ -42,9 +43,10 @@ export function StoreListCard({ store, menuItems = [] }: StoreListCardProps) {
         <View style={styles.headerLeft}>
           <View style={styles.logoContainer}>
             <Image
-              source={{ uri: store.image }}
+              source={{ uri: optimizeImageUrl(store.image) }}
               style={styles.logo}
               contentFit="cover"
+              cachePolicy="none"
             />
           </View>
           <View style={styles.headerContent}>
@@ -91,9 +93,10 @@ export function StoreListCard({ store, menuItems = [] }: StoreListCardProps) {
               activeOpacity={0.7}
             >
               <Image
-                source={{ uri: item.image }}
+                source={{ uri: optimizeImageUrl(item.image) }}
                 style={styles.menuItemImage}
                 contentFit="cover"
+                cachePolicy="none"
               />
               <View style={styles.menuItemOverlay}>
                 <Text style={styles.menuItemName} numberOfLines={1}>

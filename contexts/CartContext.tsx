@@ -1,6 +1,6 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useCallback, useMemo } from 'react';
-import { MenuItem, MenuItemExtra } from '@/mocks/menu-items';
+import { MenuItem, MenuItemExtra } from '@/types/menu.types';
 
 export interface CartItem {
   id: string;

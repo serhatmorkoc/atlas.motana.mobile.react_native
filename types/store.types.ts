@@ -11,6 +11,9 @@ export interface Store {
   cuisine: string;
   deliveryFee: string;
   distance: string;
+  deliveryTimeMin?: number;
+  deliveryTimeMax?: number;
+  minimumOrder?: number;
 }
 
 export interface StoreDetails extends Store {

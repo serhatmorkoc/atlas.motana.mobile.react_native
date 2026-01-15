@@ -42,6 +42,7 @@ export default function OrderConfirmationScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
     orderId: string;
+    orderCode?: string; // order_code from DB (e.g., ORD-849078)
     storeName: string;
     total: string;
     subtotal: string;
@@ -185,7 +186,7 @@ export default function OrderConfirmationScreen() {
               <Package size={18} color="#FF6B35" strokeWidth={2} />
               <Text style={styles.orderIdLabel}>Order No</Text>
             </View>
-            <Text style={styles.orderId}>#{params.orderId}</Text>
+            <Text style={styles.orderId}>{params.orderCode || `#${params.orderId}`}</Text>
           </View>
 
           <View style={styles.divider} />

@@ -6,9 +6,17 @@ import { EdgeInsets } from "react-native-safe-area-context";
 
 interface HomeHeaderProps {
   insets: EdgeInsets;
+  selectedAddress?: {
+    title: string;
+    address: string;
+  } | null;
 }
 
-export function HomeHeader({ insets }: HomeHeaderProps) {
+export function HomeHeader({ insets, selectedAddress }: HomeHeaderProps) {
+  const addressDisplay = selectedAddress
+    ? `${selectedAddress.title}, ${selectedAddress.address}`
+    : "Select delivery address";
+
   return (
     <View
       style={[
@@ -30,7 +38,7 @@ export function HomeHeader({ insets }: HomeHeaderProps) {
           onPress={() => router.push("/account/addresses" as any)}
         >
           <MapPin color="#FFFFFF" size={14} />
-          <Text style={styles.addressText} numberOfLines={1}>Home, 113 Vakthang Gorgasali St.</Text>
+          <Text style={styles.addressText} numberOfLines={1}>{addressDisplay}</Text>
           <ChevronDown color="#FFFFFF" size={14} />
         </TouchableOpacity>
 

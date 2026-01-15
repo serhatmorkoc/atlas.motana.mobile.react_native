@@ -21,7 +21,8 @@
         "NSLocationAlwaysUsageDescription": "Allow $(PRODUCT_NAME) to use your location.",
         "NSLocationWhenInUseUsageDescription": "Allow $(PRODUCT_NAME) to use your location.",
         "UIBackgroundModes": [
-          "location"
+          "location",
+          "remote-notification"
         ]
       }
     },
@@ -62,7 +63,8 @@
           "sounds": [
             "./local/assets/notification_sound.wav"
           ],
-          "enableBackgroundRemoteNotifications": false
+          "enableBackgroundRemoteNotifications": true,
+          "mode": "production"
         }
       ],
       [

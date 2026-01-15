@@ -1,5 +1,5 @@
 import { Image } from "expo-image";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import {
   Clock,
   CheckCircle,
@@ -8,7 +8,7 @@ import {
   Package,
   RotateCcw,
 } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -18,8 +18,13 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { orders, Order } from "@/mocks/orders";
+import { Order, DBOrderStatus } from "@/types/order.types";
 import { formatDate } from "@/utils/formatters";
+import { useOrders } from "@/hooks/useOrders";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { RefreshControl } from "react-native";
+import { ORDER_STATUS_COLORS } from "@/constants/orderStatus";
+import { optimizeImageUrl } from "@/utils/helpers";
 
 type FilterType = "all" | "in_progress" | "delivered" | "cancelled";
 
@@ -33,14 +38,69 @@ const filterOptions: { key: FilterType; label: string }[] = [
 export default function OrdersScreen() {
   const insets = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
+  
+  const { orders, loading, error, refetch } = useOrders();
+
+  // Refetch orders when screen comes into focus (tab navigation)
+  useFocusEffect(
+    useCallback(() => {
+      console.log('[Orders Screen] Screen focused, refetching orders...');
+      refetch();
+    }, [refetch])
+  );
 
   const filteredOrders = orders.filter((order) => {
     if (activeFilter === "all") return true;
     return order.status === activeFilter;
   });
 
-  const getStatusIcon = (status: Order["status"]) => {
-    switch (status) {
+  const [refreshing, setRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
+  if (loading && !refreshing) {
+    return <LoadingScreen title="Loading orders..." subtitle="Please wait" />;
+  }
+
+  if (error) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
+          <Text style={styles.headerTitle}>My Orders</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Failed to load orders</Text>
+          <TouchableOpacity style={styles.retryButton} onPress={() => refetch()}>
+            <Text style={styles.retryButtonText}>Retry</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    );
+  }
+
+  const getStatusIcon = (order: Order) => {
+    // Use rawStatus for icon color if available
+    if (order.rawStatus) {
+      const colors = ORDER_STATUS_COLORS[order.rawStatus];
+      if (order.rawStatus === 'DELIVERED') {
+        return <CheckCircle size={16} color={colors.textDark} />;
+      }
+      if (order.rawStatus === 'CANCELLED') {
+        return <XCircle size={16} color={colors.textDark} />;
+      }
+      // For active statuses, use Clock icon
+      return <Clock size={16} color={colors.textDark} />;
+    }
+    
+    // Fallback to mapped status
+    switch (order.status) {
       case "in_progress":
         return <Clock size={16} color="#F59E0B" />;
       case "delivered":
@@ -50,8 +110,24 @@ export default function OrdersScreen() {
     }
   };
 
-  const getStatusText = (status: Order["status"]) => {
-    switch (status) {
+  const getStatusText = (order: Order) => {
+    // Use raw DB status if available, otherwise use mapped status
+    if (order.rawStatus) {
+      // Format DB status for display
+      const statusMap: Record<string, string> = {
+        'PENDING': 'Pending',
+        'CONFIRMED': 'Confirmed',
+        'PREPARING': 'Preparing',
+        'READY': 'Ready',
+        'ON_WAY': 'On Way',
+        'DELIVERED': 'Delivered',
+        'CANCELLED': 'Cancelled',
+      };
+      return statusMap[order.rawStatus] || order.rawStatus;
+    }
+    
+    // Fallback to mapped status
+    switch (order.status) {
       case "in_progress":
         return "In Progress";
       case "delivered":
@@ -61,14 +137,25 @@ export default function OrdersScreen() {
     }
   };
 
-  const getStatusStyle = (status: Order["status"]) => {
-    switch (status) {
+  const getStatusStyle = (order: Order) => {
+    // Use rawStatus for colors if available
+    if (order.rawStatus && ORDER_STATUS_COLORS[order.rawStatus]) {
+      const colors = ORDER_STATUS_COLORS[order.rawStatus];
+      return {
+        backgroundColor: colors.background,
+        color: colors.text,
+        borderColor: colors.border,
+      };
+    }
+    
+    // Fallback to mapped status
+    switch (order.status) {
       case "in_progress":
-        return { backgroundColor: "#FEF3C7", color: "#92400E" };
+        return { backgroundColor: "#FEF3C7", color: "#92400E", borderColor: "rgba(234, 179, 8, 0.2)" };
       case "delivered":
-        return { backgroundColor: "#D1FAE5", color: "#065F46" };
+        return { backgroundColor: "#D1FAE5", color: "#065F46", borderColor: "rgba(34, 197, 94, 0.2)" };
       case "cancelled":
-        return { backgroundColor: "#FEE2E2", color: "#991B1B" };
+        return { backgroundColor: "#FEE2E2", color: "#991B1B", borderColor: "rgba(239, 68, 68, 0.2)" };
     }
   };
 
@@ -92,7 +179,7 @@ export default function OrdersScreen() {
   };
 
   const renderOrderCard = (order: Order) => {
-    const statusStyle = getStatusStyle(order.status);
+    const statusStyle = getStatusStyle(order);
     return (
       <TouchableOpacity
         key={order.id}
@@ -102,22 +189,32 @@ export default function OrdersScreen() {
       >
         <View style={styles.orderHeader}>
           <Image
-            source={{ uri: order.storeImage }}
+            source={{ uri: optimizeImageUrl(order.storeImage) }}
             style={styles.storeImage}
             contentFit="cover"
+            cachePolicy="none"
           />
           <View style={styles.orderHeaderInfo}>
-            <Text style={styles.storeName}>{order.storeName}</Text>
+            <View style={styles.storeNameRow}>
+              <Text style={styles.storeName}>{order.storeName}</Text>
+              {order.orderCode && (
+                <Text style={styles.orderCode}>{order.orderCode}</Text>
+              )}
+            </View>
             <Text style={styles.orderDate}>{formatDate(order.date, 'en-US')}</Text>
             <View
               style={[
                 styles.statusBadge,
-                { backgroundColor: statusStyle.backgroundColor },
+                { 
+                  backgroundColor: statusStyle.backgroundColor,
+                  borderColor: statusStyle.borderColor || 'transparent',
+                  borderWidth: 1,
+                },
               ]}
             >
-              {getStatusIcon(order.status)}
+              {getStatusIcon(order)}
               <Text style={[styles.statusText, { color: statusStyle.color }]}>
-                {getStatusText(order.status)}
+                {getStatusText(order)}
               </Text>
             </View>
           </View>
@@ -202,6 +299,9 @@ export default function OrdersScreen() {
           { paddingBottom: insets.bottom + 20 },
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
       >
         {filteredOrders.length > 0 ? (
           <>
@@ -292,11 +392,27 @@ const styles = StyleSheet.create({
     flex: 1,
     marginLeft: 12,
   },
+  storeNameRow: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "space-between" as const,
+    marginBottom: 2,
+  },
   storeName: {
     fontSize: 16,
     fontWeight: "700" as const,
     color: "#1F2937",
-    marginBottom: 2,
+    flex: 1,
+  },
+  orderCode: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: "#6B7280",
+    backgroundColor: "#F3F4F6",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    marginLeft: 8,
   },
   orderDate: {
     fontSize: 12,
@@ -401,6 +517,29 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9CA3AF",
     textAlign: "center" as const,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    padding: 32,
+    gap: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    color: "#EF4444",
+    textAlign: "center" as const,
+  },
+  retryButton: {
+    backgroundColor: "#FF6B35",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryButtonText: {
+    color: "#FFFFFF",
+    fontSize: 14,
+    fontWeight: "600" as const,
   },
   screenLabel: {
     paddingVertical: 12,

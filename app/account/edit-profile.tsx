@@ -1,5 +1,5 @@
-import { ChevronLeft, User, Mail, Phone, Camera, Check } from "lucide-react-native";
-import React, { useState } from "react";
+import { ChevronLeft, User, Mail, Phone, Camera, Check, Loader2 } from "lucide-react-native";
+import React, { useState, useEffect } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -9,26 +9,63 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { useUser } from "@/hooks/useUser";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
+  const { user, loading, updateProfile, updating } = useUser();
   
   const [form, setForm] = useState({
-    firstName: "Barlas",
-    lastName: "Ünal",
-    email: "john.doe@example.com",
-    phone: "+995 555 123 456",
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
   });
+
+  // Populate form with user data
+  useEffect(() => {
+    if (user) {
+      const nameParts = (user.name || "").split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.slice(1).join(" ") || "";
+      
+      setForm({
+        firstName,
+        lastName,
+        email: user.email || "",
+        phone: user.phone || "",
+      });
+    }
+  }, [user]);
 
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
-  const handleSave = () => {
-    console.log("Saving profile:", form);
-    router.back();
+  const handleSave = async () => {
+    const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
+    
+    const result = await updateProfile({
+      name: fullName,
+      email: form.email.trim(),
+      phone: form.phone.trim(),
+    });
+
+    if (result.success) {
+      Alert.alert("Success", "Profile updated successfully!");
+      router.back();
+    } else {
+      Alert.alert("Error", result.error || "Failed to update profile");
+    }
   };
+
+  if (loading) {
+    return <LoadingScreen title="Loading profile..." subtitle="Please wait" />;
+  }
 
   const isFormValid = 
     form.firstName.trim() !== "" && 
@@ -173,13 +210,19 @@ export default function EditProfileScreen() {
             <Text style={styles.cancelButtonText}>Cancel</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.saveButton, !isFormValid && styles.saveButtonDisabled]}
+            style={[styles.saveButton, (!isFormValid || updating) && styles.saveButtonDisabled]}
             onPress={handleSave}
             activeOpacity={0.7}
-            disabled={!isFormValid}
+            disabled={!isFormValid || updating}
           >
-            <Check size={18} color="#FFFFFF" />
-            <Text style={styles.saveButtonText}>Save Changes</Text>
+            {updating ? (
+              <ActivityIndicator color="#FFFFFF" size="small" />
+            ) : (
+              <Check size={18} color="#FFFFFF" />
+            )}
+            <Text style={styles.saveButtonText}>
+              {updating ? "Saving..." : "Save Changes"}
+            </Text>
           </TouchableOpacity>
         </View>
 

@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react-native";
 import React, { useState } from "react";
 import {
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,9 +13,39 @@ import {
   Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useMutation } from "@apollo/client/react";
+import { useQuery } from "@apollo/client/react";
+import { apolloClient } from "@/lib/apollo/client";
 
 import { useCart, CartItem, CartStoreGroup } from "@/contexts/CartContext";
 import { formatPrice, DELIVERY_FEE, SERVICE_FEE } from "@/utils";
+import { CREATE_ORDER, CREATE_ORDER_ITEMS } from "@/lib/apollo/mutations/orders";
+import { GET_USER_BY_ID, GET_USER_ADDRESSES } from "@/lib/apollo/queries/users";
+import { GET_STORE_BY_ID } from "@/lib/apollo/queries/stores";
+
+const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
+
+type Edge<T> = { node: T };
+type User = { id: string; name: string | null; email: string | null; phone: string | null };
+type UserAddress = {
+  id: string;
+  user_id: string | null;
+  label: string | null;
+  delivery_address: string | null;
+  details: string | null;
+  building: string | null;
+  floor: string | null;
+  landmark: string | null;
+  latitude: string | null;
+  longitude: string | null;
+  is_selected: boolean | null;
+};
+
+type GetUserByIdData = { usersCollection: { edges: Array<Edge<User>> } };
+type GetUserByIdVars = { id: string };
+
+type GetUserAddressesData = { user_addressesCollection: { edges: Array<Edge<UserAddress>> } };
+type GetUserAddressesVars = { userId: string };
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
@@ -29,6 +60,80 @@ export default function CheckoutScreen() {
   const [clearModalVisible, setClearModalVisible] = useState(false);
   const [storeToClear, setStoreToClear] = useState<{ id: string; name: string } | null>(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
+  const [placingStoreId, setPlacingStoreId] = useState<string | null>(null);
+
+  type CreateOrderData = {
+    insertIntoordersCollection: {
+      records: Array<{
+        id: string;
+        order_code: string | null;
+        user_id: string | null;
+        store_id: string | null;
+        courier_id: string | null;
+        delivery_address: any;
+        payment_method: string | null;
+        payment_status: string | null;
+        order_status: string | null;
+        sub_total: string | null;
+        delivery_fee: string | null;
+        tax_amount: string | null;
+        tip_amount: string | null;
+        total_amount: string | null;
+        note_to_store: string | null;
+        is_picked_up: boolean | null;
+        created_at: string;
+        estimated_delivery_time: string | null;
+      }>;
+    };
+  };
+
+  type CreateOrderVars = { order: any };
+
+  type CreateOrderItemsData = {
+    insertIntoorder_itemsCollection: {
+      records: Array<{
+        id: string;
+        order_id: string | null;
+        product_id: string | null;
+        product_title: string | null;
+        quantity: number | null;
+        unit_price: string | null;
+        total_price: string | null;
+        image: string | null;
+      }>;
+    };
+  };
+
+  type CreateOrderItemsVars = { items: any[] };
+
+  type GraphQLStore = {
+    id: string;
+    delivery_time_min: number;
+    delivery_time_max: number;
+  };
+
+  type GetStoreByIdData = {
+    storesCollection: {
+      edges: Array<{
+        node: GraphQLStore;
+      }>;
+    };
+  };
+
+  type GetStoreByIdVars = { id: string };
+
+  const [createOrder] = useMutation<CreateOrderData, CreateOrderVars>(CREATE_ORDER);
+  const [createOrderItems] = useMutation<CreateOrderItemsData, CreateOrderItemsVars>(CREATE_ORDER_ITEMS);
+
+  const userQuery = useQuery<GetUserByIdData, GetUserByIdVars>(GET_USER_BY_ID, {
+    variables: { id: HARDCODE_USER_ID },
+    fetchPolicy: "cache-and-network",
+  });
+
+  const addressesQuery = useQuery<GetUserAddressesData, GetUserAddressesVars>(GET_USER_ADDRESSES, {
+    variables: { userId: HARDCODE_USER_ID },
+    fetchPolicy: "cache-and-network",
+  });
 
   const handleClearPress = (storeId: string, storeName: string) => {
     setStoreToClear({ id: storeId, name: storeName });
@@ -105,35 +210,158 @@ export default function CheckoutScreen() {
   };
 
 
-  const handlePlaceOrder = (group: CartStoreGroup) => {
+  const handlePlaceOrder = async (group: CartStoreGroup) => {
+    if (placingStoreId) return;
+
     const storeTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE;
-    const orderId = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    const orderItems = group.items.map(item => ({
-      name: item.menuItem.name,
-      quantity: item.quantity,
-      price: getItemPrice(item),
-      extras: item.selectedExtras.length > 0 
-        ? item.selectedExtras.map(e => e.name).join(', ') 
-        : undefined,
-    }));
+    const orderCode = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    clearStoreItems(group.storeId);
+    const user: User | undefined = userQuery.data?.usersCollection?.edges?.[0]?.node;
+    const addresses: UserAddress[] =
+      addressesQuery.data?.user_addressesCollection?.edges?.map((e) => e.node) ?? [];
 
-    router.push({
-      pathname: '/order/confirmation' as any,
-      params: {
-        orderId,
-        storeName: group.storeName,
-        total: formatPrice(storeTotal).replace('₺', ''),
-        subtotal: formatPrice(group.subtotal).replace('₺', ''),
-        deliveryFee: formatPrice(DELIVERY_FEE).replace('₺', ''),
-        serviceFee: formatPrice(SERVICE_FEE).replace('₺', ''),
-        itemCount: group.items.reduce((sum, i) => sum + i.quantity, 0).toString(),
-        items: JSON.stringify(orderItems),
-        address: 'Atatürk Mah. Cumhuriyet Cad. No: 45/3, Kadıköy, İstanbul',
-      },
-    });
+    const selectedAddress =
+      addresses.find((a) => a.is_selected) ??
+      addresses[0];
+
+    if (!selectedAddress?.delivery_address) {
+      Alert.alert("Address missing", "This user has no selected delivery address in DB.");
+      return;
+    }
+
+    try {
+      setPlacingStoreId(group.storeId);
+
+      // Fetch store to get delivery_time_min and delivery_time_max for estimated_delivery_time
+      const { data: storeData } = await apolloClient.query<GetStoreByIdData, GetStoreByIdVars>({
+        query: GET_STORE_BY_ID,
+        variables: { id: group.storeId },
+        fetchPolicy: 'network-only', // Always fetch fresh data
+      });
+
+      const store = storeData?.storesCollection?.edges?.[0]?.node;
+      
+      // Calculate estimated_delivery_time: current time + delivery_time_max (in minutes)
+      let estimatedDeliveryTime: string | null = null;
+      if (store?.delivery_time_max) {
+        const now = new Date();
+        const estimatedMinutes = store.delivery_time_max;
+        const estimatedTime = new Date(now.getTime() + estimatedMinutes * 60 * 1000);
+        estimatedDeliveryTime = estimatedTime.toISOString();
+      }
+
+      const deliveryAddressJson: Record<string, any> = {};
+      
+      if (selectedAddress.id) deliveryAddressJson.address_id = selectedAddress.id;
+      if (selectedAddress.label) deliveryAddressJson.label = selectedAddress.label;
+      if (selectedAddress.delivery_address) deliveryAddressJson.delivery_address = selectedAddress.delivery_address;
+      if (selectedAddress.details) deliveryAddressJson.details = selectedAddress.details;
+      if (selectedAddress.building) deliveryAddressJson.building = selectedAddress.building;
+      if (selectedAddress.floor) deliveryAddressJson.floor = selectedAddress.floor;
+      if (selectedAddress.landmark) deliveryAddressJson.landmark = selectedAddress.landmark;
+      
+      if (selectedAddress.latitude) {
+        const latNum = parseFloat(selectedAddress.latitude);
+        if (!isNaN(latNum)) deliveryAddressJson.latitude = latNum;
+      }
+      if (selectedAddress.longitude) {
+        const lngNum = parseFloat(selectedAddress.longitude);
+        if (!isNaN(lngNum)) deliveryAddressJson.longitude = lngNum;
+      }
+
+      const deliveryAddressForMutation = Object.keys(deliveryAddressJson).length > 0 
+        ? JSON.stringify(deliveryAddressJson) // Convert to JSON string for Supabase GraphQL
+        : null; // Send null if empty instead of empty object
+
+      console.log("deliveryAddressForMutation (as JSON string):", deliveryAddressForMutation);
+      console.log("deliveryAddressForMutation type:", typeof deliveryAddressForMutation);
+
+      const orderRes = await createOrder({
+        variables: {
+          order: {
+            order_code: orderCode, // text
+            user_id: HARDCODE_USER_ID, // uuid
+            store_id: group.storeId, // uuid
+            courier_id: null, // uuid null - will be assigned later
+            delivery_address: deliveryAddressForMutation, // jsonb (as JSON string)
+            payment_method: "CASH", // text
+            payment_status: "PENDING", // text (default 'PENDING')
+            order_status: "PENDING", // text (default 'PENDING')
+            sub_total: group.subtotal.toFixed(2), // numeric(10, 2) as string
+            delivery_fee: DELIVERY_FEE.toFixed(2), // numeric(10, 2) as string
+            tax_amount: "0.00", // numeric(10, 2) as string
+            tip_amount: "0.00", // numeric(10, 2) as string
+            total_amount: storeTotal.toFixed(2), // numeric(10, 2) as string
+            note_to_store: null, // text null
+            is_picked_up: false, // boolean (default false)
+            estimated_delivery_time: estimatedDeliveryTime, // timestamp with time zone (ISO string)
+          },
+        },
+      });
+
+      const created = orderRes.data?.insertIntoordersCollection?.records?.[0];
+      const dbOrderId: string | undefined = created?.id;
+      const dbOrderCode: string | null = created?.order_code || orderCode;
+
+      if (!dbOrderId) {
+        throw new Error("Order insert succeeded but no order id returned.");
+      }
+
+      // 2) Create order items - all fields according to order_items table schema
+      const itemsPayload = group.items.map((item) => {
+        const totalPrice = getItemPrice(item);
+        const unitPrice = totalPrice / item.quantity;
+        const extrasText =
+          item.selectedExtras.length > 0 ? ` (Varyant: ${item.selectedExtras.map((e) => e.name).join(", ")})` : "";
+
+        return {
+          order_id: dbOrderId, // uuid
+          product_id: item.menuItem.id, // uuid
+          product_title: `${item.menuItem.name}${extrasText}`, // text
+          quantity: item.quantity, // integer
+          unit_price: unitPrice.toFixed(2), // numeric(10, 2) as string
+          total_price: totalPrice.toFixed(2), // numeric(10, 2) as string
+          image: item.menuItem.image || null, // text null
+        };
+      });
+
+      await createOrderItems({
+        variables: {
+          items: itemsPayload,
+        },
+      });
+
+      // 3) Clear cart for store and navigate
+      clearStoreItems(group.storeId);
+
+      const orderItemsForUi = group.items.map((item) => ({
+        name: item.menuItem.name,
+        quantity: item.quantity,
+        price: getItemPrice(item),
+        extras: item.selectedExtras.length > 0 ? item.selectedExtras.map((e) => e.name).join(", ") : undefined,
+      }));
+
+      router.push({
+        pathname: "/order/confirmation" as any,
+        params: {
+          orderId: dbOrderId,
+          orderCode: dbOrderCode || orderCode, // Use order_code instead of id
+          storeName: group.storeName,
+          total: formatPrice(storeTotal).replace("₺", ""),
+          subtotal: formatPrice(group.subtotal).replace("₺", ""),
+          deliveryFee: formatPrice(DELIVERY_FEE).replace("₺", ""),
+          serviceFee: formatPrice(SERVICE_FEE).replace("₺", ""),
+          itemCount: group.items.reduce((sum, i) => sum + i.quantity, 0).toString(),
+          items: JSON.stringify(orderItemsForUi),
+          address: selectedAddress.delivery_address,
+        },
+      });
+    } catch (e: any) {
+      console.error("Place order failed:", e);
+      Alert.alert("Order failed", e?.message ?? "Unknown error");
+    } finally {
+      setPlacingStoreId(null);
+    }
   };
 
   const renderStoreGroup = (group: CartStoreGroup) => {
@@ -182,8 +410,11 @@ export default function CheckoutScreen() {
           style={styles.placeOrderButton} 
           activeOpacity={0.8}
           onPress={() => handlePlaceOrder(group)}
+          disabled={placingStoreId === group.storeId}
         >
-          <Text style={styles.placeOrderButtonText}>Place Order • {formatPrice(storeTotal)}</Text>
+          <Text style={styles.placeOrderButtonText}>
+            {placingStoreId === group.storeId ? "Placing…" : `Place Order • ${formatPrice(storeTotal)}`}
+          </Text>
         </TouchableOpacity>
       </View>
     );
