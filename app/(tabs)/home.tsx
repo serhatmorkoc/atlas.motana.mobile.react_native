@@ -34,7 +34,8 @@ const OFFER_SIDE_SPACING = 16;
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const offerScrollRef = useRef<ScrollView>(null);
-  const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
+  const currentOfferIndexRef = useRef(0);
+  const [paginationIndex, setPaginationIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const totalOffers = offers.length;
   
@@ -108,16 +109,20 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const nextIndex = currentOfferIndex + 1;
-      setCurrentOfferIndex(nextIndex);
+      const nextIndex = currentOfferIndexRef.current + 1;
+      currentOfferIndexRef.current = nextIndex;
+      
       offerScrollRef.current?.scrollTo({
         x: (initialScrollIndex + nextIndex) * (CARD_WIDTH + 12),
         animated: true,
       });
       
+      const displayIndex = nextIndex % totalOffers;
+      setPaginationIndex(displayIndex);
+      
       if (nextIndex >= totalOffers) {
         setTimeout(() => {
-          setCurrentOfferIndex(0);
+          currentOfferIndexRef.current = 0;
           offerScrollRef.current?.scrollTo({
             x: initialScrollIndex * (CARD_WIDTH + 12),
             animated: false,
@@ -127,9 +132,9 @@ export default function HomeScreen() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [currentOfferIndex, totalOffers, initialScrollIndex]);
+  }, [totalOffers, initialScrollIndex]);
 
-  const handleOfferScrollEnd = (event: any) => {
+  const handleOfferScrollEnd = useCallback((event: any) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
     const index = Math.round(scrollPosition / (CARD_WIDTH + 12));
     const actualIndex = (index - initialScrollIndex + totalOffers) % totalOffers;
@@ -146,10 +151,9 @@ export default function HomeScreen() {
       });
     }
     
-    if (actualIndex !== currentOfferIndex) {
-      setCurrentOfferIndex(actualIndex);
-    }
-  };
+    currentOfferIndexRef.current = actualIndex;
+    setPaginationIndex(actualIndex);
+  }, [initialScrollIndex, totalOffers]);
 
   if (storesLoading) {
     return (
@@ -251,7 +255,7 @@ export default function HomeScreen() {
                 key={index}
                 style={[
                   styles.paginationDot,
-                  currentOfferIndex === index && styles.paginationDotActive,
+                  paginationIndex === index && styles.paginationDotActive,
                 ]}
               />
             ))}
