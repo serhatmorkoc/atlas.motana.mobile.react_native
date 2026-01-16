@@ -67,8 +67,8 @@ export default function LoginScreen() {
 
   return (
     <LinearGradient
-      colors={["#8B2500", "#B33000", "#D94F1A", "#FF6B35", "#FF8C5A", "#FFB89A", "#FFF5F0"]}
-      locations={[0, 0.08, 0.18, 0.32, 0.5, 0.72, 1]}
+      colors={["#8B2500", "#A62D00", "#C43A00", "#D94F1A", "#FF6B35", "#FF8C5A", "#FFAD80", "#FFD4BE", "#FFF5F0"]}
+      locations={[0, 0.1, 0.2, 0.3, 0.42, 0.55, 0.7, 0.85, 1]}
       style={styles.container}
       start={{ x: 0, y: 0 }}
       end={{ x: 0, y: 1 }}
@@ -210,16 +210,17 @@ const styles = StyleSheet.create({
   },
   logoSection: {
     alignItems: "center",
-    paddingBottom: 8,
+    paddingBottom: 24,
+    paddingTop: 16,
   },
   logoCircle: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    marginBottom: 14,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -238,7 +239,7 @@ const styles = StyleSheet.create({
   },
   formContainer: {
     flex: 1,
-    marginTop: -20,
+    marginTop: 8,
   },
   scrollContent: {
     paddingHorizontal: 20,
