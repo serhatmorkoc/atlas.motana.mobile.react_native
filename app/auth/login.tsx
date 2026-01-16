@@ -12,7 +12,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, ChevronRight } from "lucide-react-native";
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ShoppingBag } from "lucide-react-native";
+import { LinearGradient } from "expo-linear-gradient";
 
 export default function LoginScreen() {
   const insets = useSafeAreaInsets();
@@ -21,7 +22,6 @@ export default function LoginScreen() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
-  const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -67,46 +67,50 @@ export default function LoginScreen() {
 
   return (
     <View style={styles.container}>
-      <View style={[styles.header, { paddingTop: insets.top }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <ArrowLeft size={24} color="#1F2937" />
-        </TouchableOpacity>
-      </View>
+      <LinearGradient
+        colors={["#FF6B35", "#FF8C5A"]}
+        style={styles.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+      >
+        <View style={[styles.headerContent, { paddingTop: insets.top + 12 }]}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+            <ArrowLeft size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          
+          <View style={styles.logoSection}>
+            <View style={styles.logoCircle}>
+              <ShoppingBag size={32} color="#FF6B35" strokeWidth={2} />
+            </View>
+            <Text style={styles.welcomeText}>Tekrar Hoşgeldin!</Text>
+            <Text style={styles.subtitleText}>Hesabına giriş yap</Text>
+          </View>
+        </View>
+      </LinearGradient>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.content}
+        style={styles.formContainer}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <View style={styles.titleSection}>
-            <Text style={styles.title}>Hoş Geldin</Text>
-            <Text style={styles.subtitle}>Hesabına giriş yap ve alışverişe devam et</Text>
-          </View>
-
-          <View style={styles.form}>
+          <View style={styles.formCard}>
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>E-posta</Text>
-              <View style={[
-                styles.inputContainer,
-                focusedField === 'email' && styles.inputFocused,
-                errors.email && styles.inputError
-              ]}>
-                <Mail size={20} color={focusedField === 'email' ? '#FF6B35' : '#9CA3AF'} />
+              <View style={[styles.inputWrapper, errors.email && styles.inputError]}>
+                <Mail size={20} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="ornek@email.com"
-                  placeholderTextColor="#C4C4C4"
+                  placeholderTextColor="#9CA3AF"
                   value={email}
                   onChangeText={(text) => {
                     setEmail(text);
                     if (errors.email) setErrors({ ...errors, email: undefined });
                   }}
-                  onFocus={() => setFocusedField('email')}
-                  onBlur={() => setFocusedField(null)}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   autoCorrect={false}
@@ -117,28 +121,22 @@ export default function LoginScreen() {
 
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Şifre</Text>
-              <View style={[
-                styles.inputContainer,
-                focusedField === 'password' && styles.inputFocused,
-                errors.password && styles.inputError
-              ]}>
-                <Lock size={20} color={focusedField === 'password' ? '#FF6B35' : '#9CA3AF'} />
+              <View style={[styles.inputWrapper, errors.password && styles.inputError]}>
+                <Lock size={20} color="#9CA3AF" style={styles.inputIcon} />
                 <TextInput
                   style={styles.input}
                   placeholder="••••••••"
-                  placeholderTextColor="#C4C4C4"
+                  placeholderTextColor="#9CA3AF"
                   value={password}
                   onChangeText={(text) => {
                     setPassword(text);
                     if (errors.password) setErrors({ ...errors, password: undefined });
                   }}
-                  onFocus={() => setFocusedField('password')}
-                  onBlur={() => setFocusedField(null)}
                   secureTextEntry={!showPassword}
                 />
                 <TouchableOpacity
                   onPress={() => setShowPassword(!showPassword)}
-                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                  style={styles.eyeButton}
                 >
                   {showPassword ? (
                     <EyeOff size={20} color="#9CA3AF" />
@@ -158,44 +156,38 @@ export default function LoginScreen() {
               style={[styles.loginButton, isLoading && styles.loginButtonDisabled]}
               onPress={handleLogin}
               disabled={isLoading}
-              activeOpacity={0.85}
+              activeOpacity={0.8}
             >
               {isLoading ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
+                <ActivityIndicator color="#FFFFFF" />
               ) : (
-                <>
-                  <Text style={styles.loginButtonText}>Giriş Yap</Text>
-                  <ChevronRight size={20} color="#FFFFFF" />
-                </>
+                <Text style={styles.loginButtonText}>Giriş Yap</Text>
               )}
             </TouchableOpacity>
-          </View>
 
-          <View style={styles.dividerSection}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>veya şununla devam et</Text>
-            <View style={styles.dividerLine} />
-          </View>
+            <View style={styles.dividerContainer}>
+              <View style={styles.divider} />
+              <Text style={styles.dividerText}>veya</Text>
+              <View style={styles.divider} />
+            </View>
 
-          <View style={styles.socialButtons}>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-              <Text style={styles.socialIcon}>G</Text>
-              <Text style={styles.socialButtonText}>Google</Text>
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
+              <Text style={styles.socialButtonText}>Google ile Giriş Yap</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.socialButton} activeOpacity={0.7}>
-              <Text style={styles.socialIcon}>A</Text>
-              <Text style={styles.socialButtonText}>Apple</Text>
+
+            <TouchableOpacity style={styles.socialButton} activeOpacity={0.8}>
+              <Text style={styles.socialButtonText}>Apple ile Giriş Yap</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={[styles.registerContainer, { paddingBottom: insets.bottom + 20 }]}>
+            <Text style={styles.registerText}>Hesabın yok mu? </Text>
+            <TouchableOpacity onPress={handleRegister}>
+              <Text style={styles.registerLink}>Kayıt Ol</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-
-      <View style={[styles.footer, { paddingBottom: insets.bottom + 16 }]}>
-        <Text style={styles.footerText}>Hesabın yok mu?</Text>
-        <TouchableOpacity onPress={handleRegister}>
-          <Text style={styles.footerLink}>Kayıt Ol</Text>
-        </TouchableOpacity>
-      </View>
     </View>
   );
 }
@@ -203,164 +195,182 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F9FAFB",
   },
-  header: {
-    paddingHorizontal: 16,
-    paddingBottom: 8,
+  headerGradient: {
+    paddingBottom: 40,
+    borderBottomLeftRadius: 32,
+    borderBottomRightRadius: 32,
+  },
+  headerContent: {
+    paddingHorizontal: 20,
   },
   backButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: "#F5F5F5",
+    backgroundColor: "rgba(255,255,255,0.2)",
     justifyContent: "center",
     alignItems: "center",
+    marginBottom: 24,
   },
-  content: {
+  logoSection: {
+    alignItems: "center",
+    paddingBottom: 8,
+  },
+  logoCircle: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#FFFFFF",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  welcomeText: {
+    fontSize: 28,
+    fontWeight: "700" as const,
+    color: "#FFFFFF",
+    marginBottom: 6,
+  },
+  subtitleText: {
+    fontSize: 16,
+    color: "rgba(255,255,255,0.85)",
+  },
+  formContainer: {
     flex: 1,
+    marginTop: -20,
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 20,
     paddingTop: 8,
   },
-  titleSection: {
-    marginBottom: 32,
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "700" as const,
-    color: "#1F2937",
-    marginBottom: 8,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: "#6B7280",
-    lineHeight: 24,
-  },
-  form: {
-    gap: 20,
+  formCard: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 24,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 3,
   },
   inputGroup: {
-    gap: 8,
+    marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
     fontWeight: "600" as const,
-    color: "#374151",
-    marginLeft: 4,
+    color: "#1F2937",
+    marginBottom: 8,
   },
-  inputContainer: {
+  inputWrapper: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F9FAFB",
-    borderRadius: 16,
-    paddingHorizontal: 16,
-    height: 56,
-    borderWidth: 2,
-    borderColor: "transparent",
-    gap: 12,
-  },
-  inputFocused: {
-    borderColor: "#FF6B35",
-    backgroundColor: "#FFF7F4",
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderColor: "#E5E7EB",
+    paddingHorizontal: 14,
+    height: 54,
   },
   inputError: {
     borderColor: "#EF4444",
     backgroundColor: "#FEF2F2",
+  },
+  inputIcon: {
+    marginRight: 12,
   },
   input: {
     flex: 1,
     fontSize: 16,
     color: "#1F2937",
   },
+  eyeButton: {
+    padding: 4,
+  },
   errorText: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#EF4444",
+    marginTop: 6,
     marginLeft: 4,
   },
   forgotButton: {
     alignSelf: "flex-end",
+    marginBottom: 24,
+    marginTop: -8,
   },
   forgotText: {
     fontSize: 14,
-    fontWeight: "600" as const,
     color: "#FF6B35",
+    fontWeight: "600" as const,
   },
   loginButton: {
     backgroundColor: "#FF6B35",
-    height: 56,
-    borderRadius: 16,
-    flexDirection: "row",
+    height: 54,
+    borderRadius: 14,
     justifyContent: "center",
     alignItems: "center",
-    gap: 8,
-    marginTop: 8,
+    shadowColor: "#FF6B35",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
   },
   loginButtonDisabled: {
     opacity: 0.7,
   },
   loginButtonText: {
     fontSize: 17,
-    fontWeight: "600" as const,
+    fontWeight: "700" as const,
     color: "#FFFFFF",
   },
-  dividerSection: {
+  dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 32,
-    gap: 16,
+    marginVertical: 24,
   },
-  dividerLine: {
+  divider: {
     flex: 1,
     height: 1,
     backgroundColor: "#E5E7EB",
   },
   dividerText: {
-    fontSize: 13,
+    fontSize: 14,
     color: "#9CA3AF",
-  },
-  socialButtons: {
-    flexDirection: "row",
-    gap: 12,
+    marginHorizontal: 16,
   },
   socialButton: {
-    flex: 1,
     height: 52,
     borderRadius: 14,
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
-    backgroundColor: "#FAFAFA",
-    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 8,
-  },
-  socialIcon: {
-    fontSize: 18,
-    fontWeight: "700" as const,
-    color: "#374151",
+    marginBottom: 12,
+    backgroundColor: "#FFFFFF",
   },
   socialButtonText: {
     fontSize: 15,
     fontWeight: "600" as const,
-    color: "#374151",
+    color: "#1F2937",
   },
-  footer: {
+  registerContainer: {
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    gap: 6,
-    paddingTop: 16,
-    borderTopWidth: 1,
-    borderTopColor: "#F3F4F6",
+    marginTop: 24,
   },
-  footerText: {
+  registerText: {
     fontSize: 15,
     color: "#6B7280",
   },
-  footerLink: {
+  registerLink: {
     fontSize: 15,
     fontWeight: "700" as const,
     color: "#FF6B35",
