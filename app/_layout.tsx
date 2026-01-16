@@ -73,6 +73,12 @@ function RootLayoutNav() {
           animation: "slide_from_bottom",
         }}
       />
+      <Stack.Screen
+        name="test-maps"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

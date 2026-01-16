@@ -15,6 +15,8 @@ export interface Store {
   deliveryTimeMax?: number;
   minimumOrder?: number;
   storeCategoriesId?: number;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface StoreDetails extends Store {

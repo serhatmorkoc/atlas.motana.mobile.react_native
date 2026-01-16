@@ -14,6 +14,7 @@ import {
   Settings,
   LogOut,
   ChevronRight,
+  Navigation,
 } from "lucide-react-native";
 
 import { MenuItem, ProfileCard, RewardsCard, LogoutModal } from "@/components/account";
@@ -152,6 +153,21 @@ export default function AccountScreen() {
               title="Help Center"
               subtitle="FAQ and customer support"
               onPress={() => router.push("/account/help" as any)}
+              isLast
+            />
+          </View>
+        </View>
+
+        {/* Temporary Test Button - Remove after testing */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Development</Text>
+          <View style={styles.menuGroup}>
+            <MenuItem
+              icon={<Navigation size={20} color="#FF6B35" />}
+              iconBg="#FFF4F0"
+              title="Test Google Maps API"
+              subtitle="Test distance and ETA calculations"
+              onPress={() => router.push("/test-maps" as any)}
               isLast
             />
           </View>

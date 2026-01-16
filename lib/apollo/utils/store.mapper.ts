@@ -81,6 +81,9 @@ export const mapGraphQLStoreToStore = (graphQLStore: GraphQLStore): Store => {
   const deliveryFee = calculateDeliveryFee(graphQLStore.id);
   const minimumOrder = Number(graphQLStore.minimum_order);
   
+  const lat = graphQLStore.latitude ? parseFloat(graphQLStore.latitude) : undefined;
+  const lng = graphQLStore.longitude ? parseFloat(graphQLStore.longitude) : undefined;
+
   return {
     id: graphQLStore.id,
     name: graphQLStore.name,
@@ -96,6 +99,8 @@ export const mapGraphQLStoreToStore = (graphQLStore: GraphQLStore): Store => {
     storeCategoriesId: typeof graphQLStore.store_categories_id === 'string' 
       ? Number(graphQLStore.store_categories_id) 
       : graphQLStore.store_categories_id,
+    latitude: Number.isFinite(lat) ? lat : undefined,
+    longitude: Number.isFinite(lng) ? lng : undefined,
   };
 };
 
