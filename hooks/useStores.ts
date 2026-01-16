@@ -105,9 +105,10 @@ export const useStores = (options?: {
             }
 
             try {
+              // Origin: User address, Destination: Store (same as store screen)
               const distanceResult = await calculateDistance(
-                { latitude: store.latitude, longitude: store.longitude },
-                { latitude: userLocation.latitude, longitude: userLocation.longitude }
+                { latitude: userLocation.latitude, longitude: userLocation.longitude },
+                { latitude: store.latitude, longitude: store.longitude }
               );
               return {
                 ...store,

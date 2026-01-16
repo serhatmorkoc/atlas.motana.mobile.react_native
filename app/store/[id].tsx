@@ -13,7 +13,7 @@ import {
   Star,
   Zap,
 } from "lucide-react-native";
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect, useMemo } from "react";
 import {
   Animated,
   RefreshControl,
@@ -31,8 +31,10 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { useStore } from "@/hooks/useStores";
 import { useStoreMenu } from "@/hooks/useStoreMenu";
+import { useUserAddresses } from "@/hooks/useUserAddresses";
 import { MenuItem } from "@/types/menu.types";
 import { formatPrice } from "@/utils/formatters";
+import { calculateDistance } from "@/utils/google_maps";
 
 const HEADER_HEIGHT = 260;
 
@@ -44,6 +46,8 @@ export default function StoreScreen() {
   const [productModalVisible, setProductModalVisible] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [realDistance, setRealDistance] = useState<string | null>(null);
+  const [calculatingDistance, setCalculatingDistance] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
 
   // Fetch store from GraphQL
@@ -55,6 +59,53 @@ export default function StoreScreen() {
     error: menuError,
     refetch: refetchMenu,
   } = useStoreMenu(id as string, { search: searchQuery });
+
+  // Fetch selected address for distance calculation
+  const { addresses } = useUserAddresses();
+  const selectedAddress = useMemo(() => {
+    return addresses.find(addr => addr.selected);
+  }, [addresses]);
+
+  // Memoize store coordinates to prevent unnecessary recalculations
+  const storeCoords = useMemo(() => {
+    if (store?.latitude && store?.longitude) {
+      return { latitude: store.latitude, longitude: store.longitude };
+    }
+    return null;
+  }, [store?.id, store?.latitude, store?.longitude]);
+
+  // Memoize selected address coordinates
+  const addressCoords = useMemo(() => {
+    if (selectedAddress?.latitude && selectedAddress?.longitude) {
+      return { latitude: selectedAddress.latitude, longitude: selectedAddress.longitude };
+    }
+    return null;
+  }, [selectedAddress?.id, selectedAddress?.latitude, selectedAddress?.longitude]);
+
+  // Calculate real distance when store or selected address changes
+  useEffect(() => {
+    const calculateRealDistance = async () => {
+      // Reset distance if conditions not met
+      if (!storeCoords || !addressCoords) {
+        setRealDistance(null);
+        setCalculatingDistance(false);
+        return;
+      }
+
+      setCalculatingDistance(true);
+      try {
+        const result = await calculateDistance(addressCoords, storeCoords);
+        setRealDistance(result.distanceText);
+      } catch (err) {
+        console.error('Error calculating distance:', err);
+        setRealDistance(null);
+      } finally {
+        setCalculatingDistance(false);
+      }
+    };
+
+    calculateRealDistance();
+  }, [storeCoords, addressCoords]);
 
   if (storeLoading || menuLoading) {
     return <LoadingScreen title="Loading store…" subtitle="Fetching menu & details" />;
@@ -214,7 +265,9 @@ export default function StoreScreen() {
               </View>
               <View style={styles.infoBadge}>
                 <MapPin size={13} color="#FFFFFF" />
-                <Text style={styles.infoBadgeText}>{store.distance}</Text>
+                <Text style={styles.infoBadgeText}>
+                  {calculatingDistance ? "..." : (realDistance || store.distance)}
+                </Text>
               </View>
             </View>
           </View>

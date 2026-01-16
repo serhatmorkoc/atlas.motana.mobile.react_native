@@ -8,7 +8,6 @@ export default function AccountLayout() {
         animation: "slide_from_right",
       }}
     >
-      <Stack.Screen name="orders" />
       <Stack.Screen name="payment-methods" />
       <Stack.Screen name="addresses" />
       <Stack.Screen name="add-address" />

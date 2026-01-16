@@ -7,11 +7,13 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
+  Modal,
+  Animated,
 } from "react-native";
 import { Image } from "expo-image";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { Bike } from "lucide-react-native";
+import { Bike, AlertCircle } from "lucide-react-native";
 
 import { offers } from "@/mocks/offers";
 import { categories } from "@/constants/categories";
@@ -37,6 +39,9 @@ export default function HomeScreen() {
   const offerScrollRef = useRef<ScrollView>(null);
   const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
+  const [errorModalVisible, setErrorModalVisible] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const fadeAnim = useState(new Animated.Value(0))[0];
   const totalOffers = offers.length;
   
   // Fetch selected address
@@ -65,17 +70,51 @@ export default function HomeScreen() {
   // Refetch address when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      refetchAddresses();
-    }, [refetchAddresses])
+      refetchAddresses().catch((err: any) => {
+        // Ignore AbortError - it's normal when component unmounts or query is cancelled
+        if (err?.name === 'AbortError' || err?.message === 'The operation was aborted.') {
+          return;
+        }
+        // Show error modal for other errors
+        setErrorMessage(err?.message || 'Failed to refresh address information. Please try again.');
+        setErrorModalVisible(true);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      });
+    }, [refetchAddresses, fadeAnim])
   );
 
   const onRefresh = async () => {
     try {
       setRefreshing(true);
       await Promise.all([refetch(), refetchAddresses()]);
+    } catch (err: any) {
+      // Ignore AbortError - it's normal when component unmounts or query is cancelled
+      if (err?.name !== 'AbortError' && err?.message !== 'The operation was aborted.') {
+        setErrorMessage(err?.message || 'Failed to refresh data. Please try again.');
+        setErrorModalVisible(true);
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }).start();
+      }
     } finally {
       setRefreshing(false);
     }
+  };
+
+  const handleCloseErrorModal = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setErrorModalVisible(false);
+    });
   };
   
   // Memoize store lists to prevent unnecessary recalculations
@@ -411,6 +450,52 @@ export default function HomeScreen() {
           <Text style={styles.screenLabelText}>Home Screen</Text>
         </View>
       </ScrollView>
+
+      {/* Error Modal */}
+      <Modal
+        visible={errorModalVisible}
+        transparent
+        animationType="none"
+        onRequestClose={handleCloseErrorModal}
+      >
+        <Animated.View style={[styles.modalOverlay, { opacity: fadeAnim }]}>
+          <TouchableOpacity
+            style={styles.modalBackdrop}
+            activeOpacity={1}
+            onPress={handleCloseErrorModal}
+          />
+          <Animated.View
+            style={[
+              styles.errorModalContent,
+              {
+                transform: [
+                  {
+                    scale: fadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [0.9, 1],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <View style={styles.errorModalIcon}>
+              <AlertCircle size={28} color="#EF4444" />
+            </View>
+            <Text style={styles.errorModalTitle}>Error</Text>
+            <Text style={styles.errorModalMessage}>
+              {errorMessage}
+            </Text>
+            <TouchableOpacity
+              style={styles.errorModalButton}
+              onPress={handleCloseErrorModal}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.errorModalButtonText}>OK</Text>
+            </TouchableOpacity>
+          </Animated.View>
+        </Animated.View>
+      </Modal>
     </View>
   );
 }
@@ -582,6 +667,63 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: "#6B7280",
     fontWeight: "500",
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  errorModalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 24,
+    padding: 28,
+    width: "85%",
+    maxWidth: 340,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 10,
+  },
+  errorModalIcon: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: "#FEE2E2",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 20,
+  },
+  errorModalTitle: {
+    fontSize: 22,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 10,
+  },
+  errorModalMessage: {
+    fontSize: 14,
+    color: "#6B7280",
+    textAlign: "center",
+    lineHeight: 22,
+    marginBottom: 28,
+  },
+  errorModalButton: {
+    width: "100%",
+    paddingVertical: 16,
+    borderRadius: 14,
+    backgroundColor: "#EF4444",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorModalButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
   gridTimeContainer: {
     flexDirection: "row",

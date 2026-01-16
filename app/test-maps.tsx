@@ -315,7 +315,14 @@ export default function TestMapsScreen() {
         <View style={styles.headerPlaceholder} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView 
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContent,
+          { paddingBottom: insets.bottom + 100 },
+        ]}
+        showsVerticalScrollIndicator={false}
+      >
         {/* Map Section */}
         <View style={styles.mapCard}>
           <View style={styles.mapContainer}>
@@ -360,15 +367,6 @@ export default function TestMapsScreen() {
             </MapView>
           </View>
         </View>
-
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={[
-            styles.scrollContent,
-            { paddingBottom: insets.bottom + 100 },
-          ]}
-          showsVerticalScrollIndicator={false}
-        >
           {/* Delivery Address Selection */}
           <View style={styles.testSection}>
             <Text style={styles.sectionTitle}>Delivery Address (Origin)</Text>
@@ -665,8 +663,7 @@ export default function TestMapsScreen() {
             )}
           </View>
         )}
-        </ScrollView>
-      </View>
+      </ScrollView>
     </View>
   );
 }
@@ -703,14 +700,10 @@ const styles = StyleSheet.create({
   headerPlaceholder: {
     width: 40,
   },
-  content: {
-    flex: 1,
-  },
   mapCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 2,
-    marginHorizontal: 16,
     marginTop: 16,
     marginBottom: 16,
     shadowColor: '#000',
@@ -732,8 +725,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    padding: 16,
-    paddingTop: 0,
+    paddingHorizontal: 16,
+    paddingTop: 16,
   },
   dropdownButton: {
     flexDirection: 'row',
