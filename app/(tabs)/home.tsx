@@ -35,8 +35,7 @@ const OFFER_SIDE_SPACING = 16;
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const offerScrollRef = useRef<ScrollView>(null);
-  const currentOfferIndexRef = useRef(0);
-  const [paginationIndex, setPaginationIndex] = useState(0);
+  const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const totalOffers = offers.length;
   
@@ -109,20 +108,16 @@ export default function HomeScreen() {
 
   useEffect(() => {
     const interval = setInterval(() => {
-      const nextIndex = currentOfferIndexRef.current + 1;
-      currentOfferIndexRef.current = nextIndex;
-      
+      const nextIndex = currentOfferIndex + 1;
+      setCurrentOfferIndex(nextIndex);
       offerScrollRef.current?.scrollTo({
         x: (initialScrollIndex + nextIndex) * (CARD_WIDTH + 12),
         animated: true,
       });
       
-      const displayIndex = nextIndex % totalOffers;
-      setPaginationIndex(displayIndex);
-      
       if (nextIndex >= totalOffers) {
         setTimeout(() => {
-          currentOfferIndexRef.current = 0;
+          setCurrentOfferIndex(0);
           offerScrollRef.current?.scrollTo({
             x: initialScrollIndex * (CARD_WIDTH + 12),
             animated: false,
@@ -132,9 +127,9 @@ export default function HomeScreen() {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [totalOffers, initialScrollIndex]);
+  }, [currentOfferIndex, totalOffers, initialScrollIndex]);
 
-  const handleOfferScrollEnd = useCallback((event: any) => {
+  const handleOfferScrollEnd = (event: any) => {
     const scrollPosition = event.nativeEvent.contentOffset.x;
     const index = Math.round(scrollPosition / (CARD_WIDTH + 12));
     const actualIndex = (index - initialScrollIndex + totalOffers) % totalOffers;
@@ -151,9 +146,10 @@ export default function HomeScreen() {
       });
     }
     
-    currentOfferIndexRef.current = actualIndex;
-    setPaginationIndex(actualIndex);
-  }, [initialScrollIndex, totalOffers]);
+    if (actualIndex !== currentOfferIndex) {
+      setCurrentOfferIndex(actualIndex);
+    }
+  };
 
   if (storesLoading) {
     return (
@@ -255,7 +251,7 @@ export default function HomeScreen() {
                 key={index}
                 style={[
                   styles.paginationDot,
-                  paginationIndex === index && styles.paginationDotActive,
+                  currentOfferIndex === index && styles.paginationDotActive,
                 ]}
               />
             ))}
