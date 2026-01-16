@@ -36,8 +36,8 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
   const channelRef = useRef<ReturnType<typeof supabaseClient.channel> | null>(null);
   const previousStatusesRef = useRef<Map<string, string | null>>(new Map());
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!enabled || !userId) {

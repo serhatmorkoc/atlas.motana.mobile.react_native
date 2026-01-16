@@ -19,9 +19,9 @@ import * as Location from "expo-location";
 import { useUserAddresses } from "@/hooks/useUserAddresses";
 
 const addressTypes = [
-  { id: "home" as const, label: "Home", icon: Home },
-  { id: "work" as const, label: "Work", icon: Building2 },
-  { id: "other" as const, label: "Other", icon: MapPin },
+  { id: "home", label: "Home", icon: Home },
+  { id: "work", label: "Work", icon: Building2 },
+  { id: "other", label: "Other", icon: MapPin },
 ];
 
 interface GeocodedAddress {

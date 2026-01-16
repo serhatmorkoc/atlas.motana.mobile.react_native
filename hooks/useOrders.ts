@@ -45,7 +45,9 @@ interface GraphQLOrderItem {
 
 interface GetOrdersByUserIdData {
   ordersCollection: {
-    edges: { node: GraphQLOrder }[];
+    edges: Array<{
+      node: GraphQLOrder;
+    }>;
   };
 }
 
@@ -93,17 +95,11 @@ const mapOrderStatus = (status: string | null): OrderStatus => {
 /**
  * Fetch store by ID
  */
-interface GetStoreByIdData {
-  storesCollection: {
-    edges: { node: GraphQLStore }[];
-  };
-}
-
 const fetchStore = async (storeId: string | null): Promise<GraphQLStore | null> => {
   if (!storeId) return null;
   
   try {
-    const { data } = await apolloClient.query<GetStoreByIdData>({
+    const { data } = await apolloClient.query({
       query: GET_STORE_BY_ID,
       variables: { id: storeId },
       fetchPolicy: 'no-cache',
@@ -119,15 +115,9 @@ const fetchStore = async (storeId: string | null): Promise<GraphQLStore | null> 
 /**
  * Fetch order items by order ID
  */
-interface GetOrderItemsByOrderIdData {
-  order_itemsCollection: {
-    edges: { node: GraphQLOrderItem }[];
-  };
-}
-
 const fetchOrderItems = async (orderId: string): Promise<GraphQLOrderItem[]> => {
   try {
-    const { data } = await apolloClient.query<GetOrderItemsByOrderIdData>({
+    const { data } = await apolloClient.query({
       query: GET_ORDER_ITEMS_BY_ORDER_ID,
       variables: { orderId },
       fetchPolicy: 'no-cache',
