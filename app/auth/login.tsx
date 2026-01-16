@@ -68,11 +68,10 @@ export default function LoginScreen() {
   return (
     <View style={styles.container}>
       <LinearGradient
-        colors={["#FF6B35", "#FF8C5A", "#FFB89A", "#F9FAFB"]}
-        locations={[0, 0.3, 0.7, 1]}
+        colors={["#FF6B35", "#FF8C5A"]}
         style={styles.headerGradient}
         start={{ x: 0, y: 0 }}
-        end={{ x: 0, y: 1 }}
+        end={{ x: 1, y: 1 }}
       >
         <View style={[styles.headerContent, { paddingTop: insets.top + 12 }]}>
           <TouchableOpacity onPress={handleBack} style={styles.backButton}>
