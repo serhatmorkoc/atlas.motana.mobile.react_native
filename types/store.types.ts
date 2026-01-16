@@ -10,7 +10,7 @@ export interface Store {
   deliveryTime: string;
   cuisine: string;
   deliveryFee: string;
-  distance: string;
+  distance: string; // Can be calculated or placeholder
   deliveryTimeMin?: number;
   deliveryTimeMax?: number;
   minimumOrder?: number;

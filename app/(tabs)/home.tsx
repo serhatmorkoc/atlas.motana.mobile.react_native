@@ -39,18 +39,28 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const totalOffers = offers.length;
   
-  const { stores, loading: storesLoading, error: storesError, refetch } = useStores({
-    limit: 50, // Fetch more stores for filtering
-    isActive: true,
-    isAvailable: true,
-  });
-
   // Fetch selected address
   const { addresses, loading: addressesLoading, refetch: refetchAddresses } = useUserAddresses();
   const selectedAddress = React.useMemo(() => {
     const found = addresses.find(addr => addr.selected);
     return found ? { title: found.title, address: found.address } : null;
   }, [addresses]);
+
+  // Get selected address coordinates for distance calculation
+  const userLocation = React.useMemo(() => {
+    const found = addresses.find(addr => addr.selected);
+    if (found && found.latitude && found.longitude) {
+      return { latitude: found.latitude, longitude: found.longitude };
+    }
+    return null;
+  }, [addresses]);
+
+  const { stores, loading: storesLoading, error: storesError, refetch } = useStores({
+    limit: 50, // Fetch more stores for filtering
+    isActive: true,
+    isAvailable: true,
+    userLocation, // Pass selected address coordinates for distance calculation
+  });
 
   // Refetch address when screen comes into focus
   useFocusEffect(

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Modal, FlatList } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { router, Stack } from 'expo-router';
@@ -8,6 +8,7 @@ import { calculateDistance, calculateRemainingTime, getRoutePolyline } from '@/u
 import { CourierType, getTravelModeFromCourierType } from '@/utils/google_maps/types';
 import { useStores } from '@/hooks/useStores';
 import { Store } from '@/types/store.types';
+import { useUserAddresses, Address } from '@/hooks/useUserAddresses';
 
 export default function TestMapsScreen() {
   const insets = useSafeAreaInsets();
@@ -17,8 +18,10 @@ export default function TestMapsScreen() {
   const [error, setError] = useState<string | null>(null);
   const [selectedCourierType, setSelectedCourierType] = useState<CourierType>(CourierType.MOTORCYCLE);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
+  const [selectedAddress, setSelectedAddress] = useState<Address | null>(null);
   const [storeDropdownVisible, setStoreDropdownVisible] = useState(false);
   const [courierDropdownVisible, setCourierDropdownVisible] = useState(false);
+  const [addressDropdownVisible, setAddressDropdownVisible] = useState(false);
   const [routeData, setRouteData] = useState<{
     coordinates: Array<{ latitude: number; longitude: number }>;
     color: string;
@@ -28,26 +31,57 @@ export default function TestMapsScreen() {
   // Fetch all stores
   const { stores, loading: storesLoading } = useStores({ limit: 200 });
 
+  // Fetch user addresses
+  const { addresses, loading: addressesLoading } = useUserAddresses();
+
   // Test coordinates (Istanbul - Taksim to Kadıköy)
-  // Default origin (Taksim) - will be replaced by selected store
+  // Default fallback coordinates
   const defaultOrigin = { latitude: 41.0370, longitude: 28.9850 }; // Taksim
-  const testDestination = { latitude: 40.9819, longitude: 29.0256 }; // Kadıköy (Customer location)
+  const defaultDestination = { latitude: 40.9819, longitude: 29.0256 }; // Kadıköy
 
-  // Use selected store coordinates if available, otherwise use default
-  const testOrigin = selectedStore 
-    ? { 
-        latitude: selectedStore.latitude || defaultOrigin.latitude, 
-        longitude: selectedStore.longitude || defaultOrigin.longitude 
-      }
-    : defaultOrigin;
+  // Find selected address from database (is_selected: true)
+  const selectedAddressFromDB = useMemo(() => {
+    return addresses.find(addr => addr.selected) || null;
+  }, [addresses]);
 
-  // Map region to fit both points
-  const [region, setRegion] = useState<Region>({
-    latitude: (testOrigin.latitude + testDestination.latitude) / 2,
-    longitude: (testOrigin.longitude + testDestination.longitude) / 2,
-    latitudeDelta: 0.1,
-    longitudeDelta: 0.1,
-  });
+  // Origin: Delivery Address (selected address)
+  const testOrigin = useMemo(() => {
+    if (selectedAddress && selectedAddress.latitude && selectedAddress.longitude) {
+      return {
+        latitude: selectedAddress.latitude,
+        longitude: selectedAddress.longitude,
+      };
+    }
+    return defaultOrigin;
+  }, [selectedAddress]);
+
+  // Destination: Selected Store
+  const testDestination = useMemo(() => {
+    if (selectedStore && selectedStore.latitude && selectedStore.longitude) {
+      return {
+        latitude: selectedStore.latitude,
+        longitude: selectedStore.longitude,
+      };
+    }
+    return defaultDestination;
+  }, [selectedStore]);
+
+  // Set selected address from DB on mount or when addresses change
+  useEffect(() => {
+    if (selectedAddressFromDB && !selectedAddress) {
+      setSelectedAddress(selectedAddressFromDB);
+    }
+  }, [selectedAddressFromDB]);
+
+  // Map region to fit both points - update when origin or destination changes
+  const region = useMemo<Region>(() => {
+    return {
+      latitude: (testOrigin.latitude + testDestination.latitude) / 2,
+      longitude: (testOrigin.longitude + testDestination.longitude) / 2,
+      latitudeDelta: Math.abs(testOrigin.latitude - testDestination.latitude) * 1.5 || 0.1,
+      longitudeDelta: Math.abs(testOrigin.longitude - testDestination.longitude) * 1.5 || 0.1,
+    };
+  }, [testOrigin, testDestination]);
 
   // Courier type colors
   const courierColors: Record<CourierType, string> = {
@@ -112,11 +146,10 @@ export default function TestMapsScreen() {
         const newRegion: Region = {
           latitude: (minLat + maxLat) / 2,
           longitude: (minLng + maxLng) / 2,
-          latitudeDelta: (maxLat - minLat) * 1.5,
-          longitudeDelta: (maxLng - minLng) * 1.5,
+          latitudeDelta: Math.max((maxLat - minLat) * 1.5, 0.01),
+          longitudeDelta: Math.max((maxLng - minLng) * 1.5, 0.01),
         };
 
-        setRegion(newRegion);
         mapRef.current?.animateToRegion(newRegion, 1000);
       }
     } catch (err: any) {
@@ -135,15 +168,14 @@ export default function TestMapsScreen() {
     setRouteData(null);
     setResult(null);
     
-    // Update map region to show store location
-    if (store.latitude && store.longitude) {
+    // Update map region to show both origin and destination
+    if (store.latitude && store.longitude && testOrigin) {
       const newRegion: Region = {
-        latitude: store.latitude,
-        longitude: store.longitude,
-        latitudeDelta: 0.05,
-        longitudeDelta: 0.05,
+        latitude: (testOrigin.latitude + store.latitude) / 2,
+        longitude: (testOrigin.longitude + store.longitude) / 2,
+        latitudeDelta: Math.abs(testOrigin.latitude - store.latitude) * 1.5 || 0.1,
+        longitudeDelta: Math.abs(testOrigin.longitude - store.longitude) * 1.5 || 0.1,
       };
-      setRegion(newRegion);
       mapRef.current?.animateToRegion(newRegion, 500);
     }
   };
@@ -153,6 +185,32 @@ export default function TestMapsScreen() {
     setCourierDropdownVisible(false);
     setRouteData(null);
     setResult(null);
+  };
+
+  const handleAddressSelect = (address: Address) => {
+    setSelectedAddress(address);
+    setAddressDropdownVisible(false);
+    setRouteData(null);
+    setResult(null);
+    
+    // Update map region to show both origin and destination
+    if (address.latitude && address.longitude && selectedStore?.latitude && selectedStore?.longitude) {
+      const newRegion: Region = {
+        latitude: (address.latitude + selectedStore.latitude) / 2,
+        longitude: (address.longitude + selectedStore.longitude) / 2,
+        latitudeDelta: Math.abs(address.latitude - selectedStore.latitude) * 1.5 || 0.1,
+        longitudeDelta: Math.abs(address.longitude - selectedStore.longitude) * 1.5 || 0.1,
+      };
+      mapRef.current?.animateToRegion(newRegion, 500);
+    } else if (address.latitude && address.longitude) {
+      const newRegion: Region = {
+        latitude: address.latitude,
+        longitude: address.longitude,
+        latitudeDelta: 0.05,
+        longitudeDelta: 0.05,
+      };
+      mapRef.current?.animateToRegion(newRegion, 500);
+    }
   };
 
   const getCourierTypeLabel = (courierType: CourierType): string => {
@@ -207,6 +265,41 @@ export default function TestMapsScreen() {
     </TouchableOpacity>
   );
 
+  const renderAddressItem = ({ item }: { item: Address }) => (
+    <TouchableOpacity
+      style={[
+        styles.dropdownItem,
+        selectedAddress?.id === item.id && styles.dropdownItemSelected,
+      ]}
+      onPress={() => handleAddressSelect(item)}
+      activeOpacity={0.7}
+    >
+      <View style={styles.addressItemContent}>
+        <Text
+          style={[
+            styles.dropdownItemText,
+            selectedAddress?.id === item.id && styles.dropdownItemTextSelected,
+          ]}
+          numberOfLines={1}
+        >
+          {item.title}
+        </Text>
+        <Text
+          style={[
+            styles.addressItemSubtext,
+            selectedAddress?.id === item.id && styles.addressItemSubtextSelected,
+          ]}
+          numberOfLines={1}
+        >
+          {item.address}
+        </Text>
+      </View>
+      {selectedAddress?.id === item.id && (
+        <View style={styles.selectedIndicator} />
+      )}
+    </TouchableOpacity>
+  );
+
   return (
     <View style={styles.container}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -229,22 +322,29 @@ export default function TestMapsScreen() {
             <MapView
               ref={mapRef}
               style={styles.map}
-              region={region}
-              onRegionChangeComplete={setRegion}
+              initialRegion={region}
               showsUserLocation={false}
               showsMyLocationButton={false}
             >
-              {/* Origin Marker (Store) */}
+              {/* Origin Marker (Delivery Address) */}
               <Marker
                 coordinate={testOrigin}
-                title={selectedStore ? selectedStore.name : "Origin (Taksim)"}
+                title={
+                  selectedAddress 
+                    ? `${selectedAddress.title} - ${selectedAddress.address}` 
+                    : "Origin (Default)"
+                }
                 pinColor="#FF6B35"
               />
               
-              {/* Destination Marker (Customer) */}
+              {/* Destination Marker (Store) */}
               <Marker
                 coordinate={testDestination}
-                title="Destination (Kadıköy)"
+                title={
+                  selectedStore 
+                    ? selectedStore.name 
+                    : "Destination (Default)"
+                }
                 pinColor="#10B981"
               />
 
@@ -269,9 +369,79 @@ export default function TestMapsScreen() {
           ]}
           showsVerticalScrollIndicator={false}
         >
+          {/* Delivery Address Selection */}
+          <View style={styles.testSection}>
+            <Text style={styles.sectionTitle}>Delivery Address (Origin)</Text>
+            <TouchableOpacity
+              style={styles.dropdownButton}
+              onPress={() => setAddressDropdownVisible(!addressDropdownVisible)}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.dropdownButtonText,
+                  !selectedAddress && styles.dropdownButtonTextPlaceholder,
+                ]}
+                numberOfLines={1}
+              >
+                {selectedAddress ? `${selectedAddress.title} - ${selectedAddress.address}` : 'Select delivery address...'}
+              </Text>
+              {addressDropdownVisible ? (
+                <ChevronUp size={20} color="#6B7280" />
+              ) : (
+                <ChevronDown size={20} color="#6B7280" />
+              )}
+            </TouchableOpacity>
+            {selectedAddress && (
+              <Text style={styles.storeInfo}>
+                {selectedAddress.title} - {selectedAddress.latitude?.toFixed(4)}, {selectedAddress.longitude?.toFixed(4)}
+              </Text>
+            )}
+          </View>
+
+          {/* Address Dropdown Modal */}
+          <Modal
+            visible={addressDropdownVisible}
+            transparent
+            animationType="fade"
+            onRequestClose={() => setAddressDropdownVisible(false)}
+          >
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={() => setAddressDropdownVisible(false)}
+            >
+              <View style={styles.dropdownContainer}>
+                <View style={styles.dropdownHeader}>
+                  <Text style={styles.dropdownTitle}>Select Delivery Address</Text>
+                  <TouchableOpacity
+                    onPress={() => setAddressDropdownVisible(false)}
+                    style={styles.closeButton}
+                  >
+                    <Text style={styles.closeButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+                <FlatList
+                  data={addresses}
+                  renderItem={renderAddressItem}
+                  keyExtractor={(item) => item.id}
+                  style={styles.dropdownList}
+                  showsVerticalScrollIndicator={true}
+                  ListEmptyComponent={
+                    <View style={styles.emptyContainer}>
+                      <Text style={styles.emptyText}>
+                        {addressesLoading ? 'Loading addresses...' : 'No addresses available'}
+                      </Text>
+                    </View>
+                  }
+                />
+              </View>
+            </TouchableOpacity>
+          </Modal>
+
           {/* Store Selection */}
           <View style={styles.testSection}>
-            <Text style={styles.sectionTitle}>Select Store (Origin)</Text>
+            <Text style={styles.sectionTitle}>Select Store (Destination)</Text>
             <TouchableOpacity
               style={styles.dropdownButton}
               onPress={() => setStoreDropdownVisible(!storeDropdownVisible)}
@@ -295,6 +465,11 @@ export default function TestMapsScreen() {
             {selectedStore && (
               <Text style={styles.storeInfo}>
                 {selectedStore.name} - {selectedStore.latitude?.toFixed(4)}, {selectedStore.longitude?.toFixed(4)}
+              </Text>
+            )}
+            {!selectedStore && (
+              <Text style={styles.storeInfo}>
+                Please select a store to set destination
               </Text>
             )}
           </View>
@@ -393,15 +568,21 @@ export default function TestMapsScreen() {
           <View style={styles.testSection}>
             <Text style={styles.sectionTitle}>Test Coordinates</Text>
             <View style={styles.coordBox}>
-              <Text style={styles.coordLabel}>Origin (Taksim):</Text>
+              <Text style={styles.coordLabel}>Origin (Delivery Address):</Text>
               <Text style={styles.coordText}>
-                {testOrigin.latitude}, {testOrigin.longitude}
+                {selectedAddress 
+                  ? `${selectedAddress.title} - ${testOrigin.latitude.toFixed(6)}, ${testOrigin.longitude.toFixed(6)}`
+                  : `Default - ${testOrigin.latitude.toFixed(6)}, ${testOrigin.longitude.toFixed(6)}`
+                }
               </Text>
             </View>
             <View style={styles.coordBox}>
-              <Text style={styles.coordLabel}>Destination (Kadıköy):</Text>
+              <Text style={styles.coordLabel}>Destination (Store):</Text>
               <Text style={styles.coordText}>
-                {testDestination.latitude}, {testDestination.longitude}
+                {selectedStore 
+                  ? `${selectedStore.name} - ${testDestination.latitude.toFixed(6)}, ${testDestination.longitude.toFixed(6)}`
+                  : `Default - ${testDestination.latitude.toFixed(6)}, ${testDestination.longitude.toFixed(6)}`
+                }
               </Text>
             </View>
           </View>
@@ -786,5 +967,17 @@ const styles = StyleSheet.create({
     color: '#1E40AF',
     fontWeight: '500',
     textDecorationLine: 'underline',
+  },
+  addressItemContent: {
+    flex: 1,
+    marginRight: 8,
+  },
+  addressItemSubtext: {
+    fontSize: 12,
+    color: '#6B7280',
+    marginTop: 2,
+  },
+  addressItemSubtextSelected: {
+    color: '#FF6B35',
   },
 });

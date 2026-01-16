@@ -1,8 +1,10 @@
 // Custom hook for fetching stores using GraphQL
 import { useQuery } from '@apollo/client/react';
+import { useEffect, useState, useMemo } from 'react';
 import { GET_STORES, GET_STORE_BY_ID } from '@/lib/apollo/queries/stores';
 import { mapGraphQLStoresToStores, mapGraphQLStoreToStore, GraphQLStore } from '@/lib/apollo/utils/store.mapper';
 import { Store } from '@/types/store.types';
+import { calculateDistance } from '@/utils/google_maps';
 
 interface GetStoresData {
   storesCollection: {
@@ -41,6 +43,7 @@ export const useStores = (options?: {
   offset?: number;
   isActive?: boolean;
   isAvailable?: boolean;
+  userLocation?: { latitude: number; longitude: number } | null; // Selected user address coordinates
 }) => {
   const { data, loading, error, refetch } = useQuery<GetStoresData, GetStoresVariables>(
     GET_STORES,
@@ -58,11 +61,80 @@ export const useStores = (options?: {
   );
 
   const nodes: GraphQLStore[] = data?.storesCollection?.edges?.map((e) => e.node) ?? [];
-  const stores: Store[] = nodes.length ? mapGraphQLStoresToStores(nodes) : [];
+  
+  // Memoize baseStores to prevent unnecessary recalculations
+  const baseStores: Store[] = useMemo(() => 
+    nodes.length ? mapGraphQLStoresToStores(nodes) : [],
+    [nodes.length, nodes.map(n => n.id).join(',')] // Use length and IDs for comparison
+  );
+  
+  // Memoize userLocation to prevent unnecessary recalculations
+  const userLocation = useMemo(() => {
+    if (!options?.userLocation) return null;
+    return {
+      latitude: options.userLocation.latitude,
+      longitude: options.userLocation.longitude,
+    };
+  }, [options?.userLocation?.latitude, options?.userLocation?.longitude]);
+
+  const [stores, setStores] = useState<Store[]>(baseStores);
+  const [calculatingDistances, setCalculatingDistances] = useState(false);
+
+  // Calculate distances when stores or user location changes
+  useEffect(() => {
+    if (baseStores.length === 0) {
+      setStores([]);
+      return;
+    }
+
+    // If no user location, use placeholder distances from mapper
+    if (!userLocation) {
+      setStores(baseStores);
+      return;
+    }
+
+    // Calculate real distances for all stores
+    const calculateDistances = async () => {
+      setCalculatingDistances(true);
+      try {
+        const storesWithDistances = await Promise.all(
+          baseStores.map(async (store) => {
+            // Skip if store doesn't have coordinates
+            if (!store.latitude || !store.longitude) {
+              return store;
+            }
+
+            try {
+              const distanceResult = await calculateDistance(
+                { latitude: store.latitude, longitude: store.longitude },
+                { latitude: userLocation.latitude, longitude: userLocation.longitude }
+              );
+              return {
+                ...store,
+                distance: distanceResult.distanceText,
+              };
+            } catch (err) {
+              console.error(`Error calculating distance for store ${store.id}:`, err);
+              // Return store with placeholder distance if calculation fails
+              return store;
+            }
+          })
+        );
+        setStores(storesWithDistances);
+      } catch (err) {
+        console.error('Error calculating distances:', err);
+        setStores(baseStores);
+      } finally {
+        setCalculatingDistances(false);
+      }
+    };
+
+    calculateDistances();
+  }, [baseStores, userLocation]);
 
   return {
     stores,
-    loading,
+    loading: loading || calculatingDistances,
     error,
     refetch,
   };

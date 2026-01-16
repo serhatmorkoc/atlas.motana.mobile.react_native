@@ -15,6 +15,7 @@ import {
 import { ChevronLeft } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStores } from "@/hooks/useStores";
+import { useUserAddresses } from "@/hooks/useUserAddresses";
 import { Store } from "@/types/store.types";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { apolloClient } from "@/lib/apollo/client";
@@ -53,9 +54,20 @@ export default function SearchResultsScreen() {
   const [storeMenuItemsMap, setStoreMenuItemsMap] = useState<Record<string, MenuItem[]>>({});
   const [loadingProducts, setLoadingProducts] = useState(false);
 
+  // Fetch selected address for distance calculation
+  const { addresses } = useUserAddresses();
+  const userLocation = React.useMemo(() => {
+    const found = addresses.find(addr => addr.selected);
+    if (found && found.latitude && found.longitude) {
+      return { latitude: found.latitude, longitude: found.longitude };
+    }
+    return null;
+  }, [addresses]);
+
   // Fetch stores from DB - filter by store_categories_id = 1
   const { stores, loading: storesLoading, error: storesError } = useStores({
     limit: 50,
+    userLocation, // Pass selected address coordinates for distance calculation
   });
 
   // Filter stores by store_categories_id = 1
