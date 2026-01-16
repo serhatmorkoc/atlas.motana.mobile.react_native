@@ -6,7 +6,6 @@ import { Clock, Store } from "lucide-react-native";
 interface EstimateCardProps {
   fadeAnim: Animated.Value;
   slideAnim: Animated.Value;
-  pulseAnim: Animated.Value;
   progressAnim: Animated.Value;
   estimatedMinutes: number;
   storeName: string;
@@ -18,7 +17,6 @@ interface EstimateCardProps {
 export function EstimateCard({
   fadeAnim,
   slideAnim,
-  pulseAnim,
   progressAnim,
   estimatedMinutes,
   storeName,
@@ -46,14 +44,9 @@ export function EstimateCard({
         <Text style={styles.estimateLabel}>Estimated Delivery</Text>
       </View>
       <View style={styles.estimateTimeRow}>
-        <Animated.Text
-          style={[
-            styles.estimateTime,
-            { transform: [{ scale: pulseAnim }] },
-          ]}
-        >
+        <Text style={styles.estimateTime}>
           {estimatedMinutes}
-        </Animated.Text>
+        </Text>
         <Text style={styles.estimateUnit}>min</Text>
       </View>
       

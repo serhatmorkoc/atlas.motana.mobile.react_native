@@ -5,7 +5,6 @@ import { Phone, MessageCircle } from "lucide-react-native";
 interface CourierInfo {
   name: string;
   phone: string;
-  rating: number;
   vehicleType: string;
   plateNumber: string;
 }
@@ -37,9 +36,6 @@ export function CourierCard({ courier, slideAnim }: CourierCardProps) {
     >
       <View style={styles.courierHeader}>
         <Text style={styles.courierHeaderTitle}>Your Courier</Text>
-        <View style={styles.courierRating}>
-          <Text style={styles.courierRatingText}>⭐ {courier.rating}</Text>
-        </View>
       </View>
       
       <View style={styles.courierBody}>
@@ -85,26 +81,12 @@ const styles = StyleSheet.create({
     borderColor: "#10B981",
   },
   courierHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     marginBottom: 12,
   },
   courierHeaderTitle: {
     fontSize: 14,
     fontWeight: "600",
     color: "#6B7280",
-  },
-  courierRating: {
-    backgroundColor: "#FEF3C7",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  courierRatingText: {
-    fontSize: 12,
-    fontWeight: "600",
-    color: "#92400E",
   },
   courierBody: {
     flexDirection: "row",

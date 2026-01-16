@@ -30,7 +30,6 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 interface CourierInfo {
   name: string;
   phone: string;
-  rating: number;
   vehicleType: string;
   plateNumber: string;
 }
@@ -38,7 +37,6 @@ interface CourierInfo {
 const COURIER_INFO: CourierInfo = {
   name: "Luke Skywalker",
   phone: "+90 555 123 4567",
-  rating: 4.9,
   vehicleType: "Motorcycle",
   plateNumber: "34 ABC 123",
 };
@@ -341,7 +339,6 @@ export default function OrderTrackingScreen() {
         <EstimateCard 
           fadeAnim={fadeAnim}
           slideAnim={slideAnim}
-          pulseAnim={pulseAnim}
           progressAnim={progressAnim}
           estimatedMinutes={estimatedMinutes}
           storeName={displayStoreName}

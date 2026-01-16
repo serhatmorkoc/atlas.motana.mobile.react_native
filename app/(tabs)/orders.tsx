@@ -40,13 +40,20 @@ export default function OrdersScreen() {
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   
   const { orders, loading, error, refetch } = useOrders();
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   // Refetch orders when screen comes into focus (tab navigation)
+  // This ensures status changes are visible without requiring pull-to-refresh
   useFocusEffect(
     useCallback(() => {
-      console.log('[Orders Screen] Screen focused, refetching orders...');
-      refetch();
-    }, [refetch])
+      if (!isInitialLoad) {
+        // Silently refetch in background after initial load
+        refetch();
+      } else if (!loading) {
+        // Mark initial load as complete
+        setIsInitialLoad(false);
+      }
+    }, [isInitialLoad, loading, refetch])
   );
 
   const filteredOrders = orders.filter((order) => {
@@ -65,7 +72,8 @@ export default function OrdersScreen() {
     }
   };
 
-  if (loading && !refreshing) {
+  // Show loading only on initial load, not on subsequent refetches
+  if (loading && isInitialLoad && !refreshing) {
     return <LoadingScreen title="Loading orders..." subtitle="Please wait" />;
   }
 
