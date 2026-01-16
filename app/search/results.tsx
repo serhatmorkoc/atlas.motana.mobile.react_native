@@ -55,7 +55,7 @@ export default function SearchResultsScreen() {
 
   // Fetch stores from DB - filter by store_categories_id = 1
   const { stores, loading: storesLoading, error: storesError } = useStores({
-    limit: 200,
+    limit: 50,
   });
 
   // Filter stores by store_categories_id = 1
@@ -87,7 +87,7 @@ export default function SearchResultsScreen() {
                 query: GET_STORE_PRODUCTS,
                 variables: {
                   storeId: store.id,
-                  first: 6, // Fetch 6 products per store
+                  first: 8, // Fetch 8 products per store
                 },
                 fetchPolicy: 'cache-first', // Use cache for faster loading
               });
