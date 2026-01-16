@@ -10,11 +10,7 @@ export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
 
   const handleGetStarted = () => {
-    router.push("/auth/login" as any);
-  };
-
-  const handleRegister = () => {
-    router.push("/auth/register" as any);
+    router.replace("/(tabs)/home" as any);
   };
 
   return (
@@ -45,15 +41,7 @@ export default function WelcomeScreen() {
           onPress={handleGetStarted}
           activeOpacity={0.8}
         >
-          <Text style={styles.buttonText}>Giriş Yap</Text>
-        </TouchableOpacity>
-        
-        <TouchableOpacity
-          style={styles.secondaryButton}
-          onPress={handleRegister}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.secondaryButtonText}>Yeni Hesap Oluştur</Text>
+          <Text style={styles.buttonText}>Get Home Screen</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -112,36 +100,17 @@ const styles = StyleSheet.create({
   },
   button: {
     backgroundColor: "#FFFFFF",
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 24,
-    borderRadius: 14,
+    borderRadius: 20,
     alignItems: "center",
-    width: "100%",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 8,
-    elevation: 4,
   },
   buttonText: {
-    fontSize: 17,
-    fontWeight: "700" as const,
-    color: "#FF6B35",
-  },
-  secondaryButton: {
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 14,
-    alignItems: "center",
-    width: "100%",
-    marginTop: 12,
-    borderWidth: 2,
-    borderColor: "rgba(255,255,255,0.4)",
-  },
-  secondaryButtonText: {
-    fontSize: 17,
+    fontSize: 13,
     fontWeight: "600" as const,
-    color: "#FFFFFF",
+    color: "#FF6B35",
+    letterSpacing: 0.5,
+    fontFamily: "Droid Sans",
   },
   versionText: {
     fontSize: 10,
