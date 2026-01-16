@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Minus, Plus, ShoppingBag, Trash2, X } from "lucide-react-native";
+import { Minus, Plus, ShoppingBag, Trash2, CreditCard, Wallet, Check } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   Alert,
@@ -11,6 +11,7 @@ import {
   View,
   Modal,
   Animated,
+  TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation } from "@apollo/client/react";
@@ -61,6 +62,11 @@ export default function CheckoutScreen() {
   const [storeToClear, setStoreToClear] = useState<{ id: string; name: string } | null>(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const [placingStoreId, setPlacingStoreId] = useState<string | null>(null);
+  
+  // Store-specific state for payment method, note, and tip
+  const [storePaymentMethods, setStorePaymentMethods] = useState<Record<string, 'CASH' | 'CREDIT_CARD'>>({});
+  const [storeNotes, setStoreNotes] = useState<Record<string, string>>({});
+  const [storeTips, setStoreTips] = useState<Record<string, number>>({});
 
   type CreateOrderData = {
     insertIntoordersCollection: {
@@ -213,7 +219,11 @@ export default function CheckoutScreen() {
   const handlePlaceOrder = async (group: CartStoreGroup) => {
     if (placingStoreId) return;
 
-    const storeTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE;
+    const paymentMethod = storePaymentMethods[group.storeId] || 'CASH';
+    const note = storeNotes[group.storeId] || '';
+    const tipAmount = storeTips[group.storeId] || 0;
+    
+    const storeTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE + tipAmount;
     const orderCode = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const user: User | undefined = userQuery.data?.usersCollection?.edges?.[0]?.node;
@@ -284,15 +294,15 @@ export default function CheckoutScreen() {
             store_id: group.storeId, // uuid
             courier_id: null, // uuid null - will be assigned later
             delivery_address: deliveryAddressForMutation, // jsonb (as JSON string)
-            payment_method: "CASH", // text
+            payment_method: paymentMethod, // text (CASH or CREDIT_CARD)
             payment_status: "PENDING", // text (default 'PENDING')
             order_status: "PENDING", // text (default 'PENDING')
             sub_total: group.subtotal.toFixed(2), // numeric(10, 2) as string
             delivery_fee: DELIVERY_FEE.toFixed(2), // numeric(10, 2) as string
             tax_amount: "0.00", // numeric(10, 2) as string
-            tip_amount: "0.00", // numeric(10, 2) as string
+            tip_amount: tipAmount.toFixed(2), // numeric(10, 2) as string
             total_amount: storeTotal.toFixed(2), // numeric(10, 2) as string
-            note_to_store: null, // text null
+            note_to_store: note || null, // text null
             is_picked_up: false, // boolean (default false)
             estimated_delivery_time: estimatedDeliveryTime, // timestamp with time zone (ISO string)
           },
@@ -365,7 +375,10 @@ export default function CheckoutScreen() {
   };
 
   const renderStoreGroup = (group: CartStoreGroup) => {
-    const storeTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE;
+    const paymentMethod = storePaymentMethods[group.storeId] || 'CASH';
+    const note = storeNotes[group.storeId] || '';
+    const tipAmount = storeTips[group.storeId] || 0;
+    const storeTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE + tipAmount;
     const itemCount = group.items.reduce((sum, i) => sum + i.quantity, 0);
 
     return (
@@ -378,13 +391,105 @@ export default function CheckoutScreen() {
           <TouchableOpacity
             style={styles.clearButton}
             onPress={() => handleClearPress(group.storeId, group.storeName)}
+            activeOpacity={0.7}
           >
-            <X size={16} color="#6B7280" strokeWidth={2} />
+            <Text style={styles.clearButtonText}>Cancel Order</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.itemsList}>
           {group.items.map(renderCartItem)}
+        </View>
+
+        {/* Payment Method Selection */}
+        <View style={styles.paymentSection}>
+          <Text style={styles.sectionTitle}>Payment Method</Text>
+          <View style={styles.paymentOptions}>
+            <TouchableOpacity
+              style={[
+                styles.paymentOption,
+                paymentMethod === 'CASH' && styles.paymentOptionActive,
+              ]}
+              onPress={() => setStorePaymentMethods({ ...storePaymentMethods, [group.storeId]: 'CASH' })}
+              activeOpacity={0.7}
+            >
+              <Wallet size={20} color={paymentMethod === 'CASH' ? '#FFFFFF' : '#6B7280'} />
+              <Text style={[styles.paymentOptionText, paymentMethod === 'CASH' && styles.paymentOptionTextActive]}>
+                Cash
+              </Text>
+              {paymentMethod === 'CASH' && (
+                <Check size={16} color="#FFFFFF" strokeWidth={3} />
+              )}
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[
+                styles.paymentOption,
+                paymentMethod === 'CREDIT_CARD' && styles.paymentOptionActive,
+              ]}
+              onPress={() => setStorePaymentMethods({ ...storePaymentMethods, [group.storeId]: 'CREDIT_CARD' })}
+              activeOpacity={0.7}
+            >
+              <CreditCard size={20} color={paymentMethod === 'CREDIT_CARD' ? '#FFFFFF' : '#6B7280'} />
+              <Text style={[styles.paymentOptionText, paymentMethod === 'CREDIT_CARD' && styles.paymentOptionTextActive]}>
+                Credit Card
+              </Text>
+              {paymentMethod === 'CREDIT_CARD' && (
+                <Check size={16} color="#FFFFFF" strokeWidth={3} />
+              )}
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Tip Section */}
+        <View style={styles.tipSection}>
+          <Text style={styles.sectionTitle}>Tip For Courier</Text>
+          <View style={styles.tipOptions}>
+            {[0, 5, 10, 15, 20].map((tip) => (
+              <TouchableOpacity
+                key={tip}
+                style={[
+                  styles.tipOption,
+                  tipAmount === tip && styles.tipOptionActive,
+                ]}
+                onPress={() => setStoreTips({ ...storeTips, [group.storeId]: tip })}
+                activeOpacity={0.7}
+              >
+                <Text style={[styles.tipOptionText, tipAmount === tip && styles.tipOptionTextActive]}>
+                  {tip === 0 ? 'No Tip' : `${tip}₺`}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <View style={styles.tipCustomInput}>
+            <Text style={styles.tipCustomLabel}>Custom Tip:</Text>
+            <TextInput
+              style={styles.tipInput}
+              placeholder="0.00"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="numeric"
+              value={tipAmount > 0 && ![0, 5, 10, 15, 20].includes(tipAmount) ? tipAmount.toString() : ''}
+              onChangeText={(text) => {
+                const value = parseFloat(text) || 0;
+                setStoreTips({ ...storeTips, [group.storeId]: value });
+              }}
+            />
+            <Text style={styles.tipInputCurrency}>₺</Text>
+          </View>
+        </View>
+
+        {/* Note Section */}
+        <View style={styles.noteSection}>
+          <Text style={styles.sectionTitle}>Note to Store (Optional)</Text>
+          <TextInput
+            style={styles.noteInput}
+            placeholder="Add special instructions..."
+            placeholderTextColor="#9CA3AF"
+            multiline
+            numberOfLines={3}
+            value={note}
+            onChangeText={(text) => setStoreNotes({ ...storeNotes, [group.storeId]: text })}
+            textAlignVertical="top"
+          />
         </View>
 
         <View style={styles.orderSummary}>
@@ -400,6 +505,12 @@ export default function CheckoutScreen() {
             <Text style={styles.summaryLabel}>Service Fee</Text>
             <Text style={styles.summaryValue}>{formatPrice(SERVICE_FEE)}</Text>
           </View>
+          {tipAmount > 0 && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Tip For Courier</Text>
+              <Text style={styles.summaryValue}>{formatPrice(tipAmount)}</Text>
+            </View>
+          )}
           <View style={[styles.summaryRow, styles.totalRow]}>
             <Text style={styles.totalLabel}>Total</Text>
             <Text style={styles.totalValue}>{formatPrice(storeTotal)}</Text>
@@ -436,13 +547,6 @@ export default function CheckoutScreen() {
     <View style={styles.container}>
       <View style={[styles.header, { paddingTop: insets.top + 16 }]}>
         <Text style={styles.headerTitle}>Checkout</Text>
-        <View style={styles.headerRight}>
-          {totalItems > 0 && (
-            <View style={styles.itemsBadge}>
-              <Text style={styles.itemsBadgeText}>{totalItems}</Text>
-            </View>
-          )}
-        </View>
       </View>
 
       {groupedByStore.length === 0 ? (
@@ -577,8 +681,8 @@ const styles = StyleSheet.create({
   storeHeader: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
-    padding: 16,
-    paddingBottom: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#F3F4F6",
     backgroundColor: "#FAFAFA",
@@ -599,12 +703,19 @@ const styles = StyleSheet.create({
     fontWeight: "500" as const,
   },
   clearButton: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#F3F4F6",
+    paddingVertical: 6,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    backgroundColor: "#FEF2F2",
     alignItems: "center" as const,
     justifyContent: "center" as const,
+    borderWidth: 1,
+    borderColor: "#FECACA",
+  },
+  clearButtonText: {
+    fontSize: 12,
+    fontWeight: "600" as const,
+    color: "#EF4444",
   },
   itemsList: {
     paddingVertical: 8,
@@ -616,8 +727,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   itemImage: {
-    width: 56,
-    height: 56,
+    width: 64,
+    height: 64,
     borderRadius: 10,
   },
   itemInfo: {
@@ -838,5 +949,121 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#D1D5DB",
     fontWeight: "500" as const,
+  },
+  paymentSection: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: "#1F2937",
+    marginBottom: 12,
+  },
+  paymentOptions: {
+    flexDirection: "row" as const,
+    gap: 10,
+  },
+  paymentOption: {
+    flex: 1,
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    backgroundColor: "#F3F4F6",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  paymentOptionActive: {
+    backgroundColor: "#FF6B35",
+    borderColor: "#FF6B35",
+  },
+  paymentOptionText: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: "#6B7280",
+  },
+  paymentOptionTextActive: {
+    color: "#FFFFFF",
+  },
+  tipSection: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  tipOptions: {
+    flexDirection: "row" as const,
+    gap: 6,
+    marginBottom: 12,
+  },
+  tipOption: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    borderRadius: 10,
+    backgroundColor: "#F3F4F6",
+    borderWidth: 2,
+    borderColor: "transparent",
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
+  tipOptionActive: {
+    backgroundColor: "#FF6B35",
+    borderColor: "#FF6B35",
+  },
+  tipOptionText: {
+    fontSize: 13,
+    fontWeight: "600" as const,
+    color: "#6B7280",
+  },
+  tipOptionTextActive: {
+    color: "#FFFFFF",
+  },
+  tipCustomInput: {
+    flexDirection: "row" as const,
+    alignItems: "center" as const,
+    gap: 8,
+  },
+  tipCustomLabel: {
+    fontSize: 13,
+    color: "#6B7280",
+    fontWeight: "500" as const,
+  },
+  tipInput: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: "#F3F4F6",
+    fontSize: 14,
+    color: "#1F2937",
+    fontWeight: "600" as const,
+  },
+  tipInputCurrency: {
+    fontSize: 14,
+    fontWeight: "600" as const,
+    color: "#1F2937",
+  },
+  noteSection: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderTopColor: "#F3F4F6",
+  },
+  noteInput: {
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 10,
+    backgroundColor: "#F3F4F6",
+    fontSize: 14,
+    color: "#1F2937",
+    minHeight: 80,
+    maxHeight: 120,
   },
 });

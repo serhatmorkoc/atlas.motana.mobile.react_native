@@ -153,7 +153,7 @@ export default function OrderConfirmationScreen() {
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity
           style={styles.closeButton}
-          onPress={() => router.dismissAll()}
+          onPress={() => router.replace("/(tabs)/orders")}
           activeOpacity={0.7}
         >
           <X size={22} color="#6B7280" strokeWidth={2} />

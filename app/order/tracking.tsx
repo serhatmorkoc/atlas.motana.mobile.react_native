@@ -273,7 +273,7 @@ export default function OrderTrackingScreen() {
   const isDelivered = order?.rawStatus === 'DELIVERED';
 
   if (loading) {
-    return <LoadingScreen title="Loading order..." subtitle="Please wait" />;
+    return <LoadingScreen title="Loading Your Information..." subtitle="Please wait" />;
   }
 
   if (error || !order) {
