@@ -80,7 +80,7 @@ export default function LoginScreen() {
           
           <View style={styles.logoSection}>
             <View style={styles.logoCircle}>
-              <ShoppingBag size={32} color="#FF6B35" strokeWidth={2} />
+              <ShoppingBag size={26} color="#FF6B35" strokeWidth={2} />
             </View>
             <Text style={styles.welcomeText}>Tekrar Hoşgeldin!</Text>
             <Text style={styles.subtitleText}>Hesabına giriş yap</Text>
@@ -198,34 +198,34 @@ const styles = StyleSheet.create({
     backgroundColor: "#F9FAFB",
   },
   headerGradient: {
-    paddingBottom: 40,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingBottom: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerContent: {
     paddingHorizontal: 20,
   },
   backButton: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     backgroundColor: "rgba(255,255,255,0.2)",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 12,
   },
   logoSection: {
     alignItems: "center",
     paddingBottom: 8,
   },
   logoCircle: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: "#FFFFFF",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 16,
+    marginBottom: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -233,13 +233,13 @@ const styles = StyleSheet.create({
     elevation: 8,
   },
   welcomeText: {
-    fontSize: 28,
+    fontSize: 22,
     fontWeight: "700" as const,
     color: "#FFFFFF",
-    marginBottom: 6,
+    marginBottom: 4,
   },
   subtitleText: {
-    fontSize: 16,
+    fontSize: 14,
     color: "rgba(255,255,255,0.85)",
   },
   formContainer: {
@@ -252,8 +252,8 @@ const styles = StyleSheet.create({
   },
   formCard: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 24,
-    padding: 24,
+    borderRadius: 20,
+    padding: 20,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.06,
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   inputGroup: {
-    marginBottom: 20,
+    marginBottom: 14,
   },
   inputLabel: {
     fontSize: 14,
@@ -273,11 +273,11 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#F9FAFB",
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
-    paddingHorizontal: 14,
-    height: 54,
+    paddingHorizontal: 12,
+    height: 48,
   },
   inputError: {
     borderColor: "#EF4444",
@@ -302,8 +302,8 @@ const styles = StyleSheet.create({
   },
   forgotButton: {
     alignSelf: "flex-end",
-    marginBottom: 24,
-    marginTop: -8,
+    marginBottom: 16,
+    marginTop: -4,
   },
   forgotText: {
     fontSize: 14,
@@ -312,8 +312,8 @@ const styles = StyleSheet.create({
   },
   loginButton: {
     backgroundColor: "#FF6B35",
-    height: 54,
-    borderRadius: 14,
+    height: 48,
+    borderRadius: 12,
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#FF6B35",
@@ -333,7 +333,7 @@ const styles = StyleSheet.create({
   dividerContainer: {
     flexDirection: "row",
     alignItems: "center",
-    marginVertical: 24,
+    marginVertical: 16,
   },
   divider: {
     flex: 1,
@@ -346,13 +346,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
   },
   socialButton: {
-    height: 52,
-    borderRadius: 14,
+    height: 46,
+    borderRadius: 12,
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: 10,
     backgroundColor: "#FFFFFF",
   },
   socialButtonText: {
@@ -364,7 +364,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginTop: 24,
+    marginTop: 16,
   },
   registerText: {
     fontSize: 15,
