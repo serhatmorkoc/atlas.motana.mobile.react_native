@@ -20,6 +20,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { formatPrice, parsePrice } from "@/utils/formatters";
+import { logger } from "@/utils/logger";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -55,20 +56,20 @@ export default function OrderConfirmationScreen() {
   const orderItems: OrderItem[] = (() => {
     try {
       if (!params.items) return [];
-      
+
       if (Array.isArray(params.items)) {
         return params.items as OrderItem[];
       }
-      
+
       if (typeof params.items === 'string') {
-        console.log('Parsing items string:', params.items.substring(0, 100));
+        logger.debug('Order', 'Parsing items string:', params.items.substring(0, 100));
         const decoded = decodeURIComponent(params.items);
         return JSON.parse(decoded);
       }
-      
+
       return [];
     } catch (error) {
-      console.error('Failed to parse order items:', error, 'Raw value:', params.items);
+      logger.error('Order', 'Failed to parse order items:', error, 'Raw value:', params.items);
       return [];
     }
   })();
@@ -76,7 +77,7 @@ export default function OrderConfirmationScreen() {
 
   const handleTrackOrder = () => {
     router.push({
-      pathname: "/order/tracking" as any,
+      pathname: "/order/tracking",
       params: {
         orderId: params.orderId,
         storeName: params.storeName,
@@ -90,13 +91,13 @@ export default function OrderConfirmationScreen() {
 
   useEffect(() => {
     sendOrderNotification();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const sendOrderNotification = async () => {
     try {
       if (Platform.OS === "web") {
-        console.log("Notifications not supported on web");
+        logger.info('Notification', 'Notifications not supported on web');
         return;
       }
 
@@ -109,7 +110,7 @@ export default function OrderConfirmationScreen() {
       }
 
       if (finalStatus !== "granted") {
-        console.log("Notification permission not granted");
+        logger.info('Notification', 'Notification permission not granted');
         return;
       }
 
@@ -125,7 +126,7 @@ export default function OrderConfirmationScreen() {
         },
       });
 
-      console.log("First notification scheduled for 3 seconds");
+      logger.debug('Notification', 'First notification scheduled for 3 seconds');
 
       await Notifications.scheduleNotificationAsync({
         content: {
@@ -139,9 +140,9 @@ export default function OrderConfirmationScreen() {
         },
       });
 
-      console.log("Second notification scheduled for 5 minutes");
+      logger.debug('Notification', 'Second notification scheduled for 5 minutes');
     } catch (error) {
-      console.log("Error sending notification:", error);
+      logger.error('Notification', 'Error sending notification:', error);
     }
   };
 
@@ -247,7 +248,7 @@ export default function OrderConfirmationScreen() {
             <Text style={styles.deliveryTimeNumber}>{estimatedTime}-{estimatedTime + 10}</Text>
             <Text style={styles.deliveryTimeUnit}>minutes</Text>
           </View>
-          
+
           <View style={styles.addressSection}>
             <View style={styles.addressHeader}>
               <MapPin size={16} color="#FF6B35" strokeWidth={2} />

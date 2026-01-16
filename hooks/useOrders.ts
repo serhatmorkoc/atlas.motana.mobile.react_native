@@ -5,6 +5,7 @@ import { apolloClient } from '@/lib/apollo/client';
 import { GET_ORDERS_BY_USER_ID, GET_ORDER_ITEMS_BY_ORDER_ID } from '@/lib/apollo/queries/orders';
 import { GET_STORE_BY_ID } from '@/lib/apollo/queries/stores';
 import { Order, OrderItem, OrderStatus, DBOrderStatus } from '@/types/order.types';
+import type { DeliveryAddress } from '@/types/address.types';
 
 const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
 
@@ -14,7 +15,7 @@ interface GraphQLOrder {
   order_code: string | null;
   user_id: string | null;
   store_id: string | null;
-  delivery_address: any; // JSONB
+  delivery_address: DeliveryAddress | string | null; // JSONB - can be parsed object or string
   payment_method: string | null;
   payment_status: string | null;
   order_status: string | null;
@@ -57,6 +58,30 @@ interface GetOrdersByUserIdVariables {
   offset?: number;
 }
 
+interface GetStoreByIdData {
+  storesCollection: {
+    edges: Array<{
+      node: GraphQLStore;
+    }>;
+  };
+}
+
+interface GetStoreByIdVariables {
+  id: string;
+}
+
+interface GetOrderItemsByOrderIdData {
+  order_itemsCollection: {
+    edges: Array<{
+      node: GraphQLOrderItem;
+    }>;
+  };
+}
+
+interface GetOrderItemsByOrderIdVariables {
+  orderId: string;
+}
+
 /**
  * Map GraphQL order_status (DB status) to Mobile App OrderStatus type
  * DB Statuses: PENDING, CONFIRMED, PREPARING, READY, ON_WAY, DELIVERED, CANCELLED
@@ -64,9 +89,9 @@ interface GetOrdersByUserIdVariables {
  */
 const mapOrderStatus = (status: string | null): OrderStatus => {
   if (!status) return 'in_progress';
-  
+
   const statusUpper = status.toUpperCase();
-  
+
   // Active/In Progress statuses
   if (
     statusUpper === 'PENDING' ||
@@ -77,17 +102,17 @@ const mapOrderStatus = (status: string | null): OrderStatus => {
   ) {
     return 'in_progress';
   }
-  
+
   // Delivered
   if (statusUpper === 'DELIVERED') {
     return 'delivered';
   }
-  
+
   // Cancelled
   if (statusUpper === 'CANCELLED') {
     return 'cancelled';
   }
-  
+
   // Default to in_progress for unknown statuses
   return 'in_progress';
 };
@@ -97,14 +122,14 @@ const mapOrderStatus = (status: string | null): OrderStatus => {
  */
 const fetchStore = async (storeId: string | null): Promise<GraphQLStore | null> => {
   if (!storeId) return null;
-  
+
   try {
-    const { data } = await apolloClient.query({
+    const { data } = await apolloClient.query<GetStoreByIdData, GetStoreByIdVariables>({
       query: GET_STORE_BY_ID,
       variables: { id: storeId },
       fetchPolicy: 'no-cache',
     });
-    
+
     return data?.storesCollection?.edges?.[0]?.node || null;
   } catch (e) {
     console.error('Failed to fetch store:', e);
@@ -117,12 +142,12 @@ const fetchStore = async (storeId: string | null): Promise<GraphQLStore | null> 
  */
 const fetchOrderItems = async (orderId: string): Promise<GraphQLOrderItem[]> => {
   try {
-    const { data } = await apolloClient.query({
+    const { data } = await apolloClient.query<GetOrderItemsByOrderIdData, GetOrderItemsByOrderIdVariables>({
       query: GET_ORDER_ITEMS_BY_ORDER_ID,
       variables: { orderId },
       fetchPolicy: 'no-cache',
     });
-    
+
     return data?.order_itemsCollection?.edges?.map((e) => e.node) || [];
   } catch (e) {
     console.error('Failed to fetch order items:', e);
@@ -151,7 +176,7 @@ const mapGraphQLOrderToOrder = async (
   let deliveryAddress = 'Address not available';
   try {
     if (graphQLOrder.delivery_address) {
-      const addressJson = typeof graphQLOrder.delivery_address === 'string' 
+      const addressJson = typeof graphQLOrder.delivery_address === 'string'
         ? JSON.parse(graphQLOrder.delivery_address)
         : graphQLOrder.delivery_address;
       deliveryAddress = addressJson.delivery_address || deliveryAddress;

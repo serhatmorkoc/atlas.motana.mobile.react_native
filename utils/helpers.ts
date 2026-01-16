@@ -5,18 +5,18 @@
 /**
  * Debounce function
  */
-export function debounce<T extends (...args: any[]) => any>(
+export function debounce<T extends (...args: unknown[]) => unknown>(
   func: T,
   wait: number
 ): (...args: Parameters<T>) => void {
   let timeout: ReturnType<typeof setTimeout> | null = null;
-  
+
   return function executedFunction(...args: Parameters<T>) {
     const later = () => {
       timeout = null;
       func(...args);
     };
-    
+
     if (timeout) {
       clearTimeout(timeout);
     }
@@ -27,12 +27,12 @@ export function debounce<T extends (...args: any[]) => any>(
 /**
  * Throttle function
  */
-export function throttle<T extends (...args: any[]) => any>(
+export function throttle<T extends (...args: unknown[]) => unknown>(
   func: T,
   limit: number
 ): (...args: Parameters<T>) => void {
   let inThrottle: boolean;
-  
+
   return function executedFunction(...args: Parameters<T>) {
     if (!inThrottle) {
       func(...args);
@@ -59,7 +59,7 @@ export function deepClone<T>(obj: T): T {
 /**
  * Check if value is empty
  */
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: unknown): boolean {
   if (value === null || value === undefined) return true;
   if (typeof value === 'string') return value.trim().length === 0;
   if (Array.isArray(value)) return value.length === 0;
@@ -88,24 +88,24 @@ export function parseDeliveryTime(timeRange: string): number {
  */
 export function optimizeImageUrl(url: string | null | undefined): string {
   if (!url) return '';
-  
+
   // Check if it's a Supabase storage URL (check for both render/image and object/public paths)
   const isSupabaseStorage = url.includes('supabase.co/storage/v1/');
-  
+
   if (isSupabaseStorage) {
     // Check if optimization parameters already exist
     if (url.includes('width=') && url.includes('height=') && url.includes('quality=')) {
       // Already optimized, return as is
       return url;
     }
-    
+
     // Remove existing query parameters if any to avoid duplicates
     const urlWithoutParams = url.split('?')[0];
-    
+
     // Add transformation parameters (without timestamp to avoid constant re-renders)
     return `${urlWithoutParams}?width=400&height=300&quality=80&resize=cover`;
   }
-  
+
   // Return original URL if it's not a Supabase storage URL
   return url;
 }

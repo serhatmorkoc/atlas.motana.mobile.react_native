@@ -4,6 +4,7 @@ import { apolloClient } from '@/lib/apollo/client';
 import { GET_ORDER_BY_ID, GET_ORDER_ITEMS_BY_ORDER_ID } from '@/lib/apollo/queries/orders';
 import { GET_STORE_BY_ID } from '@/lib/apollo/queries/stores';
 import { Order, OrderItem, DBOrderStatus } from '@/types/order.types';
+import type { DeliveryAddress } from '@/types/address.types';
 import React from 'react';
 
 // GraphQL Order type (from Supabase)
@@ -12,7 +13,7 @@ interface GraphQLOrder {
   order_code: string | null;
   user_id: string | null;
   store_id: string | null;
-  delivery_address: any; // JSONB
+  delivery_address: DeliveryAddress | string | null; // JSONB - can be parsed object or string
   payment_method: string | null;
   payment_status: string | null;
   order_status: string | null;
@@ -74,9 +75,9 @@ interface GetOrderByIdVariables {
  */
 const mapOrderStatus = (status: string | null): 'delivered' | 'in_progress' | 'cancelled' => {
   if (!status) return 'in_progress';
-  
+
   const statusUpper = status.toUpperCase();
-  
+
   if (statusUpper === 'DELIVERED') return 'delivered';
   if (statusUpper === 'CANCELLED') return 'cancelled';
   return 'in_progress';
@@ -98,7 +99,7 @@ const fetchOrderItems = async (orderId: string): Promise<GraphQLOrderItem[]> => 
       variables: { orderId },
       fetchPolicy: 'no-cache',
     });
-    
+
     return data?.order_itemsCollection?.edges?.map((e) => e.node) || [];
   } catch (e) {
     console.error('Failed to fetch order items:', e);
@@ -116,7 +117,7 @@ const mapGraphQLOrderToOrder = async (
   // Get store info
   let storeName = 'Store';
   let storeImage = '';
-  
+
   if (graphQLOrder.store?.edges?.[0]?.node) {
     const store = graphQLOrder.store.edges[0].node;
     storeName = store.name;
@@ -139,7 +140,7 @@ const mapGraphQLOrderToOrder = async (
         variables: { id: graphQLOrder.store_id },
         fetchPolicy: 'no-cache',
       });
-      
+
       const store = data?.storesCollection?.edges?.[0]?.node;
       if (store) {
         storeName = store.name;
@@ -161,7 +162,7 @@ const mapGraphQLOrderToOrder = async (
   let deliveryAddress = 'Address not available';
   try {
     if (graphQLOrder.delivery_address) {
-      const addressJson = typeof graphQLOrder.delivery_address === 'string' 
+      const addressJson = typeof graphQLOrder.delivery_address === 'string'
         ? JSON.parse(graphQLOrder.delivery_address)
         : graphQLOrder.delivery_address;
       deliveryAddress = addressJson.delivery_address || addressJson.address || deliveryAddress;
@@ -230,9 +231,9 @@ export const useOrder = (orderId: string | null) => {
       setIsLoadingDetails(true);
       try {
         // Fetch order items if not included in the query
-        const orderItems = node.order_items?.edges?.map((e) => e.node) || 
+        const orderItems = node.order_items?.edges?.map((e) => e.node) ||
           await fetchOrderItems(node.id);
-        
+
         const mappedOrder = await mapGraphQLOrderToOrder(node, orderItems);
         setOrder(mappedOrder);
       } catch (e) {

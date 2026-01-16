@@ -4,6 +4,7 @@ import { AppState, AppStateStatus } from 'react-native';
 import { supabaseClient } from '@/lib/supabase/client';
 import { sendOrderStatusNotification } from '@/services/notification.service';
 import { DBOrderStatus } from '@/types/order.types';
+import { logger } from '@/utils/logger';
 
 const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
 
@@ -36,8 +37,8 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
   const channelRef = useRef<ReturnType<typeof supabaseClient.channel> | null>(null);
   const previousStatusesRef = useRef<Map<string, string | null>>(new Map());
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
-  const reconnectTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollingIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (!enabled || !userId) {
@@ -50,12 +51,12 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
      */
     const startPolling = () => {
       if (pollingIntervalRef.current) {
-        console.log('[Order Status] Polling already active');
+        logger.debug('OrderStatus', 'Polling already active');
         return; // Already polling
       }
 
-      console.log('[Order Status] Starting polling (30s interval)');
-      
+      logger.debug('OrderStatus', 'Starting polling (30s interval)');
+
       // First poll immediately
       pollOrders();
 
@@ -66,8 +67,8 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
 
     const pollOrders = async () => {
       try {
-        console.log('[Order Status] Polling orders...');
-        
+        logger.debug('OrderStatus', 'Polling orders...');
+
         // Fetch latest orders for this user
         const { data, error } = await supabaseClient
           .from('orders')
@@ -77,16 +78,16 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
           .limit(10);
 
         if (error) {
-          console.error('[Order Status] Polling error:', error);
+          logger.error('OrderStatus', 'Polling error:', error);
           return;
         }
 
         if (!data || data.length === 0) {
-          console.log('[Order Status] No orders found in polling');
+          logger.debug('OrderStatus', 'No orders found in polling');
           return;
         }
 
-        console.log(`[Order Status] Polling found ${data.length} orders`);
+        logger.debug('OrderStatus', `Polling found ${data.length} orders`);
 
         // Check for status changes
         for (const order of data) {
@@ -95,9 +96,9 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
 
           // If status changed, send notification
           if (previousStatus !== undefined && previousStatus !== currentStatus) {
-            console.log(
-              `[Order Status] Polling detected status change for order ${order.order_code || order.id}: ` +
-              `${previousStatus} -> ${currentStatus}`
+            logger.debug(
+              'OrderStatus',
+              `Polling detected status change for order ${order.order_code || order.id}: ${previousStatus} -> ${currentStatus}`
             );
 
             // Fetch store name
@@ -115,12 +116,12 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
                 }
               }
             } catch (error) {
-              console.error('[Order Status] Failed to fetch store name:', error);
+              logger.error('OrderStatus', 'Failed to fetch store name:', error);
             }
 
             const newStatus = (currentStatus?.toUpperCase() || null) as DBOrderStatus | null;
             if (newStatus) {
-              console.log(`[Order Status] Sending notification for status: ${newStatus}`);
+              logger.debug('OrderStatus', `Sending notification for status: ${newStatus}`);
               await sendOrderStatusNotification(newStatus, order.order_code, storeName);
             }
 
@@ -133,7 +134,7 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
           previousStatusesRef.current.set(order.id, currentStatus);
         }
       } catch (error) {
-        console.error('[Order Status] Polling failed:', error);
+        logger.error('OrderStatus', 'Polling failed:', error);
       }
     };
 
@@ -147,7 +148,7 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
       const previousState = appStateRef.current;
       appStateRef.current = nextAppState;
 
-      console.log(`[Order Status] AppState changed: ${previousState} -> ${nextAppState}`);
+      logger.debug('OrderStatus', `AppState changed: ${previousState} -> ${nextAppState}`);
 
       // Clear any pending reconnect timeout
       if (reconnectTimeoutRef.current) {
@@ -161,7 +162,7 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
         if (pollingIntervalRef.current) {
           clearInterval(pollingIntervalRef.current);
           pollingIntervalRef.current = null;
-          console.log('[Order Status] Stopped polling, using Realtime subscription');
+          logger.debug('OrderStatus', 'Stopped polling, using Realtime subscription');
         }
 
         // Add a small delay to ensure app is fully active
@@ -170,23 +171,23 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
           if (!channel) return;
 
           // Check subscription status
-          const subscriptionState = (channel as any).state || 'unknown';
-          console.log(`[Order Status] Channel state: ${subscriptionState}`);
+          const subscriptionState = (channel as unknown as { state?: string }).state || 'unknown';
+          logger.debug('OrderStatus', `Channel state: ${subscriptionState}`);
 
           // Reconnect if needed
           if (subscriptionState === 'closed' || subscriptionState === 'errored' || subscriptionState === 'timed_out') {
-            console.log('[Order Status] Reconnecting subscription after app became active');
+            logger.debug('OrderStatus', 'Reconnecting subscription after app became active');
             try {
               channel.subscribe();
             } catch (error) {
-              console.error('[Order Status] Failed to reconnect:', error);
+              logger.error('OrderStatus', 'Failed to reconnect:', error);
             }
           }
         }, 500);
       } else if (nextAppState === 'background' || nextAppState === 'inactive') {
         // Start polling when app goes to background (Realtime WebSocket may be disconnected)
         if (!pollingIntervalRef.current) {
-          console.log('[Order Status] App went to background, starting polling fallback');
+          logger.debug('OrderStatus', 'App went to background, starting polling fallback');
           startPolling();
         }
       }
@@ -218,9 +219,9 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
             // Only send notification if status changed (not initial load)
             // previousStatus will be undefined on first load, so we skip notification
             if (previousStatus !== undefined && previousStatus !== newRecord.order_status) {
-              console.log(
-                `[Order Status] Order ${newRecord.order_code || newRecord.id} status changed: ` +
-                `${oldRecord.order_status} -> ${newRecord.order_status}`
+              logger.debug(
+                'OrderStatus',
+                `Order ${newRecord.order_code || newRecord.id} status changed: ${oldRecord.order_status} -> ${newRecord.order_status}`
               );
 
               // Fetch store name for notification
@@ -238,7 +239,7 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
                   }
                 }
               } catch (error) {
-                console.error('Failed to fetch store name for notification:', error);
+                logger.error('OrderStatus', 'Failed to fetch store name for notification:', error);
               }
 
               // Send notification if status is meaningful (not null)
@@ -262,13 +263,13 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          console.log(`[Order Status] Subscribed to order updates for user ${userId}`);
+          logger.debug('OrderStatus', `Subscribed to order updates for user ${userId}`);
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('[Order Status] Channel subscription error');
+          logger.error('OrderStatus', 'Channel subscription error');
         } else if (status === 'TIMED_OUT') {
-          console.warn('[Order Status] Channel subscription timed out');
+          logger.warn('OrderStatus', 'Channel subscription timed out');
         } else if (status === 'CLOSED') {
-          console.warn('[Order Status] Channel subscription closed');
+          logger.warn('OrderStatus', 'Channel subscription closed');
         }
       });
 
@@ -285,7 +286,7 @@ export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOp
       }
       if (channelRef.current) {
         supabaseClient.removeChannel(channelRef.current);
-        console.log(`[Order Status] Unsubscribed from order updates for user ${userId}`);
+        logger.debug('OrderStatus', `Unsubscribed from order updates for user ${userId}`);
       }
     };
   }, [userId, enabled, onStatusChange]);

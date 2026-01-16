@@ -1,6 +1,7 @@
 import createContextHook from '@nkzw/create-context-hook';
 import { useState, useCallback, useMemo } from 'react';
 import { MenuItem, MenuItemExtra } from '@/types/menu.types';
+import { logger } from '@/utils/logger';
 
 export interface CartItem {
   id: string;
@@ -31,7 +32,7 @@ export const [CartProvider, useCart] = createContextHook(() => {
     storeImage: string
   ) => {
     const extras = menuItem.extras?.filter(e => selectedExtras.has(e.id)) ?? [];
-    
+
     const newItem: CartItem = {
       id: `${menuItem.id}-${Date.now()}`,
       menuItem,
@@ -43,12 +44,12 @@ export const [CartProvider, useCart] = createContextHook(() => {
     };
 
     setCartItems(prev => [...prev, newItem]);
-    console.log('Added to cart:', newItem);
+    logger.debug('Cart', 'Added to cart:', newItem);
   }, []);
 
   const removeFromCart = useCallback((cartItemId: string) => {
     setCartItems(prev => prev.filter(item => item.id !== cartItemId));
-    console.log('Removed from cart:', cartItemId);
+    logger.debug('Cart', 'Removed from cart:', cartItemId);
   }, []);
 
   const updateQuantity = useCallback((cartItemId: string, newQuantity: number) => {
@@ -65,12 +66,12 @@ export const [CartProvider, useCart] = createContextHook(() => {
 
   const clearCart = useCallback(() => {
     setCartItems([]);
-    console.log('Cart cleared');
+    logger.debug('Cart', 'Cart cleared');
   }, []);
 
   const clearStoreItems = useCallback((storeId: string) => {
     setCartItems(prev => prev.filter(item => item.storeId !== storeId));
-    console.log('Cleared items for store:', storeId);
+    logger.debug('Cart', 'Cleared items for store:', storeId);
   }, []);
 
   const getItemPrice = useCallback((item: CartItem): number => {

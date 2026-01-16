@@ -20,6 +20,7 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerBackTitle: "Back" }}>
       <Stack.Screen name="index" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen
         name="search-modal"
         options={{
@@ -36,7 +37,7 @@ function RootLayoutNav() {
           animation: "slide_from_bottom",
         }}
       />
-      
+
       <Stack.Screen
         name="account"
         options={{

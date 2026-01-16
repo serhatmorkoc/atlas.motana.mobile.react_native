@@ -4,6 +4,7 @@
  */
 import { useRef, useCallback, useEffect } from 'react';
 import { supabaseClient } from '@/lib/supabase/client';
+import { logger } from '@/utils/logger';
 
 const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
 
@@ -47,7 +48,7 @@ export function useOrdersSubscription(
     }
 
     if (!enabled || !userId) {
-      return () => {}; // No-op cleanup
+      return () => { }; // No-op cleanup
     }
 
     // Create a channel for orders changes
@@ -62,11 +63,9 @@ export function useOrdersSubscription(
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          const orderId = (payload.new as any)?.id || (payload.old as any)?.id;
-          
-          if (__DEV__) {
-            console.log(`[Orders Subscription] ${payload.eventType} event for order:`, orderId);
-          }
+          const orderId = (payload.new as { id?: string })?.id || (payload.old as { id?: string })?.id;
+
+          logger.debug('Orders', `${payload.eventType} event for order:`, orderId);
 
           // Trigger refetch when orders change
           // Use ref to get latest callback without recreating subscription
@@ -79,15 +78,13 @@ export function useOrdersSubscription(
       )
       .subscribe((status) => {
         if (status === 'SUBSCRIBED') {
-          if (__DEV__) {
-            console.log(`[Orders Subscription] Subscribed to orders changes for user ${userId}`);
-          }
+          logger.debug('Orders', `Subscribed to orders changes for user ${userId}`);
         } else if (status === 'CHANNEL_ERROR') {
-          console.error('[Orders Subscription] Channel subscription error');
+          logger.error('Orders', 'Channel subscription error');
         } else if (status === 'TIMED_OUT') {
-          console.warn('[Orders Subscription] Channel subscription timed out');
+          logger.warn('Orders', 'Channel subscription timed out');
         } else if (status === 'CLOSED') {
-          console.warn('[Orders Subscription] Channel subscription closed');
+          logger.warn('Orders', 'Channel subscription closed');
         }
       });
 
@@ -98,9 +95,7 @@ export function useOrdersSubscription(
       if (channelRef.current) {
         supabaseClient.removeChannel(channelRef.current);
         channelRef.current = null;
-        if (__DEV__) {
-          console.log(`[Orders Subscription] Unsubscribed from orders changes for user ${userId}`);
-        }
+        logger.debug('Orders', `Unsubscribed from orders changes for user ${userId}`);
       }
     };
   }, [userId, enabled]);

@@ -1,17 +1,23 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { useEffect } from "react";
+import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { ShoppingBag } from "lucide-react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Constants from "expo-constants";
+import { Colors } from "@/constants/Colors";
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
 
-  const handleGetStarted = () => {
-    router.replace("/(tabs)/home" as any);
-  };
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Navigate to Login screen after delay
+      router.replace("/auth/login" as any);
+    }, 2500);
+
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
@@ -24,7 +30,7 @@ export default function WelcomeScreen() {
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
             >
-              <ShoppingBag size={56} color="#FF6B35" strokeWidth={2} />
+              <ShoppingBag size={56} color={Colors.primary} strokeWidth={2} />
             </LinearGradient>
           </View>
 
@@ -33,16 +39,10 @@ export default function WelcomeScreen() {
             <Text style={styles.versionText}>v{Constants.expoConfig?.version || "1.0.0"}</Text>
           </View>
         </View>
-      </View>
 
-      <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          style={styles.button}
-          onPress={handleGetStarted}
-          activeOpacity={0.8}
-        >
-          <Text style={styles.buttonText}>Get Home Screen</Text>
-        </TouchableOpacity>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        </View>
       </View>
     </View>
   );
@@ -51,7 +51,7 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FF6B35",
+    backgroundColor: Colors.primary,
     justifyContent: "center",
     alignItems: "center",
   },
@@ -59,10 +59,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 40,
+    width: '100%',
   },
   logoContainer: {
     alignItems: "center",
+    marginBottom: 60,
   },
   iconWrapper: {
     marginBottom: 28,
@@ -84,40 +85,23 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   title: {
-    fontSize: 36,
-    fontWeight: "700" as const,
+    fontSize: 42,
+    fontWeight: "800",
     color: "#FFFFFF",
-    letterSpacing: 2,
-    textTransform: "lowercase" as const,
-    fontFamily: "Droid Sans",
-  },
-
-  bottomContainer: {
-    paddingHorizontal: 40,
-    paddingBottom: 40,
-    alignItems: "center",
-    width: "100%",
-  },
-  button: {
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 12,
-    paddingHorizontal: 24,
-    borderRadius: 20,
-    alignItems: "center",
-  },
-  buttonText: {
-    fontSize: 13,
-    fontWeight: "600" as const,
-    color: "#FF6B35",
-    letterSpacing: 0.5,
-    fontFamily: "Droid Sans",
+    letterSpacing: 3,
+    textTransform: "lowercase",
+    fontFamily: "System", // Using System font for now as Droid Sans might not be loaded
   },
   versionText: {
-    fontSize: 10,
+    fontSize: 12,
     color: "#FFFFFF",
-    opacity: 0.4,
+    opacity: 0.6,
     marginTop: 8,
-    fontFamily: "Droid Sans",
-    letterSpacing: 0.3,
+    letterSpacing: 1,
   },
+  loadingContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+
 });

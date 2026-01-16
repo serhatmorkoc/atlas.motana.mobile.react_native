@@ -3,4 +3,4 @@ export * from './validators';
 export * from './helpers';
 export * from './constants';
 export * from './google_maps';
-
+export * from './logger';

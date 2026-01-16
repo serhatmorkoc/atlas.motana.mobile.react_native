@@ -2,6 +2,7 @@
 import * as Notifications from 'expo-notifications';
 import { Platform, AppState } from 'react-native';
 import { DBOrderStatus } from '@/types/order.types';
+import { logger } from '@/utils/logger';
 
 // Configure notification handler for foreground and background
 Notifications.setNotificationHandler({
@@ -17,16 +18,16 @@ Notifications.setNotificationHandler({
 if (Platform.OS !== 'web') {
   // Handle notifications received while app is in foreground
   Notifications.addNotificationReceivedListener((notification) => {
-    console.log('[Notification] Received in foreground:', notification.request.content.title);
+    logger.debug('Notification', 'Received in foreground:', notification.request.content.title);
   });
 
   // Handle user interaction with notifications
   Notifications.addNotificationResponseReceivedListener((response) => {
-    console.log('[Notification] User interacted with:', response.notification.request.content.title);
+    logger.debug('Notification', 'User interacted with:', response.notification.request.content.title);
     const data = response.notification.request.content.data;
     if (data?.type === 'order_status_update') {
       // Could navigate to order details here if needed
-      console.log('[Notification] Order status update:', data);
+      logger.debug('Notification', 'Order status update:', data);
     }
   });
 }
@@ -36,7 +37,7 @@ if (Platform.OS !== 'web') {
  */
 export async function requestNotificationPermission(): Promise<boolean> {
   if (Platform.OS === 'web') {
-    console.log('Notifications not supported on web');
+    logger.info('Notification', 'Notifications not supported on web');
     return false;
   }
 
@@ -51,7 +52,7 @@ export async function requestNotificationPermission(): Promise<boolean> {
 
     return finalStatus === 'granted';
   } catch (error) {
-    console.error('Error requesting notification permission:', error);
+    logger.error('Notification', 'Error requesting notification permission:', error);
     return false;
   }
 }
@@ -117,7 +118,7 @@ export async function sendOrderStatusNotification(
   try {
     const hasPermission = await requestNotificationPermission();
     if (!hasPermission) {
-      console.log('[Notification] Permission not granted');
+      logger.info('Notification', 'Permission not granted');
       return;
     }
 
@@ -141,10 +142,8 @@ export async function sendOrderStatusNotification(
       trigger: null, // Show immediately
     });
 
-    console.log(
-      `[Notification] Sent (AppState: ${appState}): ${title} - ${body}`
-    );
+    logger.debug('Notification', `Sent (AppState: ${appState}): ${title} - ${body}`);
   } catch (error) {
-    console.error('[Notification] Error sending notification:', error);
+    logger.error('Notification', 'Error sending notification:', error);
   }
 }
