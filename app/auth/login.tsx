@@ -66,26 +66,28 @@ export default function LoginScreen() {
   };
 
   return (
-    <LinearGradient
-      colors={["#FF6B35", "#FF8C5A", "#FFB89A", "#FFF5F0"]}
-      locations={[0, 0.15, 0.4, 1]}
-      style={styles.container}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 0, y: 1 }}
-    >
-      <View style={[styles.headerContent, { paddingTop: insets.top + 12 }]}>
-        <TouchableOpacity onPress={handleBack} style={styles.backButton}>
-          <ArrowLeft size={24} color="#FFFFFF" />
-        </TouchableOpacity>
-        
-        <View style={styles.logoSection}>
-          <View style={styles.logoCircle}>
-            <ShoppingBag size={26} color="#FF6B35" strokeWidth={2} />
+    <View style={styles.container}>
+      <LinearGradient
+        colors={["#FF6B35", "#FF8C5A", "#FFB89A", "#F9FAFB"]}
+        locations={[0, 0.3, 0.7, 1]}
+        style={styles.headerGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 0, y: 1 }}
+      >
+        <View style={[styles.headerContent, { paddingTop: insets.top + 12 }]}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
+            <ArrowLeft size={24} color="#FFFFFF" />
+          </TouchableOpacity>
+          
+          <View style={styles.logoSection}>
+            <View style={styles.logoCircle}>
+              <ShoppingBag size={26} color="#FF6B35" strokeWidth={2} />
+            </View>
+            <Text style={styles.welcomeText}>Tekrar Hoşgeldin!</Text>
+            <Text style={styles.subtitleText}>Hesabına giriş yap</Text>
           </View>
-          <Text style={styles.welcomeText}>Tekrar Hoşgeldin!</Text>
-          <Text style={styles.subtitleText}>Hesabına giriş yap</Text>
         </View>
-      </View>
+      </LinearGradient>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -187,17 +189,22 @@ export default function LoginScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </LinearGradient>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: "#F9FAFB",
+  },
+  headerGradient: {
+    paddingBottom: 24,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
   headerContent: {
     paddingHorizontal: 20,
-    paddingBottom: 16,
   },
   backButton: {
     width: 40,
