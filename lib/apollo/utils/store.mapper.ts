@@ -93,6 +93,9 @@ export const mapGraphQLStoreToStore = (graphQLStore: GraphQLStore): Store => {
     deliveryTimeMin: graphQLStore.delivery_time_min,
     deliveryTimeMax: graphQLStore.delivery_time_max,
     minimumOrder: Number.isFinite(minimumOrder) ? minimumOrder : undefined,
+    storeCategoriesId: typeof graphQLStore.store_categories_id === 'string' 
+      ? Number(graphQLStore.store_categories_id) 
+      : graphQLStore.store_categories_id,
   };
 };
 

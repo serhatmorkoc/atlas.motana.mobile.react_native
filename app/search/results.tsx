@@ -1,9 +1,7 @@
-import { stores } from "@/mocks/stores";
-import { menuItems } from "@/mocks/menu-items";
 import { StoreCard, StoreListCard } from "@/components/home";
 import { formatPrice } from "@/utils/formatters";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   ScrollView,
   Image,
@@ -12,140 +10,222 @@ import {
   TouchableOpacity,
   View,
   Dimensions,
+  ActivityIndicator,
 } from "react-native";
 import { ChevronLeft } from "lucide-react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useStores } from "@/hooks/useStores";
+import { Store } from "@/types/store.types";
+import LoadingScreen from "@/components/common/LoadingScreen";
+import { apolloClient } from "@/lib/apollo/client";
+import { GET_STORE_PRODUCTS } from "@/lib/apollo/queries/products";
+import { MenuItem } from "@/types/menu.types";
 
 const { width } = Dimensions.get("window");
 
-type MenuItem = {
+interface GraphQLProduct {
   id: string;
-  storeId: string;
-  name: string;
-  description: string;
-  price: number;
-  image: string;
-  category: string;
-  storeName?: string;
-};
+  product_category_id: string | null;
+  store_id: string | null;
+  title: string | null;
+  description: string | null;
+  image: string | null;
+  price: string;
+  old_price: string | null;
+  stock_quantity: number | null;
+  is_popular: boolean;
+  is_active: boolean;
+  created_at: string;
+}
 
-type Store = {
-  id: string;
-  name: string;
-  image: string;
-  rating: number;
-  deliveryTime: string;
-  cuisine: string;
-  deliveryFee: string;
-  distance: string;
-};
-
-const getCategoryMapping = (categoryName: string): { cuisineKeywords: string[]; menuKeywords: string[] } => {
-  const mappings: Record<string, { cuisineKeywords: string[]; menuKeywords: string[] }> = {
-    "Stores": { cuisineKeywords: ["italian", "pizza", "fast food", "burgers", "japanese", "sushi", "turkish", "kebab", "mexican", "tacos", "asian", "noodles", "steakhouse", "bbq"], menuKeywords: [] },
-    "Cafe & Bakery": { cuisineKeywords: ["coffee", "cafe", "bakery"], menuKeywords: ["coffee", "pastry", "cake", "croissant"] },
-    "Bakery": { cuisineKeywords: ["bakery", "bread"], menuKeywords: ["bread", "pastry", "cake", "croissant"] },
-    "Groceries": { cuisineKeywords: ["grocery", "market"], menuKeywords: [] },
-    "Market": { cuisineKeywords: ["market", "grocery"], menuKeywords: [] },
-    "Health & Wellness": { cuisineKeywords: ["healthy", "vegan", "organic", "salad"], menuKeywords: ["salad", "smoothie", "juice"] },
-    "Pharmacy": { cuisineKeywords: ["pharmacy"], menuKeywords: [] },
+interface GetStoreProductsData {
+  productsCollection: {
+    edges: Array<{
+      node: GraphQLProduct;
+    }>;
   };
-
-  const normalized = categoryName.toLowerCase();
-  for (const [key, value] of Object.entries(mappings)) {
-    if (key.toLowerCase() === normalized) {
-      return value;
-    }
-  }
-  
-  return { cuisineKeywords: [normalized], menuKeywords: [normalized] };
-};
+}
 
 export default function SearchResultsScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{ query?: string; category?: string }>();
   const [sortBy, setSortBy] = useState<"relevance" | "rating" | "distance">("relevance");
+  const [storeMenuItemsMap, setStoreMenuItemsMap] = useState<Record<string, MenuItem[]>>({});
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  // Fetch stores from DB - filter by store_categories_id = 1
+  const { stores, loading: storesLoading, error: storesError } = useStores({
+    limit: 200,
+  });
+
+  // Filter stores by store_categories_id = 1
+  const filteredStores = useMemo(() => {
+    return stores.filter(store => {
+      const storeCategoryId = store.storeCategoriesId;
+      const storeCategoryIdNum = typeof storeCategoryId === 'string' ? Number(storeCategoryId) : storeCategoryId;
+      return storeCategoryIdNum === 1; 
+    });
+  }, [stores]);
+
+  // Fetch products for each store (6 products per store)
+  useEffect(() => {
+    const fetchProductsForStores = async () => {
+      if (filteredStores.length === 0) {
+        setStoreMenuItemsMap({});
+        setLoadingProducts(false);
+        return;
+      }
+      
+      setLoadingProducts(true);
+      const productsMap: Record<string, MenuItem[]> = {};
+
+      try {
+        await Promise.all(
+          filteredStores.map(async (store) => {
+            try {
+              const { data } = await apolloClient.query<GetStoreProductsData>({
+                query: GET_STORE_PRODUCTS,
+                variables: {
+                  storeId: store.id,
+                  first: 6, // Fetch 6 products per store
+                },
+                fetchPolicy: 'cache-first', // Use cache for faster loading
+              });
+
+              const products: MenuItem[] = (data?.productsCollection?.edges || []).map((edge) => {
+                const p = edge.node;
+                const safeNumber = (value: string | null | undefined): number => {
+                  const n = value ? Number(value) : 0;
+                  return Number.isFinite(n) ? n : 0;
+                };
+
+                return {
+                  id: p.id,
+                  storeId: p.store_id ?? store.id,
+                  name: p.title ?? "Unnamed",
+                  description: p.description ?? "",
+                  price: safeNumber(p.price),
+                  image: p.image ?? "",
+                  category: "Other",
+                  popular: p.is_popular,
+                  extras: [],
+                };
+              });
+
+              productsMap[store.id] = products;
+            } catch (error) {
+              productsMap[store.id] = [];
+            }
+          })
+        );
+
+        setStoreMenuItemsMap(productsMap);
+      } catch (error) {
+        // Silent fail - products will be empty
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProductsForStores();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filteredStores.length]);
 
   const isStoresCategory = params.category === "Stores";
 
-  const { matchingStores, matchingMenuItems, storeMenuItemsMap } = useMemo(() => {
+  const { matchingStores, matchingMenuItems } = useMemo(() => {
     const searchTerm = (params.query || "").toLowerCase();
     const categoryFilter = params.category;
 
-    let filteredStores: Store[] = [];
+    let filtered: Store[] = [];
     let filteredMenuItems: MenuItem[] = [];
 
     if (categoryFilter) {
-      const { cuisineKeywords, menuKeywords } = getCategoryMapping(categoryFilter);
-      
-      filteredStores = stores.filter(r => {
-        const cuisineLower = r.cuisine.toLowerCase();
-        return cuisineKeywords.some(keyword => cuisineLower.includes(keyword));
-      });
-
-      if (menuKeywords.length > 0) {
-        filteredMenuItems = menuItems.filter(item => {
-          const itemCategoryLower = item.category.toLowerCase();
-          const itemNameLower = item.name.toLowerCase();
-          return menuKeywords.some(keyword => 
-            itemCategoryLower.includes(keyword) || itemNameLower.includes(keyword)
-          );
-        }).slice(0, 20);
-      }
+      // Already filtered by store_categories_id = 1
+      filtered = filteredStores;
     } else if (searchTerm) {
-      filteredStores = stores.filter(r =>
+      filtered = filteredStores.filter(r =>
         r.name.toLowerCase().includes(searchTerm) ||
         r.cuisine.toLowerCase().includes(searchTerm)
       );
-
-      filteredMenuItems = menuItems.filter(item =>
-        item.name.toLowerCase().includes(searchTerm) ||
-        item.description.toLowerCase().includes(searchTerm) ||
-        item.category.toLowerCase().includes(searchTerm)
-      ).slice(0, 20);
+    } else {
+      filtered = filteredStores;
     }
 
-    filteredMenuItems = filteredMenuItems.map(item => ({
-      ...item,
-      storeName: stores.find(r => r.id === item.storeId)?.name,
-    }));
-
     if (sortBy === "rating") {
-      filteredStores.sort((a, b) => b.rating - a.rating);
+      filtered.sort((a, b) => b.rating - a.rating);
     } else if (sortBy === "distance") {
-      filteredStores.sort((a, b) => {
+      filtered.sort((a, b) => {
         const distA = parseFloat(a.distance.replace(" km", ""));
         const distB = parseFloat(b.distance.replace(" km", ""));
         return distA - distB;
       });
     }
 
-    const menuItemsMap: Record<string, { id: string; name: string; image: string; price: number }[]> = {};
-    filteredStores.forEach(store => {
-      const storeMenuItems = menuItems
-        .filter(item => item.storeId === store.id)
-        .slice(0, 5)
-        .map(item => ({
-          id: item.id,
-          name: item.name,
-          image: item.image,
-          price: item.price,
-        }));
-      menuItemsMap[store.id] = storeMenuItems;
-    });
-
     return { 
-      matchingStores: filteredStores, 
+      matchingStores: filtered, 
       matchingMenuItems: filteredMenuItems,
-      storeMenuItemsMap: menuItemsMap,
     };
-  }, [params.query, params.category, sortBy]);
+  }, [params.query, params.category, sortBy, filteredStores]);
 
   const totalResults = matchingStores.length + matchingMenuItems.length;
 
   const handleMenuItemPress = (item: MenuItem) => {
     router.push(`/store/${item.storeId}` as any);
   };
+
+  const isLoading = storesLoading || loadingProducts;
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <ChevronLeft size={24} color="#1F2937" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {params.category || "Search Results"}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#FF6B35" />
+        </View>
+      </View>
+    );
+  }
+
+  if (storesError) {
+    return (
+      <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
+          <View style={styles.headerTop}>
+            <TouchableOpacity
+              style={styles.backButton}
+              onPress={() => router.back()}
+              activeOpacity={0.7}
+            >
+              <ChevronLeft size={24} color="#1F2937" />
+            </TouchableOpacity>
+            <Text style={styles.headerTitle}>
+              {params.category || "Search Results"}
+            </Text>
+          </View>
+        </View>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyTitle}>Failed to load stores</Text>
+          <Text style={styles.emptyText}>
+            {String(storesError.message || storesError)}
+          </Text>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -264,11 +344,6 @@ export default function SearchResultsScreen() {
                         <Text style={styles.menuItemName} numberOfLines={2}>
                           {item.name}
                         </Text>
-                        {item.storeName && (
-                          <Text style={styles.storeName} numberOfLines={1}>
-                            {item.storeName}
-                          </Text>
-                        )}
                       </View>
                       <View style={styles.priceTag}>
                         <Text style={styles.price}>{formatPrice(item.price)}</Text>
@@ -436,6 +511,11 @@ const styles = StyleSheet.create({
     fontWeight: "700" as const,
     color: "#FFFFFF",
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: "center" as const,
+    justifyContent: "center" as const,
+  },
   emptyState: {
     alignItems: "center" as const,
     justifyContent: "center" as const,
@@ -455,7 +535,7 @@ const styles = StyleSheet.create({
   },
   verticalList: {
     paddingHorizontal: 16,
-    gap: 12,
+    gap: 2,
   },
   verticalListItem: {
     marginBottom: 0,

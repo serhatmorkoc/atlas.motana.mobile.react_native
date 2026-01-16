@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View, Dimensions, ScrollView } from
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Star, MapPin, Clock, ChevronRight } from "lucide-react-native";
-import { MenuItem } from "@/mocks/menu-items";
+import { MenuItem } from "@/types/menu.types";
 import { optimizeImageUrl } from "@/utils/helpers";
 
 const { width } = Dimensions.get("window");
@@ -118,6 +118,8 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     marginBottom: 16,
     overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.08,
@@ -129,6 +131,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     padding: 16,
+    backgroundColor: "#F9FAFB",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
   },
   headerLeft: {
     flexDirection: "row",
@@ -200,6 +205,7 @@ const styles = StyleSheet.create({
   },
   menuItemsContainer: {
     paddingHorizontal: 16,
+    paddingTop: 12,
     paddingBottom: 16,
     gap: 12,
   },

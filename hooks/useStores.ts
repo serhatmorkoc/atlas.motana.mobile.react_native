@@ -49,8 +49,8 @@ export const useStores = (options?: {
         first: options?.limit,
         offset: options?.offset,
         filter: {
-          is_active: { eq: options?.isActive ?? true },
-          is_available: { eq: options?.isAvailable ?? true },
+          ...(options?.isActive !== undefined && { is_active: { eq: options.isActive } }),
+          ...(options?.isAvailable !== undefined && { is_available: { eq: options.isAvailable } }),
         },
       },
       fetchPolicy: 'cache-first', // Use cache first, only fetch from network if cache is empty
