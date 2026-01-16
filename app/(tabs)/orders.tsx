@@ -8,7 +8,7 @@ import {
   Package,
   RotateCcw,
 } from "lucide-react-native";
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Order, DBOrderStatus } from "@/types/order.types";
 import { formatDate } from "@/utils/formatters";
 import { useOrders } from "@/hooks/useOrders";
+import { useOrdersSubscription } from "@/hooks/useOrdersSubscription";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import { RefreshControl } from "react-native";
 import { ORDER_STATUS_COLORS } from "@/constants/orderStatus";
@@ -41,6 +42,43 @@ export default function OrdersScreen() {
   
   const { orders, loading, error, refetch } = useOrders();
   const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [minLoadingElapsed, setMinLoadingElapsed] = useState(false);
+
+  // Subscribe to realtime orders changes
+  // Use useCallback to prevent subscription recreation on every render
+  const handleOrdersChange = useCallback(() => {
+    // Refetch orders when realtime change detected
+    if (!isInitialLoad) {
+      refetch();
+    }
+  }, [isInitialLoad, refetch]);
+
+  // Setup subscription function
+  const setupSubscription = useOrdersSubscription({
+    onOrdersChange: handleOrdersChange,
+    enabled: true,
+  });
+
+  // Subscribe when screen is focused, unsubscribe when blurred
+  useFocusEffect(
+    useCallback(() => {
+      // Setup subscription when tab is focused
+      const cleanup = setupSubscription();
+
+      // Cleanup subscription when tab loses focus
+      return cleanup;
+    }, [setupSubscription])
+  );
+
+  // Minimum loading duration to prevent flash (300ms)
+  useEffect(() => {
+    if (loading && isInitialLoad) {
+      const timer = setTimeout(() => {
+        setMinLoadingElapsed(true);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isInitialLoad]);
 
   // Refetch orders when screen comes into focus (tab navigation)
   // This ensures status changes are visible without requiring pull-to-refresh
@@ -49,12 +87,21 @@ export default function OrdersScreen() {
       if (!isInitialLoad) {
         // Silently refetch in background after initial load
         refetch();
-      } else if (!loading) {
-        // Mark initial load as complete
-        setIsInitialLoad(false);
       }
-    }, [isInitialLoad, loading, refetch])
+    }, [isInitialLoad, refetch])
   );
+
+  // Mark initial load as complete when data is ready
+  useEffect(() => {
+    if (isInitialLoad && !loading) {
+      // Small delay to ensure smooth transition
+      const timer = setTimeout(() => {
+        setIsInitialLoad(false);
+        setMinLoadingElapsed(false);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isInitialLoad, loading]);
 
   const filteredOrders = orders.filter((order) => {
     if (activeFilter === "all") return true;
@@ -73,7 +120,10 @@ export default function OrdersScreen() {
   };
 
   // Show loading only on initial load, not on subsequent refetches
-  if (loading && isInitialLoad && !refreshing) {
+  // Also ensure minimum loading duration has elapsed to prevent flash
+  const showLoading = (loading && isInitialLoad && !refreshing) || (isInitialLoad && !minLoadingElapsed);
+  
+  if (showLoading) {
     return <LoadingScreen title="Loading orders..." subtitle="Please wait" />;
   }
 

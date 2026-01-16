@@ -6,7 +6,6 @@ import { DBOrderStatus } from '@/types/order.types';
 // Configure notification handler for foreground and background
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: true,
     shouldShowBanner: true,

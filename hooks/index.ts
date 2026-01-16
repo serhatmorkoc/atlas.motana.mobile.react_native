@@ -10,4 +10,5 @@ export * from './useOrderStatusSubscription';
 export * from './useUser';
 export * from './useUserAddresses';
 export * from './useStoreCategories';
+export * from './useOrdersSubscription';
 

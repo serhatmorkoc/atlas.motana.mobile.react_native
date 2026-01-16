@@ -74,6 +74,8 @@ const getStepIndexFromStatus = (status: DBOrderStatus | null): number => {
   }
 };
 
+const ORDER_STEPS_COUNT = 8;
+
 export default function OrderTrackingScreen() {
   const insets = useSafeAreaInsets();
   const params = useLocalSearchParams<{
@@ -93,8 +95,8 @@ export default function OrderTrackingScreen() {
   useFocusEffect(
     useCallback(() => {
       if (params.orderId) {
-        console.log('[Order Tracking] Screen focused, refetching order...');
-        refetch();
+        if (__DEV__) console.log('[Order Tracking] Screen focused, refetching order...');
+        void refetch();
       }
     }, [params.orderId, refetch])
   );
@@ -236,12 +238,12 @@ export default function OrderTrackingScreen() {
     return () => {
       pulseLoop.stop();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fadeAnim, slideAnim, pulseAnim]);
 
   useEffect(() => {
+    const progress = Math.max(0, Math.min(1, currentStepIndex / (ORDER_STEPS_COUNT - 1)));
     Animated.timing(progressAnim, {
-      toValue: currentStepIndex / (orderSteps.length - 1),
+      toValue: progress,
       duration: 800,
       useNativeDriver: false,
     }).start();
@@ -254,18 +256,7 @@ export default function OrderTrackingScreen() {
         useNativeDriver: true,
       }).start();
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStepIndex]);
-
-  // Update estimated minutes countdown
-  useEffect(() => {
-    const interval = setInterval(() => {
-      // Countdown is handled by estimated_delivery_time calculation
-      // No need to manually decrement
-    }, 60000); // Check every minute
-
-    return () => clearInterval(interval);
-  }, []);
+  }, [currentStepIndex, courierSlideAnim, progressAnim]);
 
   const showCourierInfo = currentStepIndex >= 4 && currentStepIndex < 7;
   const canCancel = currentStepIndex >= 0 && currentStepIndex < 2 && order?.rawStatus !== 'CANCELLED';

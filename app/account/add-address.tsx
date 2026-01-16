@@ -22,7 +22,7 @@ const addressTypes = [
   { id: "home", label: "Home", icon: Home },
   { id: "work", label: "Work", icon: Building2 },
   { id: "other", label: "Other", icon: MapPin },
-];
+] as const;
 
 interface GeocodedAddress {
   street?: string;
@@ -102,7 +102,7 @@ export default function AddAddressScreen() {
           country: addressData.country || prev.country,
         }));
       } catch (error) {
-        console.log('Error reverse geocoding (web):', error);
+        if (__DEV__) console.log('Error reverse geocoding (web):', error);
       } finally {
         setIsGeocodingAddress(false);
       }
@@ -140,7 +140,7 @@ export default function AddAddressScreen() {
           }));
         }
       } catch (error) {
-        console.log('Error reverse geocoding:', error);
+        if (__DEV__) console.log('Error reverse geocoding:', error);
       } finally {
         setIsGeocodingAddress(false);
       }
@@ -166,7 +166,7 @@ export default function AddAddressScreen() {
             setIsInitialLoad(false);
           },
           (error) => {
-            console.log('Error getting location:', error);
+            if (__DEV__) console.log('Error getting location:', error);
             setIsLoadingLocation(false);
             setIsInitialLoad(false);
           },
@@ -206,7 +206,7 @@ export default function AddAddressScreen() {
         setIsLoadingLocation(false);
         setIsInitialLoad(false);
       } catch (error) {
-        console.log('Error getting current location:', error);
+        if (__DEV__) console.log('Error getting current location:', error);
         setIsLoadingLocation(false);
         setIsInitialLoad(false);
       }

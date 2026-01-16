@@ -283,8 +283,10 @@ export default function CheckoutScreen() {
         ? JSON.stringify(deliveryAddressJson) // Convert to JSON string for Supabase GraphQL
         : null; // Send null if empty instead of empty object
 
-      console.log("deliveryAddressForMutation (as JSON string):", deliveryAddressForMutation);
-      console.log("deliveryAddressForMutation type:", typeof deliveryAddressForMutation);
+      if (__DEV__) {
+        console.log("deliveryAddressForMutation (as JSON string):", deliveryAddressForMutation);
+        console.log("deliveryAddressForMutation type:", typeof deliveryAddressForMutation);
+      }
 
       const orderRes = await createOrder({
         variables: {

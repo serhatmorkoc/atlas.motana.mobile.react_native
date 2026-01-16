@@ -354,7 +354,13 @@ export const useUserAddresses = (userId: string = HARDCODE_USER_ID) => {
       const selectResult = currentlySelected ? results[1] : results[0];
       if (selectResult?.data?.updateuser_addressesCollection?.records?.[0]) {
         // Refetch in the background without blocking
-        refetch().catch(err => console.error('Error refetching addresses:', err));
+        // AbortError is expected during fast navigations/unmounts; don't log it as an error.
+        refetch().catch((err) => {
+          if (err?.name === 'AbortError' || err?.message === 'The operation was aborted.') {
+            return;
+          }
+          console.error('Error refetching addresses:', err);
+        });
         return { success: true };
       }
       return { success: false, error: 'Failed to set selected address' };

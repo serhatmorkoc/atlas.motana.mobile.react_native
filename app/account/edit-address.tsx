@@ -113,7 +113,7 @@ export default function EditAddressScreen() {
           country: addressData.country || prev.country,
         }));
       } catch (error) {
-        console.log('Error reverse geocoding (web):', error);
+        if (__DEV__) console.log('Error reverse geocoding (web):', error);
       } finally {
         setIsGeocodingAddress(false);
       }
@@ -151,7 +151,7 @@ export default function EditAddressScreen() {
           }));
         }
       } catch (error) {
-        console.log('Error reverse geocoding:', error);
+        if (__DEV__) console.log('Error reverse geocoding:', error);
       } finally {
         setIsGeocodingAddress(false);
       }
@@ -176,7 +176,7 @@ export default function EditAddressScreen() {
             setIsLoadingLocation(false);
           },
           (error) => {
-            console.log('Error getting location:', error);
+            if (__DEV__) console.log('Error getting location:', error);
             setIsLoadingLocation(false);
           },
           { enableHighAccuracy: true }
@@ -213,7 +213,7 @@ export default function EditAddressScreen() {
         setSelectedLocation({ latitude, longitude });
         setIsLoadingLocation(false);
       } catch (error) {
-        console.log('Error getting current location:', error);
+        if (__DEV__) console.log('Error getting current location:', error);
         setIsLoadingLocation(false);
       }
     }

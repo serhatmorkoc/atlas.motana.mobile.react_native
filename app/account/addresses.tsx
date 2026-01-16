@@ -33,7 +33,9 @@ export default function AddressesScreen() {
   // Refetch when screen comes into focus
   useFocusEffect(
     useCallback(() => {
-      refetch();
+      void refetch().catch(() => {
+        // Avoid unhandled promise rejections on focus transitions
+      });
     }, [refetch])
   );
 
