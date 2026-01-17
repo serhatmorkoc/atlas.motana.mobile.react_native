@@ -36,7 +36,7 @@ import { MenuItem } from "@/types/menu.types";
 import { formatPrice } from "@/utils/formatters";
 import { calculateDistance } from "@/utils/google_maps";
 
-const HEADER_HEIGHT = 260;
+const HEADER_HEIGHT = 245;
 
 export default function StoreScreen() {
   const { id } = useLocalSearchParams();
@@ -419,25 +419,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   headerButton: {
-    width: 38,
-    height: 38,
-    borderRadius: 19,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: "rgba(0, 0, 0, 0.35)",
     alignItems: "center" as const,
     justifyContent: "center" as const,
   },
   headerActions: {
     flexDirection: "row" as const,
-    gap: 10,
+    gap: 8,
   },
   headerBottom: {
     position: "absolute" as const,
-    bottom: 16,
+    bottom: 12,
     left: 16,
     right: 16,
   },
   storeName: {
-    fontSize: 26,
+    fontSize: 24,
     fontWeight: "700" as const,
     color: "#FFFFFF",
     marginBottom: 4,
@@ -447,18 +447,18 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "rgba(255,255,255,0.9)",
     fontWeight: "500" as const,
-    marginBottom: 10,
+    marginBottom: 8,
   },
   headerInfo: {
     flexDirection: "row" as const,
-    gap: 10,
+    gap: 8,
   },
   infoBadge: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     backgroundColor: "rgba(0, 0, 0, 0.45)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 8,
     gap: 4,
   },
@@ -486,7 +486,7 @@ const styles = StyleSheet.create({
     flexDirection: "row" as const,
     alignItems: "center" as const,
     paddingHorizontal: 16,
-    paddingVertical: 8,
+    paddingVertical: 7,
   },
   compactBackButton: {
     width: 34,
@@ -534,22 +534,22 @@ const styles = StyleSheet.create({
     alignItems: "center" as const,
     backgroundColor: "#F3F4F6",
     marginHorizontal: 16,
-    marginBottom: 8,
+    marginBottom: 7,
     borderRadius: 10,
     paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingVertical: 7,
     gap: 8,
   },
   compactSearchInput: {
     flex: 1,
-    fontSize: 14,
+    fontSize: 13,
     color: "#1F2937",
     fontWeight: "500" as const,
   },
   searchContainer: {
     paddingHorizontal: 16,
-    paddingTop: 6,
-    paddingBottom: 6,
+    paddingTop: 4,
+    paddingBottom: 4,
   },
   searchInputContainer: {
     flexDirection: "row" as const,
@@ -557,7 +557,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFFFFF",
     borderRadius: 14,
     paddingHorizontal: 16,
-    paddingVertical: 13,
+    paddingVertical: 11,
     gap: 10,
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
@@ -576,12 +576,12 @@ const styles = StyleSheet.create({
   deliveryInfo: {
     flexDirection: "row" as const,
     marginHorizontal: 16,
-    marginTop: 14,
-    marginBottom: 12,
+    marginTop: 12,
+    marginBottom: 10,
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    paddingVertical: 16,
-    paddingHorizontal: 8,
+    paddingVertical: 14,
+    paddingHorizontal: 6,
     borderWidth: 1,
     borderColor: "#F3F4F6",
     shadowColor: "#000",
@@ -599,8 +599,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 4,
   },
   deliveryIconContainer: {
-    width: 40,
-    height: 40,
+    width: 36,
+    height: 36,
     borderRadius: 10,
     backgroundColor: "#ECFDF5",
     alignItems: "center" as const,
@@ -629,7 +629,7 @@ const styles = StyleSheet.create({
     marginBottom: 1,
   },
   deliveryValue: {
-    fontSize: 13,
+    fontSize: 12,
     color: "#1F2937",
     fontWeight: "700" as const,
   },
@@ -661,13 +661,13 @@ const styles = StyleSheet.create({
   },
   categorySection: {
     paddingHorizontal: 16,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   categoryTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "700" as const,
     color: "#1F2937",
-    marginBottom: 12,
+    marginBottom: 10,
     letterSpacing: -0.2,
   },
   screenLabel: {

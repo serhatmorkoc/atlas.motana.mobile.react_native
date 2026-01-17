@@ -7,8 +7,10 @@ import { User, Mail, Lock, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabaseClient } from '@/lib/supabase/client';
 import { AlertModal, AlertType } from '@/components/common/AlertModal';
-import { apolloClient } from '@/lib/apollo/client';
-import { CREATE_USER } from '@/lib/apollo/mutations/users';
+import { relayEnvironment } from '@/lib/relay/environment';
+import { createUserMutation } from '@/lib/relay/mutations/CreateUserMutation';
+import { commitMutation } from 'relay-runtime';
+import type { CreateUserMutation } from '@/__generated__/CreateUserMutation.graphql';
 
 export default function RegisterScreen() {
     const [name, setName] = useState('');
@@ -78,7 +80,10 @@ export default function RegisterScreen() {
                 password,
                 options: {
                     data: {
+                        // Keep both keys for compatibility with common Supabase DB triggers
+                        // that may read either `full_name` or `name` from auth metadata.
                         full_name: name,
+                        name: name,
                     },
                 },
             });
@@ -110,8 +115,8 @@ export default function RegisterScreen() {
                 // Create user record in users table even if email confirmation is required
                 if (data.user.id) {
                     try {
-                        await apolloClient.mutate({
-                            mutation: CREATE_USER,
+                        commitMutation<CreateUserMutation>(relayEnvironment, {
+                            mutation: createUserMutation,
                             variables: {
                                 id: data.user.id,
                                 name: name,
@@ -140,8 +145,8 @@ export default function RegisterScreen() {
             if (data?.session && data?.user) {
                 // Create user record in users table with name and email
                 try {
-                    await apolloClient.mutate({
-                        mutation: CREATE_USER,
+                    commitMutation<CreateUserMutation>(relayEnvironment, {
+                        mutation: createUserMutation,
                         variables: {
                             id: data.user.id,
                             name: name,

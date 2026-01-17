@@ -1,138 +1,59 @@
-import { useMemo } from "react";
-import { useQuery } from "@apollo/client/react";
-
-import {
-  GET_STORE_PRODUCTS,
-  GET_STORE_PRODUCT_CATEGORIES,
-} from "@/lib/apollo/queries/products";
+import { useMemo, useCallback, useState } from "react";
+import { useLazyLoadQuery } from "react-relay";
+import { storeProductsQuery } from "@/lib/relay/queries/StoreProductsQuery";
+import { storeProductCategoriesQuery } from "@/lib/relay/queries/StoreProductCategoriesQuery";
 import { MenuItem } from "@/types/menu.types";
-
-type Edge<T> = { node: T };
+import type { StoreProductsQuery } from "@/__generated__/StoreProductsQuery.graphql";
+import type { StoreProductCategoriesQuery } from "@/__generated__/StoreProductCategoriesQuery.graphql";
 
 export interface GraphQLProduct {
-  id: string;
-  product_category_id: string | null;
-  store_id: string | null;
-  title: string | null;
-  description: string | null;
-  image: string | null;
-  price: string;
-  old_price: string | null;
-  stock_quantity: number | null;
-  is_popular: boolean;
-  is_active: boolean;
-  created_at: string;
+  id: string; product_category_id: string | null; store_id: string | null;
+  title: string | null; description: string | null; image: string | null;
+  price: string; old_price: string | null; stock_quantity: number | null;
+  is_popular: boolean; is_active: boolean; created_at: string;
 }
 
 export interface GraphQLProductCategory {
-  id: string;
-  store_id: string | null;
-  title: string | null;
-  sort_order: number | null;
+  id: string; store_id: string | null; title: string | null; sort_order: number | null;
 }
 
-interface GetStoreProductsData {
-  productsCollection: {
-    edges: Array<Edge<GraphQLProduct>>;
-  };
-}
+const safeNumber = (v: any) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
-interface GetStoreProductsVars {
-  storeId: string;
-  first?: number;
-  offset?: number;
-}
-
-interface GetStoreProductCategoriesData {
-  product_categoriesCollection: {
-    edges: Array<Edge<GraphQLProductCategory>>;
-  };
-}
-
-interface GetStoreProductCategoriesVars {
-  storeId: string;
-}
-
-const safeNumber = (value: string | null | undefined): number => {
-  const n = value ? Number(value) : 0;
-  return Number.isFinite(n) ? n : 0;
-};
-
-/**
- * Fetches store products + product categories and maps them into MenuItem[] for Store Screen.
- * (Variations/extras can be added later.)
- */
 export function useStoreMenu(storeId: string, options?: { first?: number; offset?: number; search?: string }) {
-  const productsQuery = useQuery<GetStoreProductsData, GetStoreProductsVars>(GET_STORE_PRODUCTS, {
-    variables: { storeId, first: options?.first ?? 200, offset: options?.offset ?? 0 },
-    skip: !storeId,
-    fetchPolicy: "cache-first", // Use cache first for faster loading
-  });
+  const [refetchKey, setRefetchKey] = useState(0);
+  const shouldSkip = !storeId;
 
-  const categoriesQuery = useQuery<GetStoreProductCategoriesData, GetStoreProductCategoriesVars>(
-    GET_STORE_PRODUCT_CATEGORIES,
-    {
-      variables: { storeId },
-      skip: !storeId,
-      fetchPolicy: "cache-first", // Use cache first for faster loading
-    }
+  const productsData = useLazyLoadQuery<StoreProductsQuery>(
+    storeProductsQuery,
+    { storeId: storeId || '00000000-0000-0000-0000-000000000000', first: options?.first ?? 200, offset: options?.offset ?? 0 },
+    { fetchPolicy: 'store-and-network', fetchKey: shouldSkip ? 'skip' : `products-${storeId}-${refetchKey}` }
+  );
+
+  const categoriesData = useLazyLoadQuery<StoreProductCategoriesQuery>(
+    storeProductCategoriesQuery,
+    { storeId: storeId || '00000000-0000-0000-0000-000000000000' },
+    { fetchPolicy: 'store-and-network', fetchKey: shouldSkip ? 'skip' : `categories-${storeId}-${refetchKey}` }
   );
 
   const { categories, menuItems } = useMemo(() => {
-    const categoryEdges = categoriesQuery.data?.product_categoriesCollection?.edges ?? [];
-    const categoriesSorted = [...categoryEdges]
-      .map((e) => e.node)
-      .filter((c) => Boolean(c.title))
-      .sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
-
-    const categoryTitleById = new Map<string, string>();
-    categoriesSorted.forEach((c) => {
-      if (c.id && c.title) categoryTitleById.set(c.id, c.title);
-    });
-
-    const productEdges = productsQuery.data?.productsCollection?.edges ?? [];
-    const rawProducts = productEdges.map((e) => e.node);
-
+    if (shouldSkip || !productsData || !categoriesData) return { categories: [], menuItems: [] };
+    const cats = (categoriesData?.product_categoriesCollection?.edges ?? [])
+      .map(e => e.node).filter(c => !!c.title).sort((a, b) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
+    const catMap = new Map(cats.map(c => [c.id, c.title!]));
+    const prods = (productsData?.productsCollection?.edges ?? []).map(e => e.node);
     const search = (options?.search ?? "").trim().toLowerCase();
-    const filtered = search
-      ? rawProducts.filter((p) => {
-          const title = (p.title ?? "").toLowerCase();
-          const desc = (p.description ?? "").toLowerCase();
-          return title.includes(search) || desc.includes(search);
-        })
-      : rawProducts;
+    const filtered = search ? prods.filter(p => (p.title || "").toLowerCase().includes(search) || (p.description || "").toLowerCase().includes(search)) : prods;
+    const mapped: MenuItem[] = filtered.map(p => ({
+      id: p.id, storeId: p.store_id ?? storeId, name: p.title ?? "Unnamed", description: p.description ?? "",
+      price: safeNumber(p.price), image: p.image ?? "", category: (p.product_category_id ? catMap.get(p.product_category_id) : undefined) ?? "Other",
+      popular: p.is_popular, extras: [],
+    }));
+    const catOrder = cats.map(c => c.title!);
+    if (mapped.some(m => m.category === "Other")) catOrder.push("Other");
+    return { categories: catOrder, menuItems: mapped };
+  }, [categoriesData, productsData, options?.search, storeId, shouldSkip]);
 
-    const mapped: MenuItem[] = filtered.map((p) => {
-      const category =
-        (p.product_category_id ? categoryTitleById.get(p.product_category_id) : undefined) ?? "Other";
+  const refetch = useCallback(async () => { setRefetchKey(prev => prev + 1); }, []);
 
-      return {
-        id: p.id,
-        storeId: p.store_id ?? storeId,
-        name: p.title ?? "Unnamed",
-        description: p.description ?? "",
-        price: safeNumber(p.price),
-        image: p.image ?? "",
-        category,
-        popular: p.is_popular,
-        extras: [], // TODO: load product_variations as extras
-      };
-    });
-
-    const categoryOrder = categoriesSorted.map((c) => c.title as string);
-    if (mapped.some((m) => m.category === "Other")) categoryOrder.push("Other");
-
-    return { categories: categoryOrder, menuItems: mapped };
-  }, [categoriesQuery.data, productsQuery.data, options?.search, storeId]);
-
-  return {
-    categories,
-    menuItems,
-    loading: productsQuery.loading || categoriesQuery.loading,
-    error: productsQuery.error || categoriesQuery.error,
-    refetch: async () => {
-      await Promise.all([productsQuery.refetch(), categoriesQuery.refetch()]);
-    },
-  };
+  return { categories, menuItems, loading: false, error: null, refetch };
 }
-

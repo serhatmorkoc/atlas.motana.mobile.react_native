@@ -1,7 +1,7 @@
-import { gql } from '@apollo/client';
+import { graphql } from 'react-relay';
 
-export const GET_STORE_CATEGORIES = gql`
-  query GetStoreCategories {
+export const storeCategoriesQuery = graphql`
+  query StoreCategoriesQuery {
     store_categoriesCollection(filter: { is_active: { eq: true } }, orderBy: { id: AscNullsLast }) {
       edges {
         node {

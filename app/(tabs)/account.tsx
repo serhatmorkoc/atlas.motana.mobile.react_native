@@ -25,12 +25,14 @@ export default function AccountScreen() {
   const [logoutModalVisible, setLogoutModalVisible] = React.useState(false);
   const fadeAnim = React.useState(new Animated.Value(0))[0];
   const [refreshing, setRefreshing] = useState(false);
-  const { refetch: refetchUser } = useUser();
+  const { refetch: refetchUser, loading: userLoading } = useUser();
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await refetchUser();
+      refetchUser();
+      // Wait a bit for the query to complete
+      await new Promise(resolve => setTimeout(resolve, 500));
     } finally {
       setRefreshing(false);
     }
@@ -105,8 +107,6 @@ export default function AccountScreen() {
               iconBg="#F3F4F6"
               title="My Orders"
               subtitle="Track and view order history"
-              showBadge
-              badgeCount={2}
               onPress={() => router.push("/(tabs)/orders" as any)}
             />
             <MenuItem

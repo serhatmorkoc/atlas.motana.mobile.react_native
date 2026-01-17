@@ -22,9 +22,10 @@ interface Store {
 interface StoreListCardProps {
   store: Store;
   menuItems?: MenuItem[];
+  loadingMenuItems?: boolean;
 }
 
-export function StoreListCard({ store, menuItems = [] }: StoreListCardProps) {
+export function StoreListCard({ store, menuItems = [], loadingMenuItems = false }: StoreListCardProps) {
   const handleHeaderPress = () => {
     router.push(`/store/${store.id}` as any);
   };
@@ -46,7 +47,9 @@ export function StoreListCard({ store, menuItems = [] }: StoreListCardProps) {
               source={{ uri: optimizeImageUrl(store.image) }}
               style={styles.logo}
               contentFit="cover"
-              cachePolicy="none"
+              cachePolicy="memory-disk"
+              transition={200}
+              placeholder="|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj["
             />
           </View>
           <View style={styles.headerContent}>
@@ -79,6 +82,24 @@ export function StoreListCard({ store, menuItems = [] }: StoreListCardProps) {
         </View>
       </TouchableOpacity>
 
+      {loadingMenuItems && menuItems.length === 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.menuItemsContainer}
+        >
+          {[0, 1, 2].map((i) => (
+            <View key={`skeleton-${store.id}-${i}`} style={styles.skeletonCard}>
+              <View style={styles.skeletonImage} />
+              <View style={styles.skeletonOverlay}>
+                <View style={styles.skeletonLine} />
+                <View style={[styles.skeletonLine, styles.skeletonLineShort]} />
+              </View>
+            </View>
+          ))}
+        </ScrollView>
+      )}
+
       {menuItems.length > 0 && (
         <ScrollView
           horizontal
@@ -96,7 +117,9 @@ export function StoreListCard({ store, menuItems = [] }: StoreListCardProps) {
                 source={{ uri: optimizeImageUrl(item.image) }}
                 style={styles.menuItemImage}
                 contentFit="cover"
-                cachePolicy="none"
+                cachePolicy="memory-disk"
+                transition={200}
+                placeholder="|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj["
               />
               <View style={styles.menuItemOverlay}>
                 <Text style={styles.menuItemName} numberOfLines={1}>
@@ -116,7 +139,7 @@ const styles = StyleSheet.create({
   container: {
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    marginBottom: 16,
+    marginBottom: 10,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -130,7 +153,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    padding: 16,
+    padding: 10,
     backgroundColor: "#F9FAFB",
     borderBottomWidth: 1,
     borderBottomColor: "#E5E7EB",
@@ -141,11 +164,11 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   logoContainer: {
-    width: 64,
-    height: 64,
+    width: 48,
+    height: 48,
     borderRadius: 12,
     overflow: "hidden",
-    marginRight: 12,
+    marginRight: 9,
   },
   logo: {
     width: "100%",
@@ -155,20 +178,20 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   name: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "700",
     color: "#1F2937",
-    marginBottom: 4,
+    marginBottom: 2,
   },
   cuisine: {
-    fontSize: 13,
+    fontSize: 11,
     color: "#6B7280",
-    marginBottom: 8,
+    marginBottom: 5,
   },
   headerInfo: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 8,
+    gap: 5,
   },
   ratingBadge: {
     backgroundColor: "#FFB800",
@@ -204,18 +227,18 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   menuItemsContainer: {
-    paddingHorizontal: 16,
-    paddingTop: 12,
-    paddingBottom: 16,
-    gap: 12,
+    paddingHorizontal: 10,
+    paddingTop: 8,
+    paddingBottom: 10,
+    gap: 6,
   },
   menuItemCard: {
-    width: 120,
-    height: 120,
+    width: 96,
+    height: 96,
     borderRadius: 12,
     overflow: "hidden",
     position: "relative",
-    marginRight: 12,
+    marginRight: 8,
   },
   menuItemImage: {
     width: "100%",
@@ -227,18 +250,53 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     backgroundColor: "rgba(0, 0, 0, 0.6)",
-    padding: 8,
+    padding: 5,
   },
   menuItemName: {
-    fontSize: 12,
+    fontSize: 10,
     fontWeight: "600",
     color: "#FFFFFF",
     marginBottom: 2,
   },
   menuItemPrice: {
-    fontSize: 11,
+    fontSize: 9,
     fontWeight: "700",
     color: "#FFFFFF",
+  },
+
+  skeletonCard: {
+    width: 96,
+    height: 96,
+    borderRadius: 12,
+    overflow: "hidden",
+    position: "relative",
+    marginRight: 8,
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  skeletonImage: {
+    width: "100%",
+    height: "100%",
+    backgroundColor: "#E5E7EB",
+  },
+  skeletonOverlay: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    padding: 8,
+    backgroundColor: "rgba(255,255,255,0.45)",
+  },
+  skeletonLine: {
+    height: 10,
+    borderRadius: 6,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    marginBottom: 6,
+  },
+  skeletonLineShort: {
+    width: "65%",
+    marginBottom: 0,
   },
 });
 

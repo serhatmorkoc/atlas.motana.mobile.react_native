@@ -67,6 +67,32 @@ export default function HomeScreen() {
     userLocation, // Pass selected address coordinates for distance calculation
   });
 
+  /**
+   * We want Home to feel like "one operation":
+   * - fetch stores
+   * - fetch selected address (for location)
+   * - calculate distances (async)
+   * Then render ONCE (no flicker).
+   *
+   * After the first ready render, we allow background updates without blocking the UI.
+   */
+  const [initialReady, setInitialReady] = useState(false);
+
+  useEffect(() => {
+    if (initialReady) return;
+
+    // If stores are not available yet, keep waiting.
+    if (stores.length === 0) return;
+
+    // Wait for addresses (if any) to load so userLocation is stable.
+    if (addressesLoading) return;
+
+    // If we have a userLocation, wait for distance calculation to finish.
+    if (userLocation && storesLoading) return;
+
+    setInitialReady(true);
+  }, [initialReady, stores.length, addressesLoading, userLocation, storesLoading]);
+
   // Refetch address when screen comes into focus
   useFocusEffect(
     useCallback(() => {
@@ -200,10 +226,23 @@ export default function HomeScreen() {
     }
   };
 
-  if (storesLoading) {
-    return (
-      <LoadingScreen title="Loading stores…" />
-    );
+  // Initial load: block rendering until everything is ready (stores + distance).
+  if (!initialReady) {
+    // If we already know there are no stores, show the empty state instead of infinite loading.
+    if (!storesLoading && stores.length === 0 && !storesError) {
+      return (
+        <View style={styles.container}>
+          <HomeHeader insets={insets} selectedAddress={selectedAddress} />
+          <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
+            <Text style={{ color: "#6B7280", fontWeight: "600" }}>
+              No stores found in DB.
+            </Text>
+          </View>
+        </View>
+      );
+    }
+
+    return <LoadingScreen title="Loading home…" subtitle="Preparing your feed" />;
   }
 
   if (storesError) {

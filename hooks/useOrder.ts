@@ -1,258 +1,156 @@
-// Custom hook for fetching a single order by ID
-import { useQuery } from '@apollo/client/react';
-import { apolloClient } from '@/lib/apollo/client';
-import { GET_ORDER_BY_ID, GET_ORDER_ITEMS_BY_ORDER_ID } from '@/lib/apollo/queries/orders';
-import { GET_STORE_BY_ID } from '@/lib/apollo/queries/stores';
-import { Order, OrderItem, DBOrderStatus } from '@/types/order.types';
+// Custom hook for fetching a single order by ID using Relay
+import { useLazyLoadQuery } from 'react-relay';
+import { relayEnvironment } from '@/lib/relay/environment';
+import { orderQuery } from '@/lib/relay/queries/OrderQuery';
+import { orderItemsQuery } from '@/lib/relay/queries/OrderItemsQuery';
+import { storeQuery } from '@/lib/relay/queries/StoreQuery';
+import { fetchQuery } from 'relay-runtime';
+import { DBOrderStatus, Order, OrderItem } from '@/types/order.types';
 import type { DeliveryAddress } from '@/types/address.types';
-import React from 'react';
+import React, { useCallback, useState } from 'react';
+import type { OrderQuery } from '@/__generated__/OrderQuery.graphql';
+import type { OrderItemsQuery } from '@/__generated__/OrderItemsQuery.graphql';
+import type { StoreQuery } from '@/__generated__/StoreQuery.graphql';
 
-// GraphQL Order type (from Supabase)
 interface GraphQLOrder {
-  id: string;
-  order_code: string | null;
-  user_id: string | null;
-  store_id: string | null;
-  delivery_address: DeliveryAddress | string | null; // JSONB - can be parsed object or string
-  payment_method: string | null;
-  payment_status: string | null;
-  order_status: string | null;
-  sub_total: string | null;
-  delivery_fee: string | null;
-  tax_amount: string | null;
-  tip_amount: string | null;
-  total_amount: string | null;
-  created_at: string;
-  estimated_delivery_time: string | null;
-  store?: {
-    edges: Array<{
-      node: {
-        id: string;
-        name: string;
-        image: string;
-      };
-    }>;
-  };
-  order_items?: {
-    edges: Array<{
-      node: {
-        id: string;
-        product_id: string | null;
-        product_title: string | null;
-        quantity: number | null;
-        unit_price: string | null;
-        total_price: string | null;
-        image: string | null;
-      };
-    }>;
-  };
+  id: string; order_code: string | null; user_id: string | null; store_id: string | null;
+  delivery_address: DeliveryAddress | string | null; payment_method: string | null;
+  payment_status: string | null; order_status: string | null; sub_total: string | null;
+  delivery_fee: string | null; tax_amount: string | null; tip_amount: string | null;
+  total_amount: string | null; created_at: string; estimated_delivery_time: string | null;
 }
 
-interface GraphQLOrderItem {
-  id: string;
-  product_id: string | null;
-  product_title: string | null;
-  quantity: number | null;
-  unit_price: string | null;
-  total_price: string | null;
-  image: string | null;
-}
+const isDBOrderStatus = (v: string | null | undefined): v is DBOrderStatus => {
+  if (!v) return false;
+  return (
+    v === 'PENDING' ||
+    v === 'CONFIRMED' ||
+    v === 'PREPARING' ||
+    v === 'READY' ||
+    v === 'ON_WAY' ||
+    v === 'DELIVERED' ||
+    v === 'CANCELLED'
+  );
+};
 
-interface GetOrderByIdData {
-  ordersCollection: {
-    edges: Array<{
-      node: GraphQLOrder;
-    }>;
-  };
-}
-
-interface GetOrderByIdVariables {
-  id: string;
-}
-
-/**
- * Map GraphQL order_status (DB status) to OrderStatus type
- */
 const mapOrderStatus = (status: string | null): 'delivered' | 'in_progress' | 'cancelled' => {
   if (!status) return 'in_progress';
-
-  const statusUpper = status.toUpperCase();
-
-  if (statusUpper === 'DELIVERED') return 'delivered';
-  if (statusUpper === 'CANCELLED') return 'cancelled';
+  const s = status.toUpperCase();
+  if (s === 'DELIVERED') return 'delivered';
+  if (s === 'CANCELLED') return 'cancelled';
   return 'in_progress';
 };
 
-/**
- * Fetch order items by order ID
- */
-const fetchOrderItems = async (orderId: string): Promise<GraphQLOrderItem[]> => {
+const fetchStore = async (id: string | null) => {
+  if (!id) return null;
   try {
-    const { data } = await apolloClient.query<{
-      order_itemsCollection: {
-        edges: Array<{
-          node: GraphQLOrderItem;
-        }>;
-      };
-    }>({
-      query: GET_ORDER_ITEMS_BY_ORDER_ID,
-      variables: { orderId },
-      fetchPolicy: 'no-cache',
-    });
-
-    return data?.order_itemsCollection?.edges?.map((e) => e.node) || [];
-  } catch (e) {
-    console.error('Failed to fetch order items:', e);
-    return [];
-  }
+    const data = await fetchQuery<StoreQuery>(relayEnvironment, storeQuery, { id }).toPromise();
+    return data?.storesCollection?.edges?.[0]?.node || null;
+  } catch { return null; }
 };
 
-/**
- * Map GraphQL Order to Mobile App Order type
- */
-const mapGraphQLOrderToOrder = async (
-  graphQLOrder: GraphQLOrder,
-  orderItems: GraphQLOrderItem[]
-): Promise<Order | null> => {
-  // Get store info
-  let storeName = 'Store';
-  let storeImage = '';
+const fetchOrderItems = async (orderId: string) => {
+  try {
+    const data = await fetchQuery<OrderItemsQuery>(relayEnvironment, orderItemsQuery, { orderId }).toPromise();
+    return data?.order_itemsCollection?.edges?.map((e) => e.node) || [];
+  } catch { return []; }
+};
 
-  if (graphQLOrder.store?.edges?.[0]?.node) {
-    const store = graphQLOrder.store.edges[0].node;
-    storeName = store.name;
-    storeImage = store.image;
-  } else if (graphQLOrder.store_id) {
-    // Fallback: fetch store separately
-    try {
-      const { data } = await apolloClient.query<{
-        storesCollection: {
-          edges: Array<{
-            node: {
-              id: string;
-              name: string;
-              image: string;
-            };
-          }>;
-        };
-      }>({
-        query: GET_STORE_BY_ID,
-        variables: { id: graphQLOrder.store_id },
-        fetchPolicy: 'no-cache',
-      });
-
-      const store = data?.storesCollection?.edges?.[0]?.node;
-      if (store) {
-        storeName = store.name;
-        storeImage = store.image;
-      }
-    } catch (e) {
-      console.error('Failed to fetch store:', e);
-    }
-  }
-
-  const mappedOrderItems: OrderItem[] = orderItems.map((item) => ({
-    id: item.id,
-    name: item.product_title || 'Unknown Item',
-    quantity: item.quantity || 0,
-    price: item.total_price ? `₺${parseFloat(item.total_price).toFixed(2)}` : '₺0.00',
+const mapGraphQLOrderToOrder = async (order: GraphQLOrder, store: any, items: any[]): Promise<Order | null> => {
+  if (!store) return null;
+  const mappedItems: OrderItem[] = items.map((i) => ({
+    id: i.id,
+    name: i.product_title || 'Unknown Item',
+    quantity: i.quantity || 0,
+    price: i.total_price || '0.00',
   }));
 
-  // Parse delivery_address JSONB
-  let deliveryAddress = 'Address not available';
+  let deliveryAddressText = '';
   try {
-    if (graphQLOrder.delivery_address) {
-      const addressJson = typeof graphQLOrder.delivery_address === 'string'
-        ? JSON.parse(graphQLOrder.delivery_address)
-        : graphQLOrder.delivery_address;
-      deliveryAddress = addressJson.delivery_address || addressJson.address || deliveryAddress;
+    const addr =
+      order.delivery_address
+        ? (typeof order.delivery_address === 'string'
+            ? JSON.parse(order.delivery_address)
+            : order.delivery_address)
+        : null;
+    if (addr && typeof addr === 'object') {
+      deliveryAddressText =
+        (addr as any).delivery_address ||
+        (addr as any).address ||
+        (addr as any).label ||
+        '';
     }
-  } catch (e) {
-    console.error('Failed to parse delivery_address:', e);
+  } catch {
+    // ignore
   }
 
-  // Calculate estimated time from estimated_delivery_time
-  let estimatedTime: string | undefined;
-  if (graphQLOrder.estimated_delivery_time) {
-    try {
-      const estimatedDate = new Date(graphQLOrder.estimated_delivery_time);
-      const now = new Date();
-      const diffMinutes = Math.round((estimatedDate.getTime() - now.getTime()) / (1000 * 60));
-      if (diffMinutes > 0) {
-        estimatedTime = `${diffMinutes} min`;
-      }
-    } catch (e) {
-      console.error('Failed to parse estimated_delivery_time:', e);
-    }
-  }
+  const rawStatus: DBOrderStatus | null =
+    isDBOrderStatus(order.order_status) ? order.order_status : null;
 
-  const rawStatus = (graphQLOrder.order_status?.toUpperCase() || null) as DBOrderStatus | null;
-  const mappedStatus = mapOrderStatus(graphQLOrder.order_status);
+  const total = Number(order.total_amount ?? 0);
+  const totalPrice = `₺${Number.isFinite(total) ? total.toFixed(2) : '0.00'}`;
 
   return {
-    id: graphQLOrder.id,
-    orderCode: graphQLOrder.order_code,
-    storeName,
-    storeImage,
-    items: mappedOrderItems,
-    totalPrice: graphQLOrder.total_amount ? `₺${parseFloat(graphQLOrder.total_amount).toFixed(2)}` : '₺0.00',
-    status: mappedStatus,
+    id: order.id,
+    orderCode: order.order_code,
+    storeName: store.name,
+    storeImage: store.image,
+    items: mappedItems,
+    totalPrice,
+    status: mapOrderStatus(order.order_status),
     rawStatus,
-    date: graphQLOrder.created_at,
-    deliveryAddress,
-    estimatedTime,
+    date: order.created_at,
+    deliveryAddress: deliveryAddressText,
+    estimatedTime: order.estimated_delivery_time
+      ? new Date(order.estimated_delivery_time).toLocaleTimeString([], {
+          hour: '2-digit',
+          minute: '2-digit',
+        })
+      : undefined,
   };
 };
 
-/**
- * Hook to fetch a single order by ID
- */
-export const useOrder = (orderId: string | null) => {
-  const { data, loading, error, refetch } = useQuery<GetOrderByIdData, GetOrderByIdVariables>(
-    GET_ORDER_BY_ID,
-    {
-      variables: { id: orderId || '' },
-      skip: !orderId,
-      fetchPolicy: 'no-cache',
-    }
+export const useOrder = (id: string) => {
+  const [refetchKey, setRefetchKey] = useState(0);
+
+  const data = useLazyLoadQuery<OrderQuery>(
+    orderQuery,
+    { id },
+    { fetchPolicy: 'store-and-network', fetchKey: `order-${id}-${refetchKey}` }
   );
 
   const [order, setOrder] = React.useState<Order | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
 
   React.useEffect(() => {
-    const loadOrderDetails = async () => {
-      const node = data?.ordersCollection?.edges?.[0]?.node;
+    let cancelled = false;
+
+    const load = async () => {
+      const node: GraphQLOrder | undefined = data?.ordersCollection?.edges?.[0]?.node;
       if (!node) {
-        setOrder(null);
+        if (!cancelled) setOrder(null);
         return;
       }
-
-      setIsLoadingDetails(true);
+      if (!cancelled) setIsLoadingDetails(true);
       try {
-        // Fetch order items if not included in the query
-        const orderItems = node.order_items?.edges?.map((e) => e.node) ||
-          await fetchOrderItems(node.id);
-
-        const mappedOrder = await mapGraphQLOrderToOrder(node, orderItems);
-        setOrder(mappedOrder);
-      } catch (e) {
-        console.error('Failed to load order details:', e);
-        setOrder(null);
+        const s = await fetchStore(node.store_id);
+        const i = await fetchOrderItems(node.id);
+        const mapped = await mapGraphQLOrderToOrder(node, s, i);
+        if (!cancelled) setOrder(mapped);
       } finally {
-        setIsLoadingDetails(false);
+        if (!cancelled) setIsLoadingDetails(false);
       }
     };
+    if (data) load();
 
-    if (data && !loading) {
-      loadOrderDetails();
-    }
-  }, [data, loading]);
+    return () => {
+      cancelled = true;
+    };
+  }, [data]);
 
-  return {
-    order,
-    loading: loading || isLoadingDetails,
-    error,
-    refetch,
-  };
+  const refetch = useCallback(async () => {
+    setRefetchKey(prev => prev + 1);
+  }, []);
+
+  return { order, loading: isLoadingDetails, error: null, refetch };
 };

@@ -13,19 +13,27 @@ import {
   TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useMutation } from "@apollo/client/react";
-import { useQuery } from "@apollo/client/react";
-import { apolloClient } from "@/lib/apollo/client";
+import { useMutation } from "react-relay";
+import { useLazyLoadQuery } from "react-relay";
+import { relayEnvironment } from "@/lib/relay/environment";
+import { fetchQuery } from "relay-runtime";
 import { AlertModal, AlertType } from "@/components/common/AlertModal";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 import { useCart, CartItem, CartStoreGroup } from "@/contexts/CartContext";
 import { formatPrice, DELIVERY_FEE, SERVICE_FEE } from "@/utils";
-import { CREATE_ORDER, CREATE_ORDER_ITEMS } from "@/lib/apollo/mutations/orders";
-import { GET_USER_BY_ID, GET_USER_ADDRESSES } from "@/lib/apollo/queries/users";
-import { GET_STORE_BY_ID } from "@/lib/apollo/queries/stores";
+import { createOrderMutation } from "@/lib/relay/mutations/CreateOrderMutation";
+import { createOrderItemsMutation } from "@/lib/relay/mutations/CreateOrderItemsMutation";
+import { userQuery } from "@/lib/relay/queries/UserQuery";
+import { userAddressesQuery } from "@/lib/relay/queries/UserAddressesQuery";
+import { storeQuery } from "@/lib/relay/queries/StoreQuery";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import type { CreateOrderMutation } from "@/__generated__/CreateOrderMutation.graphql";
+import type { CreateOrderItemsMutation } from "@/__generated__/CreateOrderItemsMutation.graphql";
+import type { UserQuery } from "@/__generated__/UserQuery.graphql";
+import type { UserAddressesQuery } from "@/__generated__/UserAddressesQuery.graphql";
+import type { StoreQuery } from "@/__generated__/StoreQuery.graphql";
 
-type Edge<T> = { node: T };
 type User = { id: string; name: string | null; email: string | null; phone: string | null };
 type UserAddress = {
   id: string;
@@ -40,12 +48,6 @@ type UserAddress = {
   longitude: string | null;
   is_selected: boolean | null;
 };
-
-type GetUserByIdData = { usersCollection: { edges: Array<Edge<User>> } };
-type GetUserByIdVars = { id: string };
-
-type GetUserAddressesData = { user_addressesCollection: { edges: Array<Edge<UserAddress>> } };
-type GetUserAddressesVars = { userId: string };
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
@@ -75,84 +77,34 @@ export default function CheckoutScreen() {
   const [storeNotes, setStoreNotes] = useState<Record<string, string>>({});
   const [storeTips, setStoreTips] = useState<Record<string, number>>({});
 
-  type CreateOrderData = {
-    insertIntoordersCollection: {
-      records: Array<{
-        id: string;
-        order_code: string | null;
-        user_id: string | null;
-        store_id: string | null;
-        courier_id: string | null;
-        delivery_address: any;
-        payment_method: string | null;
-        payment_status: string | null;
-        order_status: string | null;
-        sub_total: string | null;
-        delivery_fee: string | null;
-        tax_amount: string | null;
-        tip_amount: string | null;
-        total_amount: string | null;
-        note_to_store: string | null;
-        is_picked_up: boolean | null;
-        created_at: string;
-        estimated_delivery_time: string | null;
-      }>;
-    };
-  };
-
-  type CreateOrderVars = { order: any };
-
-  type CreateOrderItemsData = {
-    insertIntoorder_itemsCollection: {
-      records: Array<{
-        id: string;
-        order_id: string | null;
-        product_id: string | null;
-        product_title: string | null;
-        quantity: number | null;
-        unit_price: string | null;
-        total_price: string | null;
-        image: string | null;
-      }>;
-    };
-  };
-
-  type CreateOrderItemsVars = { items: any[] };
-
-  type GraphQLStore = {
-    id: string;
-    delivery_time_min: number;
-    delivery_time_max: number;
-  };
-
-  type GetStoreByIdData = {
-    storesCollection: {
-      edges: Array<{
-        node: GraphQLStore;
-      }>;
-    };
-  };
-
-  type GetStoreByIdVars = { id: string };
-
-  const [createOrder] = useMutation<CreateOrderData, CreateOrderVars>(CREATE_ORDER);
-  const [createOrderItems] = useMutation<CreateOrderItemsData, CreateOrderItemsVars>(CREATE_ORDER_ITEMS);
+  const [commitCreateOrder] = useMutation<CreateOrderMutation>(createOrderMutation);
+  const [commitCreateOrderItems] = useMutation<CreateOrderItemsMutation>(createOrderItemsMutation);
 
   // If user is logged in, we MUST have a userId. Only skip if auth is still loading
   // or if we explicitly don't have a userId (user not logged in)
   const shouldSkip = authLoading || !userId;
 
-  const userQuery = useQuery<GetUserByIdData, GetUserByIdVars>(GET_USER_BY_ID, {
-    variables: { id: userId || '' }, // Will only be used if shouldSkip is false
-    fetchPolicy: "cache-and-network",
-    skip: shouldSkip, // Skip query if auth is loading or no user ID
-  });
+  const userData = useLazyLoadQuery<UserQuery>(
+    userQuery,
+    { id: userId || '00000000-0000-0000-0000-000000000000' },
+    { 
+      fetchPolicy: 'store-and-network',
+      fetchKey: shouldSkip ? 'skip' : userId,
+    }
+  );
 
-  const addressesQuery = useQuery<GetUserAddressesData, GetUserAddressesVars>(GET_USER_ADDRESSES, {
-    variables: { userId: userId || '' }, // Will only be used if shouldSkip is false
-    fetchPolicy: "cache-and-network",
-    skip: shouldSkip, // Skip query if auth is loading or no user ID
-  });
+  const addressesData = useLazyLoadQuery<UserAddressesQuery>(
+    userAddressesQuery,
+    { userId: userId || '00000000-0000-0000-0000-000000000000' },
+    { 
+      fetchPolicy: 'store-and-network',
+      fetchKey: shouldSkip ? 'skip' : userId,
+    }
+  );
+
+  if (authLoading) {
+    return <LoadingScreen title="Checking authentication..." subtitle="Please wait" />;
+  }
 
   const handleClearPress = (storeId: string, storeName: string) => {
     setStoreToClear({ id: storeId, name: storeName });
@@ -266,16 +218,20 @@ export default function CheckoutScreen() {
     const storeTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE + tipAmount;
     const orderCode = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
 
-    const user: User | undefined = userQuery.data?.usersCollection?.edges?.[0]?.node;
-    const addresses: UserAddress[] =
-      addressesQuery.data?.user_addressesCollection?.edges?.map((e) => e.node) ?? [];
+    const addresses: UserAddress[] = shouldSkip 
+      ? []
+      : addressesData?.user_addressesCollection?.edges?.map((e) => e.node) ?? [];
 
     const selectedAddress =
       addresses.find((a) => a.is_selected) ??
       addresses[0];
 
     if (!selectedAddress?.delivery_address) {
-      showAlert("error", "Address missing", "This user has no selected delivery address in DB.");
+      if (!userId) {
+        showAlert("error", "Authentication Required", "Please log in to place an order.");
+      } else {
+        showAlert("error", "Address missing", "This user has no selected delivery address in DB.");
+      }
       return;
     }
 
@@ -283,11 +239,11 @@ export default function CheckoutScreen() {
       setPlacingStoreId(group.storeId);
 
       // Fetch store to get delivery_time_min and delivery_time_max for estimated_delivery_time
-      const { data: storeData } = await apolloClient.query<GetStoreByIdData, GetStoreByIdVars>({
-        query: GET_STORE_BY_ID,
-        variables: { id: group.storeId },
-        fetchPolicy: 'network-only', // Always fetch fresh data
-      });
+      const storeData = await fetchQuery<StoreQuery>(
+        relayEnvironment,
+        storeQuery,
+        { id: group.storeId }
+      ).toPromise();
 
       const store = storeData?.storesCollection?.edges?.[0]?.node;
       
@@ -328,27 +284,31 @@ export default function CheckoutScreen() {
         console.log("deliveryAddressForMutation type:", typeof deliveryAddressForMutation);
       }
 
-      const orderRes = await createOrder({
-        variables: {
-          order: {
-            order_code: orderCode, // text
-            user_id: userId, // uuid
-            store_id: group.storeId, // uuid
-            courier_id: null, // uuid null - will be assigned later
-            delivery_address: deliveryAddressForMutation, // jsonb (as JSON string)
-            payment_method: paymentMethod, // text (CASH or CREDIT_CARD)
-            payment_status: "PENDING", // text (default 'PENDING')
-            order_status: "PENDING", // text (default 'PENDING')
-            sub_total: group.subtotal.toFixed(2), // numeric(10, 2) as string
-            delivery_fee: DELIVERY_FEE.toFixed(2), // numeric(10, 2) as string
-            tax_amount: "0.00", // numeric(10, 2) as string
-            tip_amount: tipAmount.toFixed(2), // numeric(10, 2) as string
-            total_amount: storeTotal.toFixed(2), // numeric(10, 2) as string
-            note_to_store: note || null, // text null
-            is_picked_up: false, // boolean (default false)
-            estimated_delivery_time: estimatedDeliveryTime, // timestamp with time zone (ISO string)
+      const orderRes = await new Promise<{ data?: CreateOrderMutation['response'] }>((resolve, reject) => {
+        commitCreateOrder({
+          variables: {
+            order: {
+              order_code: orderCode, // text
+              user_id: userId, // uuid
+              store_id: group.storeId, // uuid
+              courier_id: null, // uuid null - will be assigned later
+              delivery_address: deliveryAddressForMutation, // jsonb (as JSON string)
+              payment_method: paymentMethod, // text (CASH or CREDIT_CARD)
+              payment_status: "PENDING", // text (default 'PENDING')
+              order_status: "PENDING", // text (default 'PENDING')
+              sub_total: group.subtotal.toFixed(2), // numeric(10, 2) as string
+              delivery_fee: DELIVERY_FEE.toFixed(2), // numeric(10, 2) as string
+              tax_amount: "0.00", // numeric(10, 2) as string
+              tip_amount: tipAmount.toFixed(2), // numeric(10, 2) as string
+              total_amount: storeTotal.toFixed(2), // numeric(10, 2) as string
+              note_to_store: note || null, // text null
+              is_picked_up: false, // boolean (default false)
+              estimated_delivery_time: estimatedDeliveryTime, // timestamp with time zone (ISO string)
+            },
           },
-        },
+          onCompleted: (response) => resolve({ data: response }),
+          onError: (error) => reject(error),
+        });
       });
 
       const created = orderRes.data?.insertIntoordersCollection?.records?.[0];
@@ -377,10 +337,14 @@ export default function CheckoutScreen() {
         };
       });
 
-      await createOrderItems({
-        variables: {
-          items: itemsPayload,
-        },
+      await new Promise<void>((resolve, reject) => {
+        commitCreateOrderItems({
+          variables: {
+            items: itemsPayload,
+          },
+          onCompleted: () => resolve(),
+          onError: (error) => reject(error),
+        });
       });
 
       // 3) Clear cart for store and navigate

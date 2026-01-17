@@ -4,20 +4,20 @@ import { Store } from '@/types/store.types';
 // GraphQL Store type (from Supabase)
 export interface GraphQLStore {
   id: string;
-  name: string;
-  image: string;
-  rating: string; // String in DB, number in mobile
-  delivery_time_min: number;
-  delivery_time_max: number;
-  address: string;
-  latitude: string;
-  longitude: string;
-  minimum_order: string;
-  is_available: boolean;
-  is_active: boolean;
-  review_count: number;
-  slug: string;
-  store_categories_id: number;
+  name?: string | null;
+  image?: string | null;
+  rating?: string | null; // String in DB, number in mobile
+  delivery_time_min?: number | null;
+  delivery_time_max?: number | null;
+  address?: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
+  minimum_order?: string | null;
+  is_available?: boolean | null;
+  is_active?: boolean | null;
+  review_count?: number | null;
+  slug?: string | null;
+  store_categories_id?: number | string | null;
 }
 
 // Store category mapping (you'll need to fetch this from store-categories)
@@ -75,30 +75,39 @@ const calculateDeliveryFee = (storeId: string): string => {
  * Maps GraphQL Store to Mobile App Store type
  */
 export const mapGraphQLStoreToStore = (graphQLStore: GraphQLStore): Store => {
-  const deliveryTime = `${graphQLStore.delivery_time_min}-${graphQLStore.delivery_time_max}`;
-  const cuisine = getCuisineFromCategory(graphQLStore.store_categories_id);
-  const distance = calculateDistance(graphQLStore.id, graphQLStore.latitude, graphQLStore.longitude);
+  const deliveryMin = graphQLStore.delivery_time_min ?? 0;
+  const deliveryMax = graphQLStore.delivery_time_max ?? 0;
+  const deliveryTime = `${deliveryMin}-${deliveryMax}`;
+
+  const categoryIdRaw = graphQLStore.store_categories_id ?? 0;
+  const categoryId =
+    typeof categoryIdRaw === 'string' ? Number(categoryIdRaw) : Number(categoryIdRaw);
+  const cuisine = getCuisineFromCategory(Number.isFinite(categoryId) ? categoryId : 0);
+
+  const distance = calculateDistance(
+    graphQLStore.id,
+    graphQLStore.latitude ?? '0',
+    graphQLStore.longitude ?? '0'
+  );
   const deliveryFee = calculateDeliveryFee(graphQLStore.id);
-  const minimumOrder = Number(graphQLStore.minimum_order);
+  const minimumOrder = Number(graphQLStore.minimum_order ?? '0');
   
   const lat = graphQLStore.latitude ? parseFloat(graphQLStore.latitude) : undefined;
   const lng = graphQLStore.longitude ? parseFloat(graphQLStore.longitude) : undefined;
 
   return {
     id: graphQLStore.id,
-    name: graphQLStore.name,
-    image: graphQLStore.image,
-    rating: parseFloat(graphQLStore.rating),
+    name: graphQLStore.name ?? '',
+    image: graphQLStore.image ?? '',
+    rating: parseFloat(graphQLStore.rating ?? '0'),
     deliveryTime,
     cuisine,
     deliveryFee,
     distance,
-    deliveryTimeMin: graphQLStore.delivery_time_min,
-    deliveryTimeMax: graphQLStore.delivery_time_max,
+    deliveryTimeMin: deliveryMin,
+    deliveryTimeMax: deliveryMax,
     minimumOrder: Number.isFinite(minimumOrder) ? minimumOrder : undefined,
-    storeCategoriesId: typeof graphQLStore.store_categories_id === 'string' 
-      ? Number(graphQLStore.store_categories_id) 
-      : graphQLStore.store_categories_id,
+    storeCategoriesId: Number.isFinite(categoryId) ? categoryId : 0,
     latitude: Number.isFinite(lat) ? lat : undefined,
     longitude: Number.isFinite(lng) ? lng : undefined,
   };

@@ -1,60 +1,24 @@
-import { useQuery, useMutation } from "@apollo/client/react";
-import { GET_USER_ADDRESSES } from "@/lib/apollo/queries/users";
+import { useLazyLoadQuery, useMutation } from 'react-relay';
+import { userAddressesQuery } from '@/lib/relay/queries/UserAddressesQuery';
 import {
-  CREATE_USER_ADDRESS,
-  UPDATE_USER_ADDRESS,
-  DELETE_USER_ADDRESS,
-  SET_SELECTED_ADDRESS,
-} from "@/lib/apollo/mutations/users";
-import React from "react";
-import { apolloClient } from "@/lib/apollo/client";
-import { useAuthUser } from "./useAuthUser";
-
-interface UserAddressNode {
-  id: string;
-  user_id: string;
-  label: string | null;
-  delivery_address: string | null;
-  details: string | null;
-  building: string | null;
-  floor: string | null;
-  landmark: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  is_selected: boolean | null;
-}
-
-interface GetUserAddressesData {
-  user_addressesCollection: {
-    edges: Array<{
-      node: UserAddressNode;
-    }>;
-  };
-}
-
-interface CreateUserAddressData {
-  insertIntouser_addressesCollection: {
-    records: UserAddressNode[];
-  };
-}
-
-interface UpdateUserAddressData {
-  updateuser_addressesCollection: {
-    records: UserAddressNode[];
-  };
-}
-
-interface DeleteUserAddressData {
-  deleteFromuser_addressesCollection: {
-    records: Array<{ id: string }>;
-  };
-}
-
-interface SetSelectedAddressData {
-  updateuser_addressesCollection: {
-    records: Array<{ id: string; is_selected: boolean | null }>;
-  };
-}
+  createUserAddressMutation,
+} from '@/lib/relay/mutations/CreateUserAddressMutation';
+import {
+  updateUserAddressMutation,
+} from '@/lib/relay/mutations/UpdateUserAddressMutation';
+import {
+  deleteUserAddressMutation,
+} from '@/lib/relay/mutations/DeleteUserAddressMutation';
+import {
+  setSelectedAddressMutation,
+} from '@/lib/relay/mutations/SetSelectedAddressMutation';
+import React, { useCallback, useMemo, useState } from 'react';
+import { useAuthUser } from './useAuthUser';
+import type { UserAddressesQuery } from '@/__generated__/UserAddressesQuery.graphql';
+import type { CreateUserAddressMutation } from '@/__generated__/CreateUserAddressMutation.graphql';
+import type { UpdateUserAddressMutation } from '@/__generated__/UpdateUserAddressMutation.graphql';
+import type { DeleteUserAddressMutation } from '@/__generated__/DeleteUserAddressMutation.graphql';
+import type { SetSelectedAddressMutation } from '@/__generated__/SetSelectedAddressMutation.graphql';
 
 export interface Address {
   id: string;
@@ -75,9 +39,6 @@ export interface Address {
   longitude?: number;
 }
 
-/**
- * Maps database address type (label) to UI type
- */
 const mapLabelToType = (label: string | null): "home" | "work" | "other" => {
   if (!label) return "other";
   const lowerLabel = label.toLowerCase();
@@ -86,23 +47,14 @@ const mapLabelToType = (label: string | null): "home" | "work" | "other" => {
   return "other";
 };
 
-/**
- * Maps UI type to database label
- */
 const mapTypeToLabel = (type: "home" | "work" | "other"): string => {
   switch (type) {
-    case "home":
-      return "Home";
-    case "work":
-      return "Work";
-    default:
-      return "Other";
+    case "home": return "Home";
+    case "work": return "Work";
+    default: return "Other";
   }
 };
 
-/**
- * Parses delivery_address string into address components
- */
 const parseDeliveryAddress = (deliveryAddress: string | null): {
   street?: string;
   city?: string;
@@ -112,11 +64,7 @@ const parseDeliveryAddress = (deliveryAddress: string | null): {
   country?: string;
 } => {
   if (!deliveryAddress) return {};
-  
-  // Simple parsing - assumes format: "Street, District, City, Region, PostalCode, Country"
-  // This is a basic implementation, can be improved
   const parts = deliveryAddress.split(",").map(p => p.trim());
-  
   return {
     street: parts[0] || undefined,
     district: parts[1] || undefined,
@@ -127,9 +75,6 @@ const parseDeliveryAddress = (deliveryAddress: string | null): {
   };
 };
 
-/**
- * Formats address components into delivery_address string
- */
 const formatDeliveryAddress = (
   street?: string,
   district?: string,
@@ -142,12 +87,19 @@ const formatDeliveryAddress = (
   return parts.join(", ");
 };
 
-/**
- * Maps database address to UI Address type
- */
-const mapAddressToUI = (node: UserAddressNode): Address => {
+const mapAddressToUI = (node: {
+  id: string;
+  label: string | null;
+  delivery_address: string | null;
+  details: string | null;
+  building: string | null;
+  floor: string | null;
+  landmark: string | null;
+  latitude: string | null;
+  longitude: string | null;
+  is_selected: boolean | null;
+}): Address => {
   const parsed = parseDeliveryAddress(node.delivery_address);
-  
   return {
     id: node.id,
     title: node.label || "Address",
@@ -168,77 +120,44 @@ const mapAddressToUI = (node: UserAddressNode): Address => {
   };
 };
 
-/**
- * Hook to fetch and manage user addresses
- */
 export const useUserAddresses = (userId?: string) => {
   const { userId: authUserId, loading: authLoading } = useAuthUser();
   const finalUserId = userId || authUserId;
-  
-  // If user is logged in, we MUST have a userId. Only skip if auth is still loading
-  // or if we explicitly don't have a userId (user not logged in)
   const shouldSkip = authLoading || !finalUserId;
   
-  const { data, loading, error, refetch } = useQuery<GetUserAddressesData>(
-    GET_USER_ADDRESSES,
-    {
-      variables: { userId: finalUserId || '' }, // Will only be used if shouldSkip is false
-      fetchPolicy: 'network-only', // Always fetch fresh data
-      skip: shouldSkip, // Skip query if auth is loading or no user ID
+  const [refetchKey, setRefetchKey] = useState(0);
+
+  const data = useLazyLoadQuery<UserAddressesQuery>(
+    userAddressesQuery,
+    { userId: finalUserId || '00000000-0000-0000-0000-000000000000' },
+    { 
+      fetchPolicy: 'store-and-network',
+      fetchKey: shouldSkip ? 'skip' : `${finalUserId}-${refetchKey}`,
     }
   );
 
-  const [createAddressMutation, { loading: creating }] = useMutation<CreateUserAddressData>(
-    CREATE_USER_ADDRESS
-  );
+  const [commitCreateAddress, isCreating] = useMutation<CreateUserAddressMutation>(createUserAddressMutation);
+  const [commitUpdateAddress, isUpdating] = useMutation<UpdateUserAddressMutation>(updateUserAddressMutation);
+  const [commitDeleteAddress, isDeleting] = useMutation<DeleteUserAddressMutation>(deleteUserAddressMutation);
+  const [commitSetSelected] = useMutation<SetSelectedAddressMutation>(setSelectedAddressMutation);
 
-  const [updateAddressMutation, { loading: updating }] = useMutation<UpdateUserAddressData>(
-    UPDATE_USER_ADDRESS
-  );
-
-  const [deleteAddressMutation, { loading: deleting }] = useMutation<DeleteUserAddressData>(
-    DELETE_USER_ADDRESS
-  );
-
-  const [setSelectedMutation] = useMutation<SetSelectedAddressData>(
-    SET_SELECTED_ADDRESS
-  );
-
-  const addresses = React.useMemo(() => {
+  const addresses = useMemo(() => {
+    if (shouldSkip) return [];
     return data?.user_addressesCollection?.edges?.map(edge => mapAddressToUI(edge.node)) || [];
-  }, [data]);
+  }, [data, shouldSkip]);
 
-  const createAddress = async (addressData: {
-    label: string;
-    type: "home" | "work" | "other";
-    street?: string;
-    district?: string;
-    city?: string;
-    region?: string;
-    postalCode?: string;
-    country?: string;
-    building?: string;
-    floor?: string;
-    landmark?: string;
-    latitude?: number;
-    longitude?: number;
-    is_selected?: boolean;
-  }) => {
-    try {
-      const deliveryAddress = formatDeliveryAddress(
-        addressData.street,
-        addressData.district,
-        addressData.city,
-        addressData.region,
-        addressData.postalCode,
-        addressData.country
-      );
+  const refetch = useCallback(async () => {
+    setRefetchKey(prev => prev + 1);
+  }, []);
 
-      if (!finalUserId) {
-        return { success: false, error: 'User ID is required' };
-      }
-
-      const { data: result } = await createAddressMutation({
+  const createAddress = useCallback(async (addressData: any) => {
+    if (!finalUserId) return { success: false, error: 'User ID is required' };
+    const deliveryAddress = formatDeliveryAddress(
+      addressData.street, addressData.district, addressData.city,
+      addressData.region, addressData.postalCode, addressData.country
+    );
+    return new Promise<{ success: boolean; error?: string; address?: Address }>((resolve) => {
+      commitCreateAddress({
         variables: {
           user_id: finalUserId,
           label: mapTypeToLabel(addressData.type),
@@ -251,48 +170,25 @@ export const useUserAddresses = (userId?: string) => {
           longitude: addressData.longitude ? addressData.longitude.toString() : null,
           is_selected: addressData.is_selected || false,
         },
+        onCompleted: (response) => {
+          if (response?.insertIntouser_addressesCollection?.records?.[0]) {
+            resolve({ success: true, address: mapAddressToUI(response.insertIntouser_addressesCollection.records[0]) });
+          } else {
+            resolve({ success: false, error: 'Failed to create address' });
+          }
+        },
+        onError: (error) => resolve({ success: false, error: error.message || 'Unknown error' }),
       });
+    });
+  }, [finalUserId, commitCreateAddress]);
 
-      if (result?.insertIntouser_addressesCollection?.records?.[0]) {
-        await refetch();
-        return { success: true, address: mapAddressToUI(result.insertIntouser_addressesCollection.records[0]) };
-      }
-      return { success: false, error: 'Failed to create address' };
-    } catch (e) {
-      console.error('Error creating address:', e);
-      return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
-    }
-  };
-
-  const updateAddress = async (
-    addressId: string,
-    addressData: {
-      label?: string;
-      type?: "home" | "work" | "other";
-      street?: string;
-      district?: string;
-      city?: string;
-      region?: string;
-      postalCode?: string;
-      country?: string;
-      building?: string;
-      floor?: string;
-      landmark?: string;
-      latitude?: number;
-      longitude?: number;
-    }
-  ) => {
-    try {
-      const deliveryAddress = formatDeliveryAddress(
-        addressData.street,
-        addressData.district,
-        addressData.city,
-        addressData.region,
-        addressData.postalCode,
-        addressData.country
-      );
-
-      const { data: result } = await updateAddressMutation({
+  const updateAddress = useCallback(async (addressId: string, addressData: any) => {
+    const deliveryAddress = formatDeliveryAddress(
+      addressData.street, addressData.district, addressData.city,
+      addressData.region, addressData.postalCode, addressData.country
+    );
+    return new Promise<{ success: boolean; error?: string; address?: Address }>((resolve) => {
+      commitUpdateAddress({
         variables: {
           id: addressId,
           label: addressData.type ? mapTypeToLabel(addressData.type) : addressData.label || null,
@@ -304,97 +200,66 @@ export const useUserAddresses = (userId?: string) => {
           latitude: addressData.latitude ? addressData.latitude.toString() : null,
           longitude: addressData.longitude ? addressData.longitude.toString() : null,
         },
-      });
-
-      if (result?.updateuser_addressesCollection?.records?.[0]) {
-        await refetch();
-        return { success: true, address: mapAddressToUI(result.updateuser_addressesCollection.records[0]) };
-      }
-      return { success: false, error: 'Failed to update address' };
-    } catch (e) {
-      console.error('Error updating address:', e);
-      return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
-    }
-  };
-
-  const deleteAddress = async (addressId: string) => {
-    try {
-      const { data: result } = await deleteAddressMutation({
-        variables: { id: addressId },
-      });
-
-      if (result?.deleteFromuser_addressesCollection?.records?.[0]) {
-        await refetch();
-        return { success: true };
-      }
-      return { success: false, error: 'Failed to delete address' };
-    } catch (e) {
-      console.error('Error deleting address:', e);
-      return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
-    }
-  };
-
-  const setSelectedAddress = async (addressId: string) => {
-    try {
-      // Find the currently selected address
-      const currentlySelected = addresses.find(addr => addr.selected && addr.id !== addressId);
-      
-      // Execute mutations in parallel for better performance
-      const mutations = [];
-      
-      // If there's a currently selected address, unselect it
-      if (currentlySelected) {
-        mutations.push(
-          setSelectedMutation({
-            variables: { id: currentlySelected.id, is_selected: false },
-          })
-        );
-      }
-
-      // Select the specified address
-      mutations.push(
-        setSelectedMutation({
-          variables: { id: addressId, is_selected: true },
-        })
-      );
-
-      // Wait for all mutations to complete
-      const results = await Promise.all(mutations);
-      
-      // Check if the select mutation was successful
-      const selectResult = currentlySelected ? results[1] : results[0];
-      if (selectResult?.data?.updateuser_addressesCollection?.records?.[0]) {
-        // Refetch in the background without blocking
-        // AbortError is expected during fast navigations/unmounts; don't log it as an error.
-        refetch().catch((err) => {
-          if (err?.name === 'AbortError' || err?.message === 'The operation was aborted.') {
-            return;
+        onCompleted: (response) => {
+          if (response?.updateuser_addressesCollection?.records?.[0]) {
+            resolve({ success: true, address: mapAddressToUI(response.updateuser_addressesCollection.records[0]) });
+          } else {
+            resolve({ success: false, error: 'Failed to update address' });
           }
-          console.error('Error refetching addresses:', err);
-        });
-        return { success: true };
-      }
-      return { success: false, error: 'Failed to set selected address' };
-    } catch (e) {
-      console.error('Error setting selected address:', e);
-      return { success: false, error: e instanceof Error ? e.message : 'Unknown error' };
-    }
-  };
+        },
+        onError: (error) => resolve({ success: false, error: error.message || 'Unknown error' }),
+      });
+    });
+  }, [commitUpdateAddress]);
 
-  // Combine auth loading with query loading
-  const isLoading = authLoading || loading;
+  const deleteAddress = useCallback(async (addressId: string) => {
+    return new Promise<{ success: boolean; error?: string }>((resolve) => {
+      commitDeleteAddress({
+        variables: { id: addressId },
+        onCompleted: (response) => {
+          if (response?.deleteFromuser_addressesCollection?.records?.[0]) resolve({ success: true });
+          else resolve({ success: false, error: 'Failed to delete address' });
+        },
+        onError: (error) => resolve({ success: false, error: error.message || 'Unknown error' }),
+      });
+    });
+  }, [commitDeleteAddress]);
+
+  const setSelectedAddress = useCallback(async (addressId: string) => {
+    const currentlySelected = addresses.find(addr => addr.selected && addr.id !== addressId);
+    return new Promise<{ success: boolean; error?: string }>((resolve) => {
+      const selectNew = () => {
+        commitSetSelected({
+          variables: { id: addressId, is_selected: true },
+          onCompleted: () => resolve({ success: true }),
+          onError: (error) => resolve({ success: false, error: error.message || 'Unknown error' }),
+        });
+      };
+      if (currentlySelected) {
+        commitSetSelected({
+          variables: { id: currentlySelected.id, is_selected: false },
+          onCompleted: selectNew,
+          onError: (error) => resolve({ success: false, error: error.message || 'Unknown error' }),
+        });
+      } else {
+        selectNew();
+      }
+    });
+  }, [addresses, commitSetSelected]);
+
+  const isLoading = authLoading || (shouldSkip ? false : !data);
 
   return {
     addresses,
     loading: isLoading,
-    error,
+    error: null,
     refetch,
     createAddress,
     updateAddress,
     deleteAddress,
     setSelectedAddress,
-    creating,
-    updating,
-    deleting,
+    creating: isCreating,
+    updating: isUpdating,
+    deleting: isDeleting,
   };
 };

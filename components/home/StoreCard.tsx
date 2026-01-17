@@ -6,7 +6,7 @@ import { Bike } from "lucide-react-native";
 import { optimizeImageUrl } from "@/utils/helpers";
 
 const { width } = Dimensions.get("window");
-const STORE_CARD_WIDTH = width * 0.55;
+const STORE_CARD_WIDTH = width * 0.53;
 
 interface Store {
   id: string;
@@ -72,7 +72,7 @@ const styles = StyleSheet.create({
     width: STORE_CARD_WIDTH,
     backgroundColor: "#FFFFFF",
     borderRadius: 16,
-    marginRight: 12,
+    marginRight: 10,
     overflow: "hidden",
     borderWidth: 1,
     borderColor: "#E5E7EB",
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   },
   storeImageContainer: {
     width: "100%",
-    height: 140,
+    height: 134,
     position: "relative",
   },
   storeImage: {
@@ -109,10 +109,10 @@ const styles = StyleSheet.create({
     color: "#1F2937",
   },
   storeInfo: {
-    padding: 12,
+    padding: 11,
   },
   storeName: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700",
     color: "#1F2937",
     marginBottom: 4,
@@ -120,7 +120,7 @@ const styles = StyleSheet.create({
   cuisine: {
     fontSize: 12,
     color: "#6B7280",
-    marginBottom: 10,
+    marginBottom: 8,
   },
   storeFooter: {
     flexDirection: "row",

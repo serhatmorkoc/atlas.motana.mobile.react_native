@@ -1,10 +1,9 @@
 import { StoreCard, StoreListCard } from "@/components/home";
 import { formatPrice } from "@/utils/formatters";
 import { router, Stack, useLocalSearchParams } from "expo-router";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useRef } from "react";
 import {
   ScrollView,
-  Image,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -17,12 +16,20 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStores } from "@/hooks/useStores";
 import { useUserAddresses } from "@/hooks/useUserAddresses";
 import { Store } from "@/types/store.types";
-import LoadingScreen from "@/components/common/LoadingScreen";
-import { apolloClient } from "@/lib/apollo/client";
-import { GET_STORE_PRODUCTS } from "@/lib/apollo/queries/products";
+import { relayEnvironment } from "@/lib/relay/environment";
+import { storeProductsQuery } from "@/lib/relay/queries/StoreProductsQuery";
+import { fetchQuery } from "relay-runtime";
+import type { StoreProductsQuery } from "@/__generated__/StoreProductsQuery.graphql";
 import { MenuItem } from "@/types/menu.types";
+import { Image } from "expo-image";
+import { optimizeImageUrl } from "@/utils/helpers";
 
 const { width } = Dimensions.get("window");
+
+// In-memory cache for store preview products to avoid refetching when navigating
+// back/forth within the same app session.
+const STORE_PREVIEW_TTL_MS = 2 * 60 * 1000; // 2 minutes
+const storePreviewCache = new Map<string, { items: MenuItem[]; ts: number }>();
 
 interface GraphQLProduct {
   id: string;
@@ -52,10 +59,12 @@ export default function SearchResultsScreen() {
   const params = useLocalSearchParams<{ query?: string; category?: string }>();
   const [sortBy, setSortBy] = useState<"relevance" | "rating" | "distance">("relevance");
   const [storeMenuItemsMap, setStoreMenuItemsMap] = useState<Record<string, MenuItem[]>>({});
-  const [loadingProducts, setLoadingProducts] = useState(false);
+  const storeMenuItemsMapRef = useRef<Record<string, MenuItem[]>>({});
+  const inFlightStoreIdsRef = useRef<Set<string>>(new Set());
+  const [initialReady, setInitialReady] = useState(false);
 
   // Fetch selected address for distance calculation
-  const { addresses } = useUserAddresses();
+  const { addresses, loading: addressesLoading } = useUserAddresses();
   const userLocation = React.useMemo(() => {
     const found = addresses.find(addr => addr.selected);
     if (found && found.latitude && found.longitude) {
@@ -68,7 +77,7 @@ export default function SearchResultsScreen() {
   const { stores, loading: storesLoading, error: storesError } = useStores({
     limit: 50,
     userLocation, // Pass selected address coordinates for distance calculation
-  });
+  }) as { stores: Store[]; loading: boolean; error: any };
 
   // Filter stores by store_categories_id = 1
   const filteredStores = useMemo(() => {
@@ -78,70 +87,6 @@ export default function SearchResultsScreen() {
       return storeCategoryIdNum === 1; 
     });
   }, [stores]);
-
-  // Fetch products for each store (6 products per store)
-  useEffect(() => {
-    const fetchProductsForStores = async () => {
-      if (filteredStores.length === 0) {
-        setStoreMenuItemsMap({});
-        setLoadingProducts(false);
-        return;
-      }
-      
-      setLoadingProducts(true);
-      const productsMap: Record<string, MenuItem[]> = {};
-
-      try {
-        await Promise.all(
-          filteredStores.map(async (store) => {
-            try {
-              const { data } = await apolloClient.query<GetStoreProductsData>({
-                query: GET_STORE_PRODUCTS,
-                variables: {
-                  storeId: store.id,
-                  first: 8, // Fetch 8 products per store
-                },
-                fetchPolicy: 'cache-first', // Use cache for faster loading
-              });
-
-              const products: MenuItem[] = (data?.productsCollection?.edges || []).map((edge) => {
-                const p = edge.node;
-                const safeNumber = (value: string | null | undefined): number => {
-                  const n = value ? Number(value) : 0;
-                  return Number.isFinite(n) ? n : 0;
-                };
-
-                return {
-                  id: p.id,
-                  storeId: p.store_id ?? store.id,
-                  name: p.title ?? "Unnamed",
-                  description: p.description ?? "",
-                  price: safeNumber(p.price),
-                  image: p.image ?? "",
-                  category: "Other",
-                  popular: p.is_popular,
-                  extras: [],
-                };
-              });
-
-              productsMap[store.id] = products;
-            } catch (error) {
-              productsMap[store.id] = [];
-            }
-          })
-        );
-
-        setStoreMenuItemsMap(productsMap);
-      } catch (error) {
-        // Silent fail - products will be empty
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-
-    fetchProductsForStores();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [filteredStores.length]);
 
   const isStoresCategory = params.category === "Stores";
 
@@ -180,15 +125,152 @@ export default function SearchResultsScreen() {
     };
   }, [params.query, params.category, sortBy, filteredStores]);
 
+  const storeIdsForPreviewKey = useMemo(() => {
+    return matchingStores.map((s) => s.id).slice().sort().join(",");
+  }, [matchingStores]);
+
+  // Reset initial gate when the result set changes.
+  useEffect(() => {
+    setInitialReady(false);
+  }, [storeIdsForPreviewKey, isStoresCategory]);
+
+  // Keep a ref for latest products map so we can fetch incrementally without re-running effects.
+  useEffect(() => {
+    storeMenuItemsMapRef.current = storeMenuItemsMap;
+  }, [storeMenuItemsMap]);
+
+  // Fetch preview products for stores shown on this screen.
+  useEffect(() => {
+    const storeIds = matchingStores.map((s) => s.id);
+
+    let cancelled = false;
+
+    // If no stores, clear state.
+    if (storeIds.length === 0) {
+      setStoreMenuItemsMap({});
+      inFlightStoreIdsRef.current.clear();
+      return;
+    }
+
+    const safeNumber = (value: string | null | undefined): number => {
+      const n = value ? Number(value) : 0;
+      return Number.isFinite(n) ? n : 0;
+    };
+
+    const fetchForStoreId = async (storeId: string) => {
+      try {
+        const data = await fetchQuery<StoreProductsQuery>(
+          relayEnvironment,
+          storeProductsQuery,
+          { storeId, first: 8 }
+        ).toPromise();
+
+        const products: MenuItem[] = (data?.productsCollection?.edges || []).map((edge) => {
+          const p = edge.node;
+          return {
+            id: p.id,
+            storeId: p.store_id ?? storeId,
+            name: p.title ?? "Unnamed",
+            description: p.description ?? "",
+            price: safeNumber(p.price),
+            image: p.image ?? "",
+            category: "Other",
+            // `MenuItem.popular` is `boolean | undefined` (no `null`)
+            popular: p.is_popular ?? undefined,
+            extras: [],
+          };
+        });
+
+        if (!cancelled) {
+          storePreviewCache.set(storeId, { items: products, ts: Date.now() });
+          setStoreMenuItemsMap((prev) => ({ ...prev, [storeId]: products }));
+        }
+      } catch {
+        if (!cancelled) {
+          storePreviewCache.set(storeId, { items: [], ts: Date.now() });
+          setStoreMenuItemsMap((prev) => ({ ...prev, [storeId]: [] }));
+        }
+      } finally {
+        inFlightStoreIdsRef.current.delete(storeId);
+      }
+    };
+
+    const run = async () => {
+      const currentMap = storeMenuItemsMapRef.current;
+      // First, hydrate from cache if available/fresh.
+      for (const id of storeIds) {
+        if (Object.prototype.hasOwnProperty.call(currentMap, id)) continue;
+        const cached = storePreviewCache.get(id);
+        if (cached && Date.now() - cached.ts < STORE_PREVIEW_TTL_MS) {
+          setStoreMenuItemsMap((prev) =>
+            Object.prototype.hasOwnProperty.call(prev, id) ? prev : { ...prev, [id]: cached.items }
+          );
+        }
+      }
+
+      const missingIds = storeIds.filter((id) => {
+        if (Object.prototype.hasOwnProperty.call(currentMap, id)) return false;
+        if (inFlightStoreIdsRef.current.has(id)) return false;
+        const cached = storePreviewCache.get(id);
+        if (cached && Date.now() - cached.ts < STORE_PREVIEW_TTL_MS) return false;
+        return true;
+      });
+
+      if (missingIds.length === 0) return;
+
+      // Concurrency limit to avoid hammering the network.
+      const concurrency = 3;
+      const queue = [...missingIds];
+      const workers = Array.from({ length: Math.min(concurrency, queue.length) }, () =>
+        (async () => {
+          while (!cancelled && queue.length > 0) {
+            const id = queue.shift();
+            if (!id) return;
+            inFlightStoreIdsRef.current.add(id);
+            await fetchForStoreId(id);
+          }
+        })()
+      );
+
+      await Promise.all(workers);
+    };
+
+    run();
+
+    return () => {
+      cancelled = true;
+    };
+    // Intentionally depend on a stable key instead of the full array.
+  }, [storeIdsForPreviewKey]);
+
   const totalResults = matchingStores.length + matchingMenuItems.length;
 
   const handleMenuItemPress = (item: MenuItem) => {
     router.push(`/store/${item.storeId}` as any);
   };
 
-  const isLoading = storesLoading || loadingProducts;
+  // Gate: open screen only after everything is loaded (stores + distance + previews).
+  const previewsReady =
+    matchingStores.length === 0
+      ? true
+      : matchingStores.every((s) => Object.prototype.hasOwnProperty.call(storeMenuItemsMap, s.id));
 
-  if (isLoading) {
+  const shouldGate =
+    // Wait for addresses so userLocation/distance ordering is stable.
+    addressesLoading ||
+    // Wait for distance calculation (useStores sets loading while calculating distances).
+    storesLoading ||
+    // If this screen renders store previews, wait for all previews to be fetched.
+    (isStoresCategory && !previewsReady);
+
+  useEffect(() => {
+    if (initialReady) return;
+    if (storesError) return;
+    if (shouldGate) return;
+    setInitialReady(true);
+  }, [initialReady, storesError, shouldGate]);
+
+  if (!initialReady) {
     return (
       <View style={styles.container}>
         <View style={[styles.header, { paddingTop: insets.top + 12 }]}>
@@ -316,6 +398,7 @@ export default function SearchResultsScreen() {
                       <StoreListCard 
                         store={store} 
                         menuItems={storeMenuItemsMap[store.id] || []}
+                        loadingMenuItems={false}
                       />
                     </View>
                   ))}
@@ -350,7 +433,14 @@ export default function SearchResultsScreen() {
                     activeOpacity={0.7}
                     onPress={() => handleMenuItemPress(item)}
                   >
-                    <Image source={{ uri: item.image }} style={styles.menuItemImage} />
+                    <Image
+                      source={{ uri: optimizeImageUrl(item.image) }}
+                      style={styles.menuItemImage}
+                      contentFit="cover"
+                      cachePolicy="memory-disk"
+                      transition={200}
+                      placeholder="|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj["
+                    />
                     <View style={styles.menuItemOverlay}>
                       <View style={styles.menuItemInfo}>
                         <Text style={styles.menuItemName} numberOfLines={2}>

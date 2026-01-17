@@ -1,56 +1,29 @@
-import { useQuery } from '@apollo/client/react';
-import { GET_STORE_CATEGORIES } from '@/lib/apollo/queries/store-categories';
-import React from 'react';
+import { useLazyLoadQuery } from 'react-relay';
+import { storeCategoriesQuery } from '@/lib/relay/queries/StoreCategoriesQuery';
+import React, { useCallback, useState } from 'react';
+import type { StoreCategoriesQuery } from '@/__generated__/StoreCategoriesQuery.graphql';
 
 export interface StoreCategory {
-  id: number;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  is_active: boolean | null;
+  id: number; name: string; icon: string | null; color: string | null; is_active: boolean | null;
 }
 
-interface GraphQLStoreCategory {
-  id: string;
-  name: string;
-  icon: string | null;
-  color: string | null;
-  is_active: boolean | null;
-}
-
-interface GetStoreCategoriesData {
-  store_categoriesCollection: {
-    edges: Array<{
-      node: GraphQLStoreCategory;
-    }>;
-  };
-}
-
-/**
- * Hook to fetch store categories
- */
 export const useStoreCategories = () => {
-  const { data, loading, error, refetch } = useQuery<GetStoreCategoriesData>(
-    GET_STORE_CATEGORIES,
-    {
-      fetchPolicy: 'cache-first',
-    }
+  const [refetchKey, setRefetchKey] = useState(0);
+
+  const data = useLazyLoadQuery<StoreCategoriesQuery>(
+    storeCategoriesQuery,
+    {},
+    { fetchPolicy: 'store-and-network', fetchKey: `categories-${refetchKey}` }
   );
 
   const categories = React.useMemo(() => {
-    return data?.store_categoriesCollection?.edges?.map(edge => ({
-      id: Number(edge.node.id),
-      name: edge.node.name,
-      icon: edge.node.icon,
-      color: edge.node.color || '#6B7280',
-      is_active: edge.node.is_active ?? true,
+    return data?.store_categoriesCollection?.edges?.map(e => ({
+      id: Number(e.node.id), name: e.node.name, icon: e.node.icon,
+      color: e.node.color || '#6B7280', is_active: e.node.is_active ?? true,
     })) || [];
   }, [data]);
 
-  return {
-    categories,
-    loading,
-    error,
-    refetch,
-  };
+  const refetch = useCallback(async () => { setRefetchKey(prev => prev + 1); }, []);
+
+  return { categories, loading: false, error: null, refetch };
 };

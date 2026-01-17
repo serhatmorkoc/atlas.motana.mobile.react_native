@@ -1,4 +1,4 @@
-import { ChevronLeft, User, Mail, Phone, Camera, Check, Loader2 } from "lucide-react-native";
+import { ChevronLeft, User, Mail, Phone, Camera, Check } from "lucide-react-native";
 import React, { useState, useEffect } from "react";
 import {
   ScrollView,
@@ -61,16 +61,25 @@ export default function EditProfileScreen() {
   // Populate form with user data
   useEffect(() => {
     if (user) {
-      // User data is loaded from database - use it directly
-      // Register'da name mutlaka kaydediliyor, bu yüzden user.name her zaman olmalı
+      // Prefer DB `users.name`, but if DB has a bad value (e.g. name == email),
+      // fall back to auth metadata (common Supabase trigger setups).
+      const metaFullName =
+        (authUser as any)?.user_metadata?.full_name ??
+        (authUser as any)?.user_metadata?.name ??
+        "";
+
+      const dbName = user.name ?? "";
+      const dbEmail = user.email ?? "";
+      const fullNameForUi =
+        metaFullName && dbEmail && dbName === dbEmail ? metaFullName : dbName;
+
       setForm({
-        fullName: user.name || "",
-        email: user.email || "",
-        phone: user.phone || "",
+        fullName: fullNameForUi,
+        email: user.email ?? "",
+        phone: user.phone ?? "",
       });
     }
-    // Don't initialize form with authUser data - wait for user data to load
-  }, [user]);
+  }, [user, authUser]);
 
   const [focusedField, setFocusedField] = useState<string | null>(null);
 

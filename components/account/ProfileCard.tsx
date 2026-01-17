@@ -1,11 +1,13 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View, ActivityIndicator } from "react-native";
-import { User, Sparkles, Phone, ChevronRight } from "lucide-react-native";
+import { User, Sparkles, Phone, ChevronRight, Mail } from "lucide-react-native";
 import { router } from "expo-router";
 import { useUser } from "@/hooks/useUser";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 export function ProfileCard() {
   const { user, loading } = useUser();
+  const { user: authUser } = useAuthUser();
 
   if (loading) {
     return (
@@ -14,6 +16,22 @@ export function ProfileCard() {
       </View>
     );
   }
+
+  // Don't render if user data is not available - wait for it to load
+  if (!user) {
+    return null;
+  }
+
+  // Prefer DB name, but if DB has an invalid value (e.g. name == email),
+  // fall back to Supabase auth metadata.
+  const metaFullName =
+    (authUser as any)?.user_metadata?.full_name ??
+    (authUser as any)?.user_metadata?.name ??
+    "";
+
+  const dbName = user.name ?? "";
+  const dbEmail = user.email ?? "";
+  const displayName = metaFullName && dbEmail && dbName === dbEmail ? metaFullName : dbName;
 
   return (
     <TouchableOpacity 
@@ -31,11 +49,21 @@ export function ProfileCard() {
       </View>
       
       <View style={styles.profileInfo}>
-        <Text style={styles.profileName}>{user?.name || "User"}</Text>
-        <View style={styles.phoneRow}>
-          <Phone size={12} color="#9CA3AF" />
-          <Text style={styles.profilePhone}>{user?.phone || "No phone number"}</Text>
-        </View>
+        {!!displayName && <Text style={styles.profileName}>{displayName}</Text>}
+
+        {!!dbEmail && (
+          <View style={styles.metaRow}>
+            <Mail size={12} color="#9CA3AF" />
+            <Text style={styles.profileMeta}>{dbEmail}</Text>
+          </View>
+        )}
+
+        {user.phone && user.phone !== displayName && user.phone !== dbEmail && (
+          <View style={styles.metaRow}>
+            <Phone size={12} color="#9CA3AF" />
+            <Text style={styles.profileMeta}>{user.phone}</Text>
+          </View>
+        )}
       </View>
       
       <ChevronRight size={20} color="#9CA3AF" />
@@ -91,12 +119,12 @@ const styles = StyleSheet.create({
     color: "#1F2937",
     marginBottom: 4,
   },
-  phoneRow: {
+  metaRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: 5,
   },
-  profilePhone: {
+  profileMeta: {
     fontSize: 13,
     color: "#9CA3AF",
   },

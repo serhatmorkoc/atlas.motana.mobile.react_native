@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { View, Text, StyleSheet, ActivityIndicator } from "react-native";
 import { ShoppingBag } from "lucide-react-native";
 import { router } from "expo-router";
@@ -6,18 +6,39 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LinearGradient } from "expo-linear-gradient";
 import Constants from "expo-constants";
 import { Colors } from "@/constants/Colors";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 export default function WelcomeScreen() {
   const insets = useSafeAreaInsets();
+  const { userId, loading: authLoading } = useAuthUser();
+  const [minSplashDone, setMinSplashDone] = useState(false);
+  const didNavigateRef = useRef(false);
 
   useEffect(() => {
+    let cancelled = false;
     const timer = setTimeout(() => {
-      // Navigate to Login screen after delay
-      router.replace("/auth/login" as any);
-    }, 2500);
+      if (!cancelled) setMinSplashDone(true);
+    }, 800);
 
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   }, []);
+
+  const targetRoute = useMemo(() => {
+    // If session exists, go straight into app; otherwise go to login.
+    return userId ? "/(tabs)/home" : "/auth/login";
+  }, [userId]);
+
+  useEffect(() => {
+    if (didNavigateRef.current) return;
+    if (authLoading) return;
+    if (!minSplashDone) return;
+
+    didNavigateRef.current = true;
+    router.replace(targetRoute as any);
+  }, [authLoading, minSplashDone, targetRoute]);
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>

@@ -93,7 +93,7 @@ export default function MenuItemCard({ item, onPress }: MenuItemCardProps) {
 
 const styles = StyleSheet.create({
   menuItem: {
-    marginBottom: 12,
+    marginBottom: 10,
     borderRadius: 18,
     shadowColor: "#1F2937",
     shadowOffset: { width: 0, height: 6 },
@@ -109,8 +109,8 @@ const styles = StyleSheet.create({
   },
   menuItemContent: {
     flexDirection: "row" as const,
-    padding: 12,
-    gap: 14,
+    padding: 10,
+    gap: 12,
   },
   imageContainer: {
     position: "relative" as const,
@@ -149,39 +149,39 @@ const styles = StyleSheet.create({
     letterSpacing: 0.2,
   },
   menuItemName: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "700" as const,
     color: "#1F2937",
-    marginBottom: 4,
+    marginBottom: 3,
     letterSpacing: -0.3,
   },
   menuItemDescription: {
-    fontSize: 12,
+    fontSize: 11,
     color: "#6B7280",
-    lineHeight: 17,
+    lineHeight: 16,
   },
   priceRow: {
     flexDirection: "row" as const,
     alignItems: "center" as const,
     justifyContent: "space-between" as const,
-    marginTop: 10,
+    marginTop: 8,
   },
   priceContainer: {
     backgroundColor: "#FFF7ED",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 4,
     borderRadius: 8,
   },
   menuItemPrice: {
-    fontSize: 15,
+    fontSize: 14,
     fontWeight: "800" as const,
     color: "#EA580C",
     letterSpacing: -0.3,
   },
   addButton: {
-    width: 34,
-    height: 34,
-    borderRadius: 11,
+    width: 32,
+    height: 32,
+    borderRadius: 10,
     alignItems: "center" as const,
     justifyContent: "center" as const,
     shadowColor: "#FF6B35",
@@ -191,13 +191,13 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   menuItemImage: {
-    width: 95,
-    height: 95,
+    width: 88,
+    height: 88,
     borderRadius: 14,
   },
   placeholderImage: {
-    width: 95,
-    height: 95,
+    width: 88,
+    height: 88,
     borderRadius: 14,
     alignItems: "center" as const,
     justifyContent: "center" as const,

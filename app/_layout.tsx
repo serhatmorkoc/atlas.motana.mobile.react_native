@@ -1,13 +1,14 @@
 // template
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ApolloProvider } from "@apollo/client/react";
+import { RelayEnvironmentProvider } from "react-relay";
 import { Stack } from "expo-router";
 import * as ExpoSplashScreen from "expo-splash-screen";
-import React, { useEffect } from "react";
+import React, { Suspense, useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { CartProvider } from "@/contexts/CartContext";
-import { apolloClient } from "@/lib/apollo/client";
+import { relayEnvironment } from "@/lib/relay/environment";
+import LoadingScreen from "@/components/common/LoadingScreen";
 
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -90,14 +91,16 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <ApolloProvider client={apolloClient}>
+    <RelayEnvironmentProvider environment={relayEnvironment}>
       <QueryClientProvider client={queryClient}>
         <CartProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <RootLayoutNav />
+            <Suspense fallback={<LoadingScreen title="Loading…" subtitle="Please wait" />}>
+              <RootLayoutNav />
+            </Suspense>
           </GestureHandlerRootView>
         </CartProvider>
       </QueryClientProvider>
-    </ApolloProvider>
+    </RelayEnvironmentProvider>
   );
 }
