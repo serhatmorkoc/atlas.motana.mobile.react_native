@@ -225,19 +225,23 @@ export const useOrders = (options?: {
   offset?: number;
   userId?: string;
 }) => {
-  const { userId: authUserId } = useAuthUser();
-  const finalUserId = options?.userId || authUserId || null;
+  const { userId: authUserId, loading: authLoading } = useAuthUser();
+  const finalUserId = options?.userId || authUserId;
+  
+  // If user is logged in, we MUST have a userId. Only skip if auth is still loading
+  // or if we explicitly don't have a userId (user not logged in)
+  const shouldSkip = authLoading || !finalUserId;
   
   const { data, loading, error, refetch } = useQuery<GetOrdersByUserIdData, GetOrdersByUserIdVariables>(
     GET_ORDERS_BY_USER_ID,
     {
       variables: {
-        userId: finalUserId || '',
+        userId: finalUserId || '', // Will only be used if shouldSkip is false
         first: options?.limit,
         offset: options?.offset,
       },
       fetchPolicy: 'no-cache',
-      skip: !finalUserId, // Skip query if no user ID
+      skip: shouldSkip, // Skip query if auth is loading or no user ID
     }
   );
 
@@ -278,9 +282,12 @@ export const useOrders = (options?: {
     }
   }, [data, loading]);
 
+  // Combine auth loading with query loading
+  const isLoading = authLoading || loading || isLoadingDetails;
+
   return {
     orders,
-    loading: loading || isLoadingDetails,
+    loading: isLoading,
     error,
     refetch,
   };

@@ -172,15 +172,19 @@ const mapAddressToUI = (node: UserAddressNode): Address => {
  * Hook to fetch and manage user addresses
  */
 export const useUserAddresses = (userId?: string) => {
-  const { userId: authUserId } = useAuthUser();
-  const finalUserId = userId || authUserId || null;
+  const { userId: authUserId, loading: authLoading } = useAuthUser();
+  const finalUserId = userId || authUserId;
+  
+  // If user is logged in, we MUST have a userId. Only skip if auth is still loading
+  // or if we explicitly don't have a userId (user not logged in)
+  const shouldSkip = authLoading || !finalUserId;
   
   const { data, loading, error, refetch } = useQuery<GetUserAddressesData>(
     GET_USER_ADDRESSES,
     {
-      variables: { userId: finalUserId || '' },
+      variables: { userId: finalUserId || '' }, // Will only be used if shouldSkip is false
       fetchPolicy: 'network-only', // Always fetch fresh data
-      skip: !finalUserId, // Skip query if no user ID
+      skip: shouldSkip, // Skip query if auth is loading or no user ID
     }
   );
 
@@ -229,6 +233,10 @@ export const useUserAddresses = (userId?: string) => {
         addressData.postalCode,
         addressData.country
       );
+
+      if (!finalUserId) {
+        return { success: false, error: 'User ID is required' };
+      }
 
       const { data: result } = await createAddressMutation({
         variables: {
@@ -373,9 +381,12 @@ export const useUserAddresses = (userId?: string) => {
     }
   };
 
+  // Combine auth loading with query loading
+  const isLoading = authLoading || loading;
+
   return {
     addresses,
-    loading,
+    loading: isLoading,
     error,
     refetch,
     createAddress,

@@ -1,5 +1,26 @@
 import { gql } from "@apollo/client";
 
+export const CREATE_USER = gql`
+  mutation CreateUser($id: UUID!, $name: String!, $email: String!) {
+    insertIntousersCollection(objects: { 
+      id: $id, 
+      name: $name, 
+      email: $email,
+      user_type: "CUSTOMER",
+      is_active: true
+    }) {
+      records {
+        id
+        name
+        email
+        phone
+        user_type
+        is_active
+      }
+    }
+  }
+`;
+
 export const UPDATE_USER_PROFILE = gql`
   mutation UpdateUserProfile($id: UUID!, $name: String, $email: String, $phone: String) {
     updateusersCollection(

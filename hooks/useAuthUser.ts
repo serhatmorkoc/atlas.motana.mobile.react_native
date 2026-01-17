@@ -39,10 +39,15 @@ export const useAuthUser = () => {
     };
   }, []);
 
+  // Ensure userId is a valid non-empty string, otherwise return null
+  const userId = user?.id && typeof user.id === 'string' && user.id.trim() !== '' 
+    ? user.id 
+    : null;
+
   return {
     user,
-    userId: user?.id ?? null,
+    userId,
     loading,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user && !!userId,
   };
 };

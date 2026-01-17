@@ -7,6 +7,8 @@ import { User, Mail, Lock, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabaseClient } from '@/lib/supabase/client';
 import { AlertModal, AlertType } from '@/components/common/AlertModal';
+import { apolloClient } from '@/lib/apollo/client';
+import { CREATE_USER } from '@/lib/apollo/mutations/users';
 
 export default function RegisterScreen() {
     const [name, setName] = useState('');
@@ -105,6 +107,23 @@ export default function RegisterScreen() {
             // Check if email confirmation is required
             if (data?.user && !data.session) {
                 // Email confirmation is enabled in Supabase
+                // Create user record in users table even if email confirmation is required
+                if (data.user.id) {
+                    try {
+                        await apolloClient.mutate({
+                            mutation: CREATE_USER,
+                            variables: {
+                                id: data.user.id,
+                                name: name,
+                                email: email,
+                            },
+                        });
+                    } catch (createUserError) {
+                        console.error('Error creating user record:', createUserError);
+                        // Don't block registration if user creation fails
+                    }
+                }
+                
                 showAlert(
                     'info',
                     'Check Your Email',
@@ -118,7 +137,25 @@ export default function RegisterScreen() {
             }
 
             // If session exists, user is automatically logged in (email confirmation disabled)
-            if (data?.session) {
+            if (data?.session && data?.user) {
+                // Create user record in users table with name and email
+                try {
+                    await apolloClient.mutate({
+                        mutation: CREATE_USER,
+                        variables: {
+                            id: data.user.id,
+                            name: name,
+                            email: email,
+                        },
+                    });
+                } catch (createUserError: any) {
+                    // If user already exists (duplicate key), that's okay - ignore it
+                    if (!createUserError?.message?.includes('duplicate') && 
+                        !createUserError?.message?.includes('already exists')) {
+                        console.error('Error creating user record:', createUserError);
+                    }
+                }
+                
                 // Success! User is registered and logged in
                 showAlert(
                     'success',

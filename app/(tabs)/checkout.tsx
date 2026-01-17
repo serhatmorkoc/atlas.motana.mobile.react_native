@@ -49,7 +49,7 @@ type GetUserAddressesVars = { userId: string };
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
-  const { userId } = useAuthUser();
+  const { userId, loading: authLoading } = useAuthUser();
   const {
     groupedByStore,
     totalItems,
@@ -138,16 +138,20 @@ export default function CheckoutScreen() {
   const [createOrder] = useMutation<CreateOrderData, CreateOrderVars>(CREATE_ORDER);
   const [createOrderItems] = useMutation<CreateOrderItemsData, CreateOrderItemsVars>(CREATE_ORDER_ITEMS);
 
+  // If user is logged in, we MUST have a userId. Only skip if auth is still loading
+  // or if we explicitly don't have a userId (user not logged in)
+  const shouldSkip = authLoading || !userId;
+
   const userQuery = useQuery<GetUserByIdData, GetUserByIdVars>(GET_USER_BY_ID, {
-    variables: { id: userId || '' },
+    variables: { id: userId || '' }, // Will only be used if shouldSkip is false
     fetchPolicy: "cache-and-network",
-    skip: !userId, // Skip query if no user ID
+    skip: shouldSkip, // Skip query if auth is loading or no user ID
   });
 
   const addressesQuery = useQuery<GetUserAddressesData, GetUserAddressesVars>(GET_USER_ADDRESSES, {
-    variables: { userId: userId || '' },
+    variables: { userId: userId || '' }, // Will only be used if shouldSkip is false
     fetchPolicy: "cache-and-network",
-    skip: !userId || !userId.trim(), // Skip query if no user ID or empty string
+    skip: shouldSkip, // Skip query if auth is loading or no user ID
   });
 
   const handleClearPress = (storeId: string, storeName: string) => {

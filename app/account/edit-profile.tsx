@@ -61,16 +61,16 @@ export default function EditProfileScreen() {
   // Populate form with user data
   useEffect(() => {
     if (user) {
-      // Use user.name from database, or fallback to auth user metadata
-      const fullName = user.name || authUser?.user_metadata?.full_name || "";
-      
+      // User data is loaded from database - use it directly
+      // Register'da name mutlaka kaydediliyor, bu yüzden user.name her zaman olmalı
       setForm({
-        fullName,
+        fullName: user.name || "",
         email: user.email || "",
         phone: user.phone || "",
       });
     }
-  }, [user, authUser]);
+    // Don't initialize form with authUser data - wait for user data to load
+  }, [user]);
 
   const [focusedField, setFocusedField] = useState<string | null>(null);
 

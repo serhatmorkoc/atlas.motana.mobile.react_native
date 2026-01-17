@@ -29,15 +29,19 @@ interface UpdateUserProfileData {
  * Hook to fetch and update user profile
  */
 export const useUser = (userId?: string) => {
-  const { userId: authUserId } = useAuthUser();
-  const finalUserId = userId || authUserId || null;
+  const { userId: authUserId, loading: authLoading } = useAuthUser();
+  const finalUserId = userId || authUserId;
+  
+  // If user is logged in, we MUST have a userId. Only skip if auth is still loading
+  // or if we explicitly don't have a userId (user not logged in)
+  const shouldSkip = authLoading || !finalUserId;
   
   const { data, loading, error, refetch } = useQuery<GetUserByIdData>(
     GET_USER_BY_ID,
     {
-      variables: { id: finalUserId || '' },
+      variables: { id: finalUserId || '' }, // Will only be used if shouldSkip is false
       fetchPolicy: 'no-cache', // Always fetch fresh data for profile
-      skip: !finalUserId, // Skip query if no user ID
+      skip: shouldSkip, // Skip query if auth is loading or no user ID
     }
   );
 
@@ -54,6 +58,10 @@ export const useUser = (userId?: string) => {
     email?: string;
     phone?: string;
   }) => {
+    if (!finalUserId) {
+      return { success: false, error: 'User ID is required' };
+    }
+
     try {
       const { data: result } = await updateProfileMutation({
         variables: {
@@ -73,9 +81,12 @@ export const useUser = (userId?: string) => {
     }
   };
 
+  // Combine auth loading with query loading
+  const isLoading = authLoading || loading;
+
   return {
     user,
-    loading,
+    loading: isLoading,
     error,
     refetch,
     updateProfile,
