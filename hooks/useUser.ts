@@ -2,8 +2,7 @@ import { useQuery, useMutation } from "@apollo/client/react";
 import { GET_USER_BY_ID } from "@/lib/apollo/queries/users";
 import { UPDATE_USER_PROFILE } from "@/lib/apollo/mutations/users";
 import React from "react";
-
-const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
+import { useAuthUser } from "./useAuthUser";
 
 interface UserNode {
   id: string;
@@ -29,12 +28,16 @@ interface UpdateUserProfileData {
 /**
  * Hook to fetch and update user profile
  */
-export const useUser = (userId: string = HARDCODE_USER_ID) => {
+export const useUser = (userId?: string) => {
+  const { userId: authUserId } = useAuthUser();
+  const finalUserId = userId || authUserId || null;
+  
   const { data, loading, error, refetch } = useQuery<GetUserByIdData>(
     GET_USER_BY_ID,
     {
-      variables: { id: userId },
+      variables: { id: finalUserId || '' },
       fetchPolicy: 'no-cache', // Always fetch fresh data for profile
+      skip: !finalUserId, // Skip query if no user ID
     }
   );
 
@@ -54,7 +57,7 @@ export const useUser = (userId: string = HARDCODE_USER_ID) => {
     try {
       const { data: result } = await updateProfileMutation({
         variables: {
-          id: userId,
+          id: finalUserId,
           ...updates,
         },
       });

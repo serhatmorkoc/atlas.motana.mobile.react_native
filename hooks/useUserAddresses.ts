@@ -8,8 +8,7 @@ import {
 } from "@/lib/apollo/mutations/users";
 import React from "react";
 import { apolloClient } from "@/lib/apollo/client";
-
-const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
+import { useAuthUser } from "./useAuthUser";
 
 interface UserAddressNode {
   id: string;
@@ -172,12 +171,16 @@ const mapAddressToUI = (node: UserAddressNode): Address => {
 /**
  * Hook to fetch and manage user addresses
  */
-export const useUserAddresses = (userId: string = HARDCODE_USER_ID) => {
+export const useUserAddresses = (userId?: string) => {
+  const { userId: authUserId } = useAuthUser();
+  const finalUserId = userId || authUserId || null;
+  
   const { data, loading, error, refetch } = useQuery<GetUserAddressesData>(
     GET_USER_ADDRESSES,
     {
-      variables: { userId },
+      variables: { userId: finalUserId || '' },
       fetchPolicy: 'network-only', // Always fetch fresh data
+      skip: !finalUserId, // Skip query if no user ID
     }
   );
 
@@ -229,7 +232,7 @@ export const useUserAddresses = (userId: string = HARDCODE_USER_ID) => {
 
       const { data: result } = await createAddressMutation({
         variables: {
-          user_id: userId,
+          user_id: finalUserId,
           label: mapTypeToLabel(addressData.type),
           delivery_address: deliveryAddress,
           details: addressData.landmark || null,

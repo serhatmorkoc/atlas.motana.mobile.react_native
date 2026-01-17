@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import React, { useState } from "react";
 import { useUser } from "@/hooks/useUser";
+import { supabaseClient } from "@/lib/supabase/client";
 
 import {
   ShoppingBag,
@@ -44,9 +45,19 @@ export default function AccountScreen() {
     }).start();
   };
 
-  const handleConfirmLogout = () => {
-    console.log("User logged out");
-    handleCloseLogoutModal();
+  const handleConfirmLogout = async () => {
+    try {
+      const { error } = await supabaseClient.auth.signOut();
+      if (error) {
+        console.error("Logout error:", error);
+        return;
+      }
+      // Navigate to login screen
+      handleCloseLogoutModal();
+      router.replace("/auth/login");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const handleCloseLogoutModal = () => {

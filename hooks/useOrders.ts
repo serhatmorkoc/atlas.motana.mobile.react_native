@@ -6,8 +6,7 @@ import { GET_ORDERS_BY_USER_ID, GET_ORDER_ITEMS_BY_ORDER_ID } from '@/lib/apollo
 import { GET_STORE_BY_ID } from '@/lib/apollo/queries/stores';
 import { Order, OrderItem, OrderStatus, DBOrderStatus } from '@/types/order.types';
 import type { DeliveryAddress } from '@/types/address.types';
-
-const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
+import { useAuthUser } from './useAuthUser';
 
 // GraphQL Order type (from Supabase)
 interface GraphQLOrder {
@@ -224,16 +223,21 @@ const mapGraphQLOrderToOrder = async (
 export const useOrders = (options?: {
   limit?: number;
   offset?: number;
+  userId?: string;
 }) => {
+  const { userId: authUserId } = useAuthUser();
+  const finalUserId = options?.userId || authUserId || null;
+  
   const { data, loading, error, refetch } = useQuery<GetOrdersByUserIdData, GetOrdersByUserIdVariables>(
     GET_ORDERS_BY_USER_ID,
     {
       variables: {
-        userId: HARDCODE_USER_ID,
+        userId: finalUserId || '',
         first: options?.limit,
         offset: options?.offset,
       },
       fetchPolicy: 'no-cache',
+      skip: !finalUserId, // Skip query if no user ID
     }
   );
 

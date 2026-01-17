@@ -1,9 +1,8 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Minus, Plus, ShoppingBag, Trash2, CreditCard, Wallet, Check } from "lucide-react-native";
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
-  Alert,
   ScrollView,
   StyleSheet,
   Text,
@@ -17,14 +16,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useMutation } from "@apollo/client/react";
 import { useQuery } from "@apollo/client/react";
 import { apolloClient } from "@/lib/apollo/client";
+import { AlertModal, AlertType } from "@/components/common/AlertModal";
 
 import { useCart, CartItem, CartStoreGroup } from "@/contexts/CartContext";
 import { formatPrice, DELIVERY_FEE, SERVICE_FEE } from "@/utils";
 import { CREATE_ORDER, CREATE_ORDER_ITEMS } from "@/lib/apollo/mutations/orders";
 import { GET_USER_BY_ID, GET_USER_ADDRESSES } from "@/lib/apollo/queries/users";
 import { GET_STORE_BY_ID } from "@/lib/apollo/queries/stores";
-
-const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
+import { useAuthUser } from "@/hooks/useAuthUser";
 
 type Edge<T> = { node: T };
 type User = { id: string; name: string | null; email: string | null; phone: string | null };
@@ -50,6 +49,7 @@ type GetUserAddressesVars = { userId: string };
 
 export default function CheckoutScreen() {
   const insets = useSafeAreaInsets();
+  const { userId } = useAuthUser();
   const {
     groupedByStore,
     totalItems,
@@ -62,6 +62,13 @@ export default function CheckoutScreen() {
   const [storeToClear, setStoreToClear] = useState<{ id: string; name: string } | null>(null);
   const fadeAnim = useState(new Animated.Value(0))[0];
   const [placingStoreId, setPlacingStoreId] = useState<string | null>(null);
+  
+  // Alert modal state
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertType, setAlertType] = useState<AlertType>('error');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const alertFadeAnim = useRef(new Animated.Value(0)).current;
   
   // Store-specific state for payment method, note, and tip
   const [storePaymentMethods, setStorePaymentMethods] = useState<Record<string, 'CASH' | 'CREDIT_CARD'>>({});
@@ -132,13 +139,15 @@ export default function CheckoutScreen() {
   const [createOrderItems] = useMutation<CreateOrderItemsData, CreateOrderItemsVars>(CREATE_ORDER_ITEMS);
 
   const userQuery = useQuery<GetUserByIdData, GetUserByIdVars>(GET_USER_BY_ID, {
-    variables: { id: HARDCODE_USER_ID },
+    variables: { id: userId || '' },
     fetchPolicy: "cache-and-network",
+    skip: !userId, // Skip query if no user ID
   });
 
   const addressesQuery = useQuery<GetUserAddressesData, GetUserAddressesVars>(GET_USER_ADDRESSES, {
-    variables: { userId: HARDCODE_USER_ID },
+    variables: { userId: userId || '' },
     fetchPolicy: "cache-and-network",
+    skip: !userId || !userId.trim(), // Skip query if no user ID or empty string
   });
 
   const handleClearPress = (storeId: string, storeName: string) => {
@@ -166,6 +175,28 @@ export default function CheckoutScreen() {
     }).start(() => {
       setClearModalVisible(false);
       setStoreToClear(null);
+    });
+  };
+
+  const showAlert = (type: AlertType, title: string, message: string) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+    Animated.timing(alertFadeAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const hideAlert = () => {
+    Animated.timing(alertFadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setAlertVisible(false);
     });
   };
 
@@ -218,6 +249,11 @@ export default function CheckoutScreen() {
 
   const handlePlaceOrder = async (group: CartStoreGroup) => {
     if (placingStoreId) return;
+    
+    if (!userId) {
+      showAlert("error", "Authentication Required", "Please log in to place an order.");
+      return;
+    }
 
     const paymentMethod = storePaymentMethods[group.storeId] || 'CASH';
     const note = storeNotes[group.storeId] || '';
@@ -235,7 +271,7 @@ export default function CheckoutScreen() {
       addresses[0];
 
     if (!selectedAddress?.delivery_address) {
-      Alert.alert("Address missing", "This user has no selected delivery address in DB.");
+      showAlert("error", "Address missing", "This user has no selected delivery address in DB.");
       return;
     }
 
@@ -292,7 +328,7 @@ export default function CheckoutScreen() {
         variables: {
           order: {
             order_code: orderCode, // text
-            user_id: HARDCODE_USER_ID, // uuid
+            user_id: userId, // uuid
             store_id: group.storeId, // uuid
             courier_id: null, // uuid null - will be assigned later
             delivery_address: deliveryAddressForMutation, // jsonb (as JSON string)
@@ -370,7 +406,7 @@ export default function CheckoutScreen() {
       });
     } catch (e: any) {
       console.error("Place order failed:", e);
-      Alert.alert("Order failed", e?.message ?? "Unknown error");
+      showAlert("error", "Order failed", e?.message ?? "Unknown error");
     } finally {
       setPlacingStoreId(null);
     }
@@ -623,6 +659,15 @@ export default function CheckoutScreen() {
           </Animated.View>
         </Animated.View>
       </Modal>
+
+      <AlertModal
+        visible={alertVisible}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={hideAlert}
+        fadeAnim={alertFadeAnim}
+      />
     </View>
   );
 }

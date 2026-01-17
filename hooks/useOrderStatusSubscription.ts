@@ -5,8 +5,7 @@ import { supabaseClient } from '@/lib/supabase/client';
 import { sendOrderStatusNotification } from '@/services/notification.service';
 import { DBOrderStatus } from '@/types/order.types';
 import { logger } from '@/utils/logger';
-
-const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
+import { useAuthUser } from './useAuthUser';
 
 interface OrderStatusUpdate {
   id: string;
@@ -28,8 +27,9 @@ interface UseOrderStatusSubscriptionOptions {
  * @returns Object with subscription status and cleanup function
  */
 export function useOrderStatusSubscription(options: UseOrderStatusSubscriptionOptions = {}) {
+  const { userId: authUserId } = useAuthUser();
   const {
-    userId = HARDCODE_USER_ID,
+    userId = authUserId || '',
     onStatusChange,
     enabled = true,
   } = options;

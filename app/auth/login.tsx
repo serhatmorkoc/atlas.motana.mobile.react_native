@@ -1,21 +1,83 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Mail, Lock, ArrowRight } from 'lucide-react-native';
-import { AntDesign } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { supabaseClient } from '@/lib/supabase/client';
+import { AlertModal, AlertType } from '@/components/common/AlertModal';
 
 
 
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState<AlertType>('error');
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
+    const fadeAnim = useRef(new Animated.Value(0)).current;
 
-    const handleLogin = () => {
-        console.log('Login attempt:', email);
-        router.replace('/(tabs)/home');
+    const showAlert = (type: AlertType, title: string, message: string, onConfirm?: () => void) => {
+        setAlertType(type);
+        setAlertTitle(title);
+        setAlertMessage(message);
+        setAlertVisible(true);
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+        }).start();
+    };
+
+    const hideAlert = () => {
+        Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+        }).start(() => {
+            setAlertVisible(false);
+        });
+    };
+
+    const handleLogin = async () => {
+        if (!email || !password) {
+            showAlert('error', 'Error', 'Please enter both email and password');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                // Check for specific error types
+                const errorMessage = error.message.toLowerCase();
+                if (errorMessage.includes('invalid login credentials') || 
+                    errorMessage.includes('invalid credentials')) {
+                    showAlert('error', 'Login Failed', 'Invalid email or password. Please try again.');
+                } else if (errorMessage.includes('email not confirmed')) {
+                    showAlert('warning', 'Email Not Confirmed', 'Please check your email and confirm your account before logging in.');
+                } else {
+                    showAlert('error', 'Login Failed', error.message);
+                }
+                return;
+            }
+
+            if (data?.session) {
+                router.replace('/(tabs)/home');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            showAlert('error', 'Error', 'An unexpected error occurred');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleRegister = () => {
@@ -87,35 +149,28 @@ export default function LoginScreen() {
                                     <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity style={styles.loginButton} onPress={handleLogin} activeOpacity={0.9}>
+                                <TouchableOpacity 
+                                    style={styles.loginButton} 
+                                    onPress={handleLogin} 
+                                    activeOpacity={0.9}
+                                    disabled={loading}
+                                >
                                     <LinearGradient
                                         colors={[Colors.primary, '#FF8C61']}
                                         style={styles.loginButtonGradient}
                                         start={{ x: 0, y: 0 }}
                                         end={{ x: 1, y: 0 }}
                                     >
-                                        <Text style={styles.loginButtonText}>Login</Text>
-                                        <ArrowRight color="#FFFFFF" size={18} strokeWidth={2.5} />
+                                        {loading ? (
+                                            <ActivityIndicator color="#FFFFFF" />
+                                        ) : (
+                                            <>
+                                                <Text style={styles.loginButtonText}>Login</Text>
+                                                <ArrowRight color="#FFFFFF" size={18} strokeWidth={2.5} />
+                                            </>
+                                        )}
                                     </LinearGradient>
                                 </TouchableOpacity>
-
-                                <View style={styles.divider}>
-                                    <View style={styles.dividerLine} />
-                                    <Text style={styles.dividerText}>or continue with</Text>
-                                    <View style={styles.dividerLine} />
-                                </View>
-
-                                <View style={styles.socialContainer}>
-                                    <TouchableOpacity style={styles.socialButton}>
-                                        <AntDesign name="apple" size={20} color="#000" />
-                                        <Text style={styles.socialButtonText}>Apple</Text>
-                                    </TouchableOpacity>
-
-                                    <TouchableOpacity style={styles.socialButton}>
-                                        <AntDesign name="google" size={20} color="#DB4437" />
-                                        <Text style={styles.socialButtonText}>Google</Text>
-                                    </TouchableOpacity>
-                                </View>
 
                                 <View style={styles.footer}>
                                     <Text style={styles.footerText}>New to Motana? </Text>
@@ -128,6 +183,15 @@ export default function LoginScreen() {
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
+
+            <AlertModal
+                visible={alertVisible}
+                type={alertType}
+                title={alertTitle}
+                message={alertMessage}
+                onClose={hideAlert}
+                fadeAnim={fadeAnim}
+            />
         </View>
     );
 }
@@ -260,46 +324,6 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         fontSize: 15,
         letterSpacing: 0.5,
-    },
-    divider: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    dividerLine: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#E9ECEF',
-    },
-    dividerText: {
-        marginHorizontal: 16,
-        color: '#ADB5BD',
-        fontSize: 13,
-        fontWeight: '600',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    socialContainer: {
-        flexDirection: 'row',
-        gap: 16,
-        marginBottom: 32,
-    },
-    socialButton: {
-        flex: 1,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 44,
-        borderRadius: 12,
-        borderWidth: 1,
-        borderColor: '#E9ECEF',
-        backgroundColor: '#FFFFFF',
-        gap: 10,
-    },
-    socialButtonText: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: Colors.text,
     },
     footer: {
         flexDirection: 'row',

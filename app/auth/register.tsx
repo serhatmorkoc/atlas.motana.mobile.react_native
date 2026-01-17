@@ -1,22 +1,152 @@
-import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView } from 'react-native';
+import React, { useState, useRef } from 'react';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ScrollView, ActivityIndicator, Animated } from 'react-native';
 import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { User, Mail, Lock, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { supabaseClient } from '@/lib/supabase/client';
+import { AlertModal, AlertType } from '@/components/common/AlertModal';
 
 export default function RegisterScreen() {
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [alertVisible, setAlertVisible] = useState(false);
+    const [alertType, setAlertType] = useState<AlertType>('error');
+    const [alertTitle, setAlertTitle] = useState('');
+    const [alertMessage, setAlertMessage] = useState('');
+    const alertOnConfirmRef = useRef<(() => void) | undefined>(undefined);
+    const fadeAnim = useRef(new Animated.Value(0)).current;
 
+    const showAlert = (type: AlertType, title: string, message: string, onConfirm?: () => void) => {
+        setAlertType(type);
+        setAlertTitle(title);
+        setAlertMessage(message);
+        alertOnConfirmRef.current = onConfirm;
+        setAlertVisible(true);
+        Animated.timing(fadeAnim, {
+            toValue: 1,
+            duration: 200,
+            useNativeDriver: true,
+        }).start();
+    };
 
+    const hideAlert = () => {
+        Animated.timing(fadeAnim, {
+            toValue: 0,
+            duration: 200,
+            useNativeDriver: true,
+        }).start(() => {
+            setAlertVisible(false);
+        });
+    };
 
-    const handleRegister = () => {
-        console.log('Register attempt:', { name, email });
-        router.replace('/(tabs)/home');
+    const handleRegister = async () => {
+        // Validation
+        if (!name || !email || !password || !confirmPassword) {
+            showAlert('error', 'Error', 'Please fill in all fields');
+            return;
+        }
+
+        if (password.length < 6) {
+            showAlert('error', 'Error', 'Password must be at least 6 characters');
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            showAlert('error', 'Error', 'Passwords do not match');
+            return;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showAlert('error', 'Error', 'Please enter a valid email address');
+            return;
+        }
+
+        setLoading(true);
+        try {
+            // Sign up with Supabase
+            const { data, error } = await supabaseClient.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        full_name: name,
+                    },
+                },
+            });
+
+            if (error) {
+                // Check if user already exists
+                const errorMessage = error.message.toLowerCase();
+                if (errorMessage.includes('already registered') || 
+                    errorMessage.includes('user already exists') ||
+                    errorMessage.includes('email already registered')) {
+                    showAlert(
+                        'warning',
+                        'Email Already Registered',
+                        'This email address is already registered. Please try logging in instead.',
+                        () => {
+                            hideAlert();
+                            router.back();
+                        }
+                    );
+                } else {
+                    showAlert('error', 'Registration Failed', error.message);
+                }
+                return;
+            }
+
+            // Check if email confirmation is required
+            if (data?.user && !data.session) {
+                // Email confirmation is enabled in Supabase
+                showAlert(
+                    'info',
+                    'Check Your Email',
+                    'We sent you a confirmation email. Please check your inbox to verify your account.',
+                    () => {
+                        hideAlert();
+                        router.back();
+                    }
+                );
+                return;
+            }
+
+            // If session exists, user is automatically logged in (email confirmation disabled)
+            if (data?.session) {
+                // Success! User is registered and logged in
+                showAlert(
+                    'success',
+                    'Registration Successful',
+                    'Your account has been created successfully! You are now logged in.',
+                    () => {
+                        hideAlert();
+                        router.replace('/(tabs)/home');
+                    }
+                );
+            } else {
+                // Fallback: if no session and no error, something unexpected happened
+                showAlert(
+                    'success',
+                    'Registration Successful',
+                    'Your account has been created. Please log in.',
+                    () => {
+                        hideAlert();
+                        router.replace('/auth/login');
+                    }
+                );
+            }
+        } catch (error) {
+            console.error('Registration error:', error);
+            showAlert('error', 'Error', 'An unexpected error occurred');
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleLogin = () => {
@@ -114,15 +244,26 @@ export default function RegisterScreen() {
                                     </View>
                                 </View>
 
-                                <TouchableOpacity style={styles.registerButton} onPress={handleRegister} activeOpacity={0.9}>
+                                <TouchableOpacity 
+                                    style={styles.registerButton} 
+                                    onPress={handleRegister} 
+                                    activeOpacity={0.9}
+                                    disabled={loading}
+                                >
                                     <LinearGradient
                                         colors={[Colors.primary, '#FF8C61']}
                                         style={styles.registerButtonGradient}
                                         start={{ x: 0, y: 0 }}
                                         end={{ x: 1, y: 0 }}
                                     >
-                                        <Text style={styles.registerButtonText}>Sign Up</Text>
-                                        <ArrowRight color="#FFFFFF" size={18} strokeWidth={2.5} />
+                                        {loading ? (
+                                            <ActivityIndicator color="#FFFFFF" />
+                                        ) : (
+                                            <>
+                                                <Text style={styles.registerButtonText}>Sign Up</Text>
+                                                <ArrowRight color="#FFFFFF" size={18} strokeWidth={2.5} />
+                                            </>
+                                        )}
                                     </LinearGradient>
                                 </TouchableOpacity>
 
@@ -137,6 +278,16 @@ export default function RegisterScreen() {
                     </ScrollView>
                 </KeyboardAvoidingView>
             </SafeAreaView>
+
+            <AlertModal
+                visible={alertVisible}
+                type={alertType}
+                title={alertTitle}
+                message={alertMessage}
+                onClose={hideAlert}
+                onConfirm={alertOnConfirmRef.current}
+                fadeAnim={fadeAnim}
+            />
         </View>
     );
 }

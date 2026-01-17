@@ -5,8 +5,7 @@
 import { useRef, useCallback, useEffect } from 'react';
 import { supabaseClient } from '@/lib/supabase/client';
 import { logger } from '@/utils/logger';
-
-const HARDCODE_USER_ID = "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a02";
+import { useAuthUser } from './useAuthUser';
 
 interface UseOrdersSubscriptionOptions {
   userId?: string;
@@ -24,8 +23,9 @@ interface UseOrdersSubscriptionOptions {
 export function useOrdersSubscription(
   options: UseOrdersSubscriptionOptions = {}
 ): () => () => void {
+  const { userId: authUserId } = useAuthUser();
   const {
-    userId = HARDCODE_USER_ID,
+    userId = authUserId || '',
     onOrdersChange,
     enabled = true,
   } = options;

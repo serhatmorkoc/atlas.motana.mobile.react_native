@@ -9,57 +9,100 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
-  Alert,
   ActivityIndicator,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { useUser } from "@/hooks/useUser";
+import { useAuthUser } from "@/hooks/useAuthUser";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { AlertModal, AlertType } from "@/components/common/AlertModal";
+import { Animated } from "react-native";
 
 export default function EditProfileScreen() {
   const insets = useSafeAreaInsets();
   const { user, loading, updateProfile, updating } = useUser();
+  const { user: authUser } = useAuthUser();
   
   const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     phone: "",
   });
 
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertType, setAlertType] = useState<AlertType>('error');
+  const [alertTitle, setAlertTitle] = useState('');
+  const [alertMessage, setAlertMessage] = useState('');
+  const alertFadeAnim = React.useRef(new Animated.Value(0)).current;
+
+  const showAlert = (type: AlertType, title: string, message: string, onConfirm?: () => void) => {
+    setAlertType(type);
+    setAlertTitle(title);
+    setAlertMessage(message);
+    setAlertVisible(true);
+    Animated.timing(alertFadeAnim, {
+      toValue: 1,
+      duration: 200,
+      useNativeDriver: true,
+    }).start();
+  };
+
+  const hideAlert = () => {
+    Animated.timing(alertFadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setAlertVisible(false);
+    });
+  };
+
   // Populate form with user data
   useEffect(() => {
     if (user) {
-      const nameParts = (user.name || "").split(" ");
-      const firstName = nameParts[0] || "";
-      const lastName = nameParts.slice(1).join(" ") || "";
+      // Use user.name from database, or fallback to auth user metadata
+      const fullName = user.name || authUser?.user_metadata?.full_name || "";
       
       setForm({
-        firstName,
-        lastName,
+        fullName,
         email: user.email || "",
         phone: user.phone || "",
       });
     }
-  }, [user]);
+  }, [user, authUser]);
 
   const [focusedField, setFocusedField] = useState<string | null>(null);
 
   const handleSave = async () => {
-    const fullName = `${form.firstName.trim()} ${form.lastName.trim()}`.trim();
-    
+    if (!form.fullName.trim()) {
+      showAlert('error', 'Error', 'Please enter your full name');
+      return;
+    }
+
+    if (!form.email.trim()) {
+      showAlert('error', 'Error', 'Please enter your email address');
+      return;
+    }
+
     const result = await updateProfile({
-      name: fullName,
+      name: form.fullName.trim(),
       email: form.email.trim(),
       phone: form.phone.trim(),
     });
 
     if (result.success) {
-      Alert.alert("Success", "Profile updated successfully!");
-      router.back();
+      showAlert(
+        'success',
+        'Success',
+        'Profile updated successfully!',
+        () => {
+          hideAlert();
+          router.back();
+        }
+      );
     } else {
-      Alert.alert("Error", result.error || "Failed to update profile");
+      showAlert('error', 'Error', result.error || 'Failed to update profile');
     }
   };
 
@@ -68,8 +111,7 @@ export default function EditProfileScreen() {
   }
 
   const isFormValid = 
-    form.firstName.trim() !== "" && 
-    form.lastName.trim() !== "" && 
+    form.fullName.trim() !== "" && 
     form.email.trim() !== "" && 
     form.phone.trim() !== "";
 
@@ -114,38 +156,22 @@ export default function EditProfileScreen() {
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Personal Information</Text>
           
-          <View style={styles.rowInputs}>
-            <View style={[styles.inputCard, styles.halfInput]}>
-              <View style={styles.inputRow}>
-                <View style={styles.inputContent}>
-                  <Text style={styles.inputLabel}>First Name</Text>
-                  <TextInput
-                    style={[styles.input, focusedField === 'firstName' && styles.inputFocused]}
-                    placeholder="First name"
-                    placeholderTextColor="#9CA3AF"
-                    value={form.firstName}
-                    onChangeText={(text) => setForm({ ...form, firstName: text })}
-                    onFocus={() => setFocusedField('firstName')}
-                    onBlur={() => setFocusedField(null)}
-                  />
-                </View>
+          <View style={styles.inputCard}>
+            <View style={styles.inputRow}>
+              <View style={styles.inputIconContainer}>
+                <User size={18} color="#FF6B35" />
               </View>
-            </View>
-
-            <View style={[styles.inputCard, styles.halfInput]}>
-              <View style={styles.inputRow}>
-                <View style={styles.inputContent}>
-                  <Text style={styles.inputLabel}>Last Name</Text>
-                  <TextInput
-                    style={[styles.input, focusedField === 'lastName' && styles.inputFocused]}
-                    placeholder="Last name"
-                    placeholderTextColor="#9CA3AF"
-                    value={form.lastName}
-                    onChangeText={(text) => setForm({ ...form, lastName: text })}
-                    onFocus={() => setFocusedField('lastName')}
-                    onBlur={() => setFocusedField(null)}
-                  />
-                </View>
+              <View style={styles.inputContent}>
+                <Text style={styles.inputLabel}>Full Name</Text>
+                <TextInput
+                  style={[styles.input, focusedField === 'fullName' && styles.inputFocused]}
+                  placeholder="Your full name"
+                  placeholderTextColor="#9CA3AF"
+                  value={form.fullName}
+                  onChangeText={(text) => setForm({ ...form, fullName: text })}
+                  onFocus={() => setFocusedField('fullName')}
+                  onBlur={() => setFocusedField(null)}
+                />
               </View>
             </View>
           </View>
@@ -230,6 +256,19 @@ export default function EditProfileScreen() {
           <Text style={styles.screenLabelText}>Account / Edit Profile Screen</Text>
         </View>
       </ScrollView>
+
+      <AlertModal
+        visible={alertVisible}
+        type={alertType}
+        title={alertTitle}
+        message={alertMessage}
+        onClose={hideAlert}
+        onConfirm={alertType === 'success' ? () => {
+          hideAlert();
+          router.back();
+        } : undefined}
+        fadeAnim={alertFadeAnim}
+      />
     </KeyboardAvoidingView>
   );
 }
