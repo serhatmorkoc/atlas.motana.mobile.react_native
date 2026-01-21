@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, KeyboardAvoidingVi
 import { router } from 'expo-router';
 import { Colors } from '@/constants/Colors';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Mail, Lock, ArrowRight } from 'lucide-react-native';
+import { Mail, Lock, ArrowRight, Settings } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabaseClient } from '@/lib/supabase/client';
 import { AlertModal, AlertType } from '@/components/common/AlertModal';
@@ -82,6 +82,10 @@ export default function LoginScreen() {
 
     const handleRegister = () => {
         router.push('/auth/register');
+    };
+
+    const handleDebugEnv = () => {
+        router.push('/debug-env');
     };
 
     return (
@@ -178,6 +182,16 @@ export default function LoginScreen() {
                                         <Text style={styles.signupText}>Create Account</Text>
                                     </TouchableOpacity>
                                 </View>
+
+                                {/* Debug Button - Remove in production */}
+                                <TouchableOpacity 
+                                    style={styles.debugButton}
+                                    onPress={handleDebugEnv}
+                                    activeOpacity={0.7}
+                                >
+                                    <Settings size={14} color="#9CA3AF" strokeWidth={2} />
+                                    <Text style={styles.debugButtonText}>Debug Env</Text>
+                                </TouchableOpacity>
                             </View>
                         </View>
                     </ScrollView>
@@ -339,5 +353,22 @@ const styles = StyleSheet.create({
         color: Colors.primary,
         fontWeight: '700',
         fontSize: 13,
+    },
+    debugButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 6,
+        marginTop: 24,
+        paddingVertical: 8,
+        paddingHorizontal: 12,
+        backgroundColor: '#F3F4F6',
+        borderRadius: 8,
+        alignSelf: 'center',
+    },
+    debugButtonText: {
+        color: '#9CA3AF',
+        fontSize: 12,
+        fontWeight: '500',
     },
 });

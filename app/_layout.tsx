@@ -80,6 +80,12 @@ function RootLayoutNav() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="debug-env"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }
@@ -120,6 +126,20 @@ export default function RootLayout() {
   useEffect(() => {
     // Initialize global error handler
     errorHandler.initialize();
+    
+    // Debug: Check environment variables (works in both dev and production)
+    const { config } = require('@/config/env');
+    const envStatus = {
+      supabaseUrl: config.supabaseUrl ? '✅' : '❌',
+      supabaseAnonKey: config.supabaseAnonKey ? '✅' : '❌',
+      supabaseGraphqlUrl: config.supabaseGraphqlUrl ? '✅' : '❌',
+      googleMapsApiKey: config.googleMapsApiKey ? '✅' : '❌',
+    };
+    
+    // Log in both dev and production (for debugging)
+    console.log('[App] Environment check:', envStatus);
+    
+    // In production, you can also access this via /debug-env route
     
     ExpoSplashScreen.hideAsync();
   }, []);

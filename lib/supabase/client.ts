@@ -1,21 +1,8 @@
 // Supabase Client for Realtime subscriptions and Auth
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { config } from '@/config/env';
 import { errorHandler } from '@/services/errorHandler';
-
-// Validate Supabase configuration
-if (!config.supabaseUrl || !config.supabaseAnonKey) {
-  const error = new Error(
-    'Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. ' +
-    'Please check your EAS Build configuration and Expo Dashboard secrets.'
-  );
-  
-  // Log error but don't throw immediately - let errorHandler validate on startup
-  if (__DEV__) {
-    console.warn('[Supabase]', error.message);
-  }
-}
 
 // Custom fetch with retry logic
 const fetchWithRetry = async (
@@ -65,23 +52,115 @@ const fetchWithRetry = async (
   throw lastError || new Error('Request failed after retries');
 };
 
-export const supabaseClient = createClient(
-  config.supabaseUrl || '',
-  config.supabaseAnonKey || '',
-  {
-    auth: {
-      storage: AsyncStorage,
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: false,
-    },
-    realtime: {
-      params: {
-        eventsPerSecond: 10,
-      },
-    },
-    global: {
-      fetch: fetchWithRetry,
-    },
+// Validate configuration before creating client
+function validateConfig(): { isValid: boolean; error?: Error } {
+  const missing: string[] = [];
+
+  if (!config.supabaseUrl || config.supabaseUrl.trim() === '') {
+    missing.push('EXPO_PUBLIC_SUPABASE_URL');
   }
-);
+
+  if (!config.supabaseAnonKey || config.supabaseAnonKey.trim() === '') {
+    missing.push('EXPO_PUBLIC_SUPABASE_ANON_KEY');
+  }
+
+  if (missing.length > 0) {
+    return {
+      isValid: false,
+      error: new Error(
+        `Missing required environment variables: ${missing.join(', ')}. ` +
+        'Please check your EAS Build configuration and Expo Dashboard secrets.'
+      ),
+    };
+  }
+
+  return { isValid: true };
+}
+
+// Create client only if configuration is valid
+function createSupabaseClient(): SupabaseClient {
+  const validation = validateConfig();
+  
+  if (!validation.isValid) {
+    const error = validation.error!;
+    
+    // Log error
+    errorHandler.handleError(error, true, 'Supabase Client Initialization');
+    
+    if (__DEV__) {
+      console.error('[Supabase]', error.message);
+    }
+    
+    // Throw error to be caught by ErrorBoundary
+    throw error;
+  }
+
+  try {
+    return createClient(
+      config.supabaseUrl!,
+      config.supabaseAnonKey!,
+      {
+        auth: {
+          storage: AsyncStorage,
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: false,
+        },
+        realtime: {
+          params: {
+            eventsPerSecond: 10,
+          },
+        },
+        global: {
+          fetch: fetchWithRetry,
+        },
+      }
+    );
+  } catch (error: any) {
+    const initError = new Error(
+      `Failed to initialize Supabase client: ${error?.message || 'Unknown error'}`
+    );
+    errorHandler.handleError(initError, true, 'Supabase Client Creation');
+    throw initError;
+  }
+}
+
+// Lazy initialization - create client on first access
+let supabaseClientInstance: SupabaseClient | null = null;
+let initializationError: Error | null = null;
+
+function getSupabaseClient(): SupabaseClient {
+  if (initializationError) {
+    throw initializationError;
+  }
+  
+  if (!supabaseClientInstance) {
+    try {
+      supabaseClientInstance = createSupabaseClient();
+    } catch (error: any) {
+      initializationError = error;
+      throw error;
+    }
+  }
+  
+  return supabaseClientInstance;
+}
+
+// Export as getter - throws error on first access if config is invalid
+// This prevents crash on import, but throws error when client is actually used
+// ErrorBoundary will catch the error and show CrashScreen
+export const supabaseClient: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, prop: string | symbol) {
+    const client = getSupabaseClient();
+    const value = (client as any)[prop];
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    return value;
+  },
+  set(_target, prop: string | symbol, value: any) {
+    const client = getSupabaseClient();
+    (client as any)[prop] = value;
+    return true;
+  },
+}) as SupabaseClient;
