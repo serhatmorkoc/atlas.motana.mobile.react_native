@@ -45,7 +45,19 @@ function HomeContent() {
   const fadeAnim = useState(new Animated.Value(0))[0];
   const totalOffers = offers.length;
   
+  // Debug: Log home screen mount
+  React.useEffect(() => {
+    console.log('[Home] STEP 1: Home screen mounted');
+    console.log('[Home] STEP 1: Checking Relay environment...');
+    const { config } = require('@/config/env');
+    console.log('[Home] STEP 1: Config check:', {
+      supabaseUrl: config.supabaseUrl ? '✅' : '❌',
+      supabaseGraphqlUrl: config.supabaseGraphqlUrl ? '✅' : '❌',
+    });
+  }, []);
+  
   // Fetch selected address
+  console.log('[Home] STEP 2: Calling useUserAddresses...');
   const { addresses, loading: addressesLoading, refetch: refetchAddresses } = useUserAddresses();
   const selectedAddress = React.useMemo(() => {
     const found = addresses.find(addr => addr.selected);
@@ -61,6 +73,7 @@ function HomeContent() {
     return null;
   }, [addresses]);
 
+  console.log('[Home] STEP 3: Calling useStores...');
   const { stores, loading: storesLoading, error: storesError, refetch } = useStores({
     limit: 50, // Fetch more stores for filtering
     isActive: true,

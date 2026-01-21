@@ -11,7 +11,6 @@ import { errorHandler } from '@/services/errorHandler';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 
 
-
 export default function LoginScreen() {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -51,12 +50,44 @@ export default function LoginScreen() {
         }
 
         setLoading(true);
+        
+        // STEP 1: Log start
+        console.log('[Login] STEP 1: Starting login process');
+        errorHandler.handleError(
+            new Error(`[Login] STEP 1: Starting login for: ${email.substring(0, 5)}...`),
+            false,
+            'Login Step 1'
+        );
+
         try {
-            // Log error to errorHandler for debugging
+            // STEP 2: Check Supabase client
+            console.log('[Login] STEP 2: Checking Supabase client...');
+            try {
+                // Test if client is accessible
+                const testClient = supabaseClient;
+                console.log('[Login] STEP 2: ✅ Supabase client accessible');
+                errorHandler.handleError(
+                    new Error('[Login] STEP 2: Supabase client accessible'),
+                    false,
+                    'Login Step 2'
+                );
+            } catch (clientError: any) {
+                console.error('[Login] STEP 2: ❌ Supabase client error:', clientError);
+                errorHandler.handleError(
+                    new Error(`[Login] STEP 2: Supabase client error: ${clientError?.message || 'Unknown'}`),
+                    true,
+                    'Login Step 2 - Client Error'
+                );
+                showAlert('error', 'Configuration Error', `Supabase client error: ${clientError?.message || 'Unknown error'}`);
+                return;
+            }
+
+            // STEP 3: Attempt login
+            console.log('[Login] STEP 3: Calling supabaseClient.auth.signInWithPassword...');
             errorHandler.handleError(
-                new Error(`[Login] Attempting login for: ${email.substring(0, 5)}...`),
+                new Error('[Login] STEP 3: Calling signInWithPassword'),
                 false,
-                'Login Attempt'
+                'Login Step 3'
             );
 
             const { data, error } = await supabaseClient.auth.signInWithPassword({
@@ -64,12 +95,13 @@ export default function LoginScreen() {
                 password,
             });
 
+            // STEP 4: Check response
+            console.log('[Login] STEP 4: Received response from Supabase');
             if (error) {
-                // Log error to errorHandler
-                const loginError = new Error(`[Login] Supabase error: ${error.message}`);
-                errorHandler.handleError(loginError, false, 'Login Supabase Error');
+                console.error('[Login] STEP 4: ❌ Supabase error:', error);
+                const loginError = new Error(`[Login] STEP 4: Supabase error: ${error.message}`);
+                errorHandler.handleError(loginError, false, 'Login Step 4 - Supabase Error');
                 
-                // Check for specific error types
                 const errorMessage = error.message.toLowerCase();
                 if (errorMessage.includes('invalid login credentials') || 
                     errorMessage.includes('invalid credentials')) {
@@ -77,39 +109,72 @@ export default function LoginScreen() {
                 } else if (errorMessage.includes('email not confirmed')) {
                     showAlert('warning', 'Email Not Confirmed', 'Please check your email and confirm your account before logging in.');
                 } else {
-                    // Show detailed error in production too
-                    const detailedError = `Login failed: ${error.message}`;
-                    showAlert('error', 'Login Failed', detailedError);
+                    showAlert('error', 'Login Failed', `Login failed: ${error.message}`);
                 }
                 return;
             }
 
-            if (data?.session) {
-                // Success - navigate to home
-                router.replace('/(tabs)/home');
-            } else {
-                // No session but no error - this shouldn't happen
-                const noSessionError = new Error('[Login] No session returned after successful login');
-                errorHandler.handleError(noSessionError, false, 'Login No Session');
+            // STEP 5: Check session
+            console.log('[Login] STEP 5: Checking session...');
+            if (!data?.session) {
+                console.error('[Login] STEP 5: ❌ No session returned');
+                const noSessionError = new Error('[Login] STEP 5: No session returned after successful login');
+                errorHandler.handleError(noSessionError, false, 'Login Step 5 - No Session');
                 showAlert('error', 'Login Failed', 'No session created. Please try again.');
+                return;
             }
-        } catch (error: any) {
-            // Log detailed error to errorHandler
-            const crashError = new Error(
-                `[Login] Crash: ${error?.message || 'Unknown error'}\nStack: ${error?.stack || 'No stack trace'}`
+
+            console.log('[Login] STEP 5: ✅ Session created:', data.session.user?.id);
+            errorHandler.handleError(
+                new Error(`[Login] STEP 5: Session created for user: ${data.session.user?.id}`),
+                false,
+                'Login Step 5 - Success'
             );
-            errorHandler.handleError(crashError, true, 'Login Crash');
+
+            // STEP 6: Navigate to home
+            console.log('[Login] STEP 6: Navigating to home screen...');
+            errorHandler.handleError(
+                new Error('[Login] STEP 6: About to navigate to /(tabs)/home'),
+                false,
+                'Login Step 6 - Navigation'
+            );
+
+            // Small delay to ensure state is updated
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            try {
+                router.replace('/(tabs)/home');
+                console.log('[Login] STEP 6: ✅ Navigation called successfully');
+            } catch (navError: any) {
+                console.error('[Login] STEP 6: ❌ Navigation error:', navError);
+                errorHandler.handleError(
+                    new Error(`[Login] STEP 6: Navigation error: ${navError?.message || 'Unknown'}`),
+                    true,
+                    'Login Step 6 - Navigation Error'
+                );
+                showAlert('error', 'Navigation Error', `Failed to navigate: ${navError?.message || 'Unknown error'}`);
+            }
+
+        } catch (error: any) {
+            // STEP X: Catch all errors
+            console.error('[Login] STEP X: ❌ CRASH:', error);
+            const crashError = new Error(
+                `[Login] STEP X: CRASH - ${error?.message || 'Unknown error'}\n` +
+                `Stack: ${error?.stack || 'No stack trace'}\n` +
+                `Name: ${error?.name || 'Unknown'}\n` +
+                `Type: ${typeof error}`
+            );
+            errorHandler.handleError(crashError, true, 'Login CRASH');
             
-            // Show detailed error message
             const errorMessage = error?.message || 'An unexpected error occurred';
-            const errorDetails = error?.stack 
-                ? `${errorMessage}\n\nDetails: ${error.stack.substring(0, 200)}...`
-                : errorMessage;
+            const errorDetails = `Error: ${errorMessage}\n\n` +
+                `Type: ${error?.name || typeof error}\n` +
+                (error?.stack ? `Stack: ${error.stack.substring(0, 300)}...` : 'No stack trace');
             
-            console.error('[Login] Crash error:', error);
-            showAlert('error', 'Login Error', errorDetails);
+            showAlert('error', 'Login Crash', errorDetails);
         } finally {
             setLoading(false);
+            console.log('[Login] FINAL: Login process completed');
         }
     };
 
@@ -132,114 +197,114 @@ export default function LoginScreen() {
                 />
 
                 <SafeAreaView style={styles.safeArea}>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                    style={{ flex: 1 }}
-                >
-                    <ScrollView
-                        contentContainerStyle={styles.scrollContent}
-                        showsVerticalScrollIndicator={false}
-                        keyboardShouldPersistTaps="handled"
+                    <KeyboardAvoidingView
+                        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                        style={{ flex: 1 }}
                     >
+                        <ScrollView
+                            contentContainerStyle={styles.scrollContent}
+                            showsVerticalScrollIndicator={false}
+                            keyboardShouldPersistTaps="handled"
+                        >
 
-                        <View style={styles.header}>
-                            <View style={styles.logoBadge}>
-                                <Text style={styles.logoText}>M</Text>
+                            <View style={styles.header}>
+                                <View style={styles.logoBadge}>
+                                    <Text style={styles.logoText}>M</Text>
+                                </View>
+                                <Text style={styles.welcomeText}>Welcome Back</Text>
+                                <Text style={styles.subtitle}>Sign in to your account</Text>
                             </View>
-                            <Text style={styles.welcomeText}>Welcome Back</Text>
-                            <Text style={styles.subtitle}>Sign in to your account</Text>
-                        </View>
 
-                        <View style={styles.card}>
-                            <View style={styles.form}>
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>Email</Text>
-                                    <View style={styles.inputContainer}>
-                                        <Mail color={Colors.primary} size={18} style={styles.inputIcon} />
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="hello@example.com"
-                                            placeholderTextColor="#A0A0A0"
-                                            value={email}
-                                            onChangeText={setEmail}
-                                            keyboardType="email-address"
-                                            autoCapitalize="none"
-                                        />
+                            <View style={styles.card}>
+                                <View style={styles.form}>
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.inputLabel}>Email</Text>
+                                        <View style={styles.inputContainer}>
+                                            <Mail color={Colors.primary} size={18} style={styles.inputIcon} />
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="hello@example.com"
+                                                placeholderTextColor="#A0A0A0"
+                                                value={email}
+                                                onChangeText={setEmail}
+                                                keyboardType="email-address"
+                                                autoCapitalize="none"
+                                            />
+                                        </View>
                                     </View>
-                                </View>
 
-                                <View style={styles.inputGroup}>
-                                    <Text style={styles.inputLabel}>Password</Text>
-                                    <View style={styles.inputContainer}>
-                                        <Lock color={Colors.primary} size={18} style={styles.inputIcon} />
-                                        <TextInput
-                                            style={styles.input}
-                                            placeholder="••••••••"
-                                            placeholderTextColor="#A0A0A0"
-                                            value={password}
-                                            onChangeText={setPassword}
-                                            secureTextEntry
-                                        />
+                                    <View style={styles.inputGroup}>
+                                        <Text style={styles.inputLabel}>Password</Text>
+                                        <View style={styles.inputContainer}>
+                                            <Lock color={Colors.primary} size={18} style={styles.inputIcon} />
+                                            <TextInput
+                                                style={styles.input}
+                                                placeholder="••••••••"
+                                                placeholderTextColor="#A0A0A0"
+                                                value={password}
+                                                onChangeText={setPassword}
+                                                secureTextEntry
+                                            />
+                                        </View>
                                     </View>
-                                </View>
 
-                                <TouchableOpacity style={styles.forgotPassword}>
-                                    <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
-                                </TouchableOpacity>
+                                    <TouchableOpacity style={styles.forgotPassword}>
+                                        <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+                                    </TouchableOpacity>
 
-                                <TouchableOpacity 
-                                    style={styles.loginButton} 
-                                    onPress={handleLogin} 
-                                    activeOpacity={0.9}
-                                    disabled={loading}
-                                >
-                                    <LinearGradient
-                                        colors={[Colors.primary, '#FF8C61']}
-                                        style={styles.loginButtonGradient}
-                                        start={{ x: 0, y: 0 }}
-                                        end={{ x: 1, y: 0 }}
+                                    <TouchableOpacity 
+                                        style={styles.loginButton} 
+                                        onPress={handleLogin} 
+                                        activeOpacity={0.9}
+                                        disabled={loading}
                                     >
-                                        {loading ? (
-                                            <ActivityIndicator color="#FFFFFF" />
-                                        ) : (
-                                            <>
-                                                <Text style={styles.loginButtonText}>Login</Text>
-                                                <ArrowRight color="#FFFFFF" size={18} strokeWidth={2.5} />
-                                            </>
-                                        )}
-                                    </LinearGradient>
-                                </TouchableOpacity>
+                                        <LinearGradient
+                                            colors={[Colors.primary, '#FF8C61']}
+                                            style={styles.loginButtonGradient}
+                                            start={{ x: 0, y: 0 }}
+                                            end={{ x: 1, y: 0 }}
+                                        >
+                                            {loading ? (
+                                                <ActivityIndicator color="#FFFFFF" />
+                                            ) : (
+                                                <>
+                                                    <Text style={styles.loginButtonText}>Login</Text>
+                                                    <ArrowRight color="#FFFFFF" size={18} strokeWidth={2.5} />
+                                                </>
+                                            )}
+                                        </LinearGradient>
+                                    </TouchableOpacity>
 
-                                <View style={styles.footer}>
-                                    <Text style={styles.footerText}>New to Motana? </Text>
-                                    <TouchableOpacity onPress={handleRegister}>
-                                        <Text style={styles.signupText}>Create Account</Text>
+                                    <View style={styles.footer}>
+                                        <Text style={styles.footerText}>New to Motana? </Text>
+                                        <TouchableOpacity onPress={handleRegister}>
+                                            <Text style={styles.signupText}>Create Account</Text>
+                                        </TouchableOpacity>
+                                    </View>
+
+                                    {/* Debug Button - Remove in production */}
+                                    <TouchableOpacity 
+                                        style={styles.debugButton}
+                                        onPress={handleDebugEnv}
+                                        activeOpacity={0.7}
+                                    >
+                                        <Settings size={14} color="#9CA3AF" strokeWidth={2} />
+                                        <Text style={styles.debugButtonText}>Debug Env</Text>
                                     </TouchableOpacity>
                                 </View>
-
-                                {/* Debug Button - Remove in production */}
-                                <TouchableOpacity 
-                                    style={styles.debugButton}
-                                    onPress={handleDebugEnv}
-                                    activeOpacity={0.7}
-                                >
-                                    <Settings size={14} color="#9CA3AF" strokeWidth={2} />
-                                    <Text style={styles.debugButtonText}>Debug Env</Text>
-                                </TouchableOpacity>
                             </View>
-                        </View>
-                    </ScrollView>
-                </KeyboardAvoidingView>
-            </SafeAreaView>
+                        </ScrollView>
+                    </KeyboardAvoidingView>
+                </SafeAreaView>
 
-            <AlertModal
-                visible={alertVisible}
-                type={alertType}
-                title={alertTitle}
-                message={alertMessage}
-                onClose={hideAlert}
-                fadeAnim={fadeAnim}
-            />
+                <AlertModal
+                    visible={alertVisible}
+                    type={alertType}
+                    title={alertTitle}
+                    message={alertMessage}
+                    onClose={hideAlert}
+                    fadeAnim={fadeAnim}
+                />
             </View>
         </ErrorBoundary>
     );
