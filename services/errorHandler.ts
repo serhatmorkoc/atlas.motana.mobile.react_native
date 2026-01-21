@@ -84,8 +84,27 @@ class ErrorHandlerService {
       .filter(Boolean)
       .join('\n');
 
-    if (__DEV__) {
-      console.error(logMessage);
+    // ALWAYS log errors, even in production (for debugging)
+    // React Native console works in production via Xcode/Android Studio
+    console.error(logMessage);
+
+    // In production, also try to persist error for later retrieval
+    if (!__DEV__) {
+      try {
+        // Store last 5 errors in AsyncStorage for debugging
+        const AsyncStorage = require('@react-native-async-storage/async-storage').default;
+        const errorKey = `error_${Date.now()}`;
+        AsyncStorage.setItem(errorKey, JSON.stringify({
+          message: error.message,
+          stack: error.stack,
+          context,
+          timestamp: timestamp.toISOString(),
+        })).catch(() => {
+          // Ignore storage errors
+        });
+      } catch {
+        // Ignore if AsyncStorage not available
+      }
     }
 
     // TODO: In production, send to crash reporting service (e.g., Sentry, Bugsnag)

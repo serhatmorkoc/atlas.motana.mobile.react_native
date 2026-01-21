@@ -86,6 +86,12 @@ function RootLayoutNav() {
           headerShown: false,
         }}
       />
+      <Stack.Screen
+        name="debug-errors"
+        options={{
+          headerShown: false,
+        }}
+      />
     </Stack>
   );
 }

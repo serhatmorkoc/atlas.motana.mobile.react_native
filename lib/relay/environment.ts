@@ -56,11 +56,34 @@ const isRetryableError = (error: any, status?: number): boolean => {
 
 // Single fetch attempt
 async function attemptFetch(operation: any, variables: any): Promise<Response> {
+  // CRITICAL: Validate GraphQL URL before fetch (production safety check)
+  if (!graphqlUrl || graphqlUrl.trim() === '') {
+    const error = new Error(
+      `[Relay] CRITICAL: GraphQL URL is empty! Operation: ${operation.name || 'unknown'}. ` +
+      'This should not happen in production. Check EXPO_PUBLIC_SUPABASE_GRAPHQL_URL or EXPO_PUBLIC_SUPABASE_URL.'
+    );
+    // Log to error handler (works in production)
+    const { errorHandler } = require('@/services/errorHandler');
+    errorHandler.handleError(error, true, 'Relay Fetch - Empty URL');
+    throw error;
+  }
+
+  // CRITICAL: Validate API key before fetch
+  if (!config.supabaseAnonKey || config.supabaseAnonKey.trim() === '') {
+    const error = new Error(
+      `[Relay] CRITICAL: Supabase API key is empty! Operation: ${operation.name || 'unknown'}. ` +
+      'Check EXPO_PUBLIC_SUPABASE_ANON_KEY in Expo Dashboard Secrets.'
+    );
+    const { errorHandler } = require('@/services/errorHandler');
+    errorHandler.handleError(error, true, 'Relay Fetch - Empty API Key');
+    throw error;
+  }
+
   return fetch(graphqlUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      apikey: config.supabaseAnonKey || '',
+      apikey: config.supabaseAnonKey,
     },
     body: JSON.stringify({
       query: operation.text,
@@ -71,8 +94,17 @@ async function attemptFetch(operation: any, variables: any): Promise<Response> {
 
 // Network layer for Relay with retry logic
 async function fetchQuery(operation: any, variables: any, cacheConfig: any, uploadables: any) {
-  if (!graphqlUrl) {
-    return Promise.reject(new Error('GraphQL URL is not configured'));
+  // CRITICAL: Double-check GraphQL URL (production safety)
+  if (!graphqlUrl || graphqlUrl.trim() === '') {
+    const error = new Error(
+      `[Relay] GraphQL URL is not configured. Operation: ${operation.name || 'unknown'}. ` +
+      'This is a CRITICAL production error. Check Expo Dashboard Secrets: ' +
+      'EXPO_PUBLIC_SUPABASE_GRAPHQL_URL or EXPO_PUBLIC_SUPABASE_URL'
+    );
+    // Log to error handler (works in production)
+    const { errorHandler } = require('@/services/errorHandler');
+    errorHandler.handleError(error, true, 'Relay Query - No GraphQL URL');
+    return Promise.reject(error);
   }
 
   let lastError: Error | null = null;

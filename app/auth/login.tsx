@@ -282,15 +282,25 @@ export default function LoginScreen() {
                                         </TouchableOpacity>
                                     </View>
 
-                                    {/* Debug Button - Remove in production */}
-                                    <TouchableOpacity 
-                                        style={styles.debugButton}
-                                        onPress={handleDebugEnv}
-                                        activeOpacity={0.7}
-                                    >
-                                        <Settings size={14} color="#9CA3AF" strokeWidth={2} />
-                                        <Text style={styles.debugButtonText}>Debug Env</Text>
-                                    </TouchableOpacity>
+                                    {/* Debug Buttons - Remove in production */}
+                                    <View style={styles.debugButtonsContainer}>
+                                        <TouchableOpacity 
+                                            style={styles.debugButton}
+                                            onPress={handleDebugEnv}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Settings size={14} color="#9CA3AF" strokeWidth={2} />
+                                            <Text style={styles.debugButtonText}>Debug Env</Text>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity 
+                                            style={styles.debugButton}
+                                            onPress={() => router.push('/debug-errors')}
+                                            activeOpacity={0.7}
+                                        >
+                                            <Settings size={14} color="#9CA3AF" strokeWidth={2} />
+                                            <Text style={styles.debugButtonText}>Debug Errors</Text>
+                                        </TouchableOpacity>
+                                    </View>
                                 </View>
                             </View>
                         </ScrollView>
@@ -454,17 +464,21 @@ const styles = StyleSheet.create({
         fontWeight: '700',
         fontSize: 13,
     },
+    debugButtonsContainer: {
+        flexDirection: 'row',
+        gap: 8,
+        marginTop: 24,
+        justifyContent: 'center',
+    },
     debugButton: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'center',
         gap: 6,
-        marginTop: 24,
         paddingVertical: 8,
         paddingHorizontal: 12,
         backgroundColor: '#F3F4F6',
         borderRadius: 8,
-        alignSelf: 'center',
     },
     debugButtonText: {
         color: '#9CA3AF',
