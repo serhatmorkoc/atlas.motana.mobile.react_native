@@ -1,6 +1,6 @@
 // Custom hook for fetching orders using Apollo
 import React, { useCallback, useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client/react';
+import { useQuery } from '@apollo/client';
 import { apolloClient } from '@/lib/apollo/client';
 import { ORDERS_QUERY } from '@/lib/apollo/queries/OrdersQuery';
 import { ORDER_ITEMS_QUERY } from '@/lib/apollo/queries/OrderItemsQuery';

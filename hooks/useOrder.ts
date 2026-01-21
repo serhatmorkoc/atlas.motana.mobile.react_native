@@ -1,16 +1,12 @@
-// Custom hook for fetching a single order by ID using Relay
-import { useLazyLoadQuery } from 'react-relay';
-import { relayEnvironment } from '@/lib/relay/environment';
-import { orderQuery } from '@/lib/relay/queries/OrderQuery';
-import { orderItemsQuery } from '@/lib/relay/queries/OrderItemsQuery';
-import { storeQuery } from '@/lib/relay/queries/StoreQuery';
-import { fetchQuery } from 'relay-runtime';
+// Custom hook for fetching a single order by ID using Apollo
+import { useQuery } from '@apollo/client/react';
+import { apolloClient } from '@/lib/apollo/client';
+import { ORDER_QUERY } from '@/lib/apollo/queries/OrderQuery';
+import { ORDER_ITEMS_QUERY } from '@/lib/apollo/queries/OrderItemsQuery';
+import { STORE_QUERY } from '@/lib/apollo/queries/StoreQuery';
 import { DBOrderStatus, Order, OrderItem } from '@/types/order.types';
 import type { DeliveryAddress } from '@/types/address.types';
-import React, { useCallback, useState } from 'react';
-import type { OrderQuery } from '@/__generated__/OrderQuery.graphql';
-import type { OrderItemsQuery } from '@/__generated__/OrderItemsQuery.graphql';
-import type { StoreQuery } from '@/__generated__/StoreQuery.graphql';
+import React, { useCallback } from 'react';
 
 interface GraphQLOrder {
   id: string; order_code: string | null; user_id: string | null; store_id: string | null;
@@ -44,15 +40,23 @@ const mapOrderStatus = (status: string | null): 'delivered' | 'in_progress' | 'c
 const fetchStore = async (id: string | null) => {
   if (!id) return null;
   try {
-    const data = await fetchQuery<StoreQuery>(relayEnvironment, storeQuery, { id }).toPromise();
+    const { data } = await apolloClient.query({
+      query: STORE_QUERY,
+      variables: { id },
+      fetchPolicy: 'cache-first',
+    });
     return data?.storesCollection?.edges?.[0]?.node || null;
   } catch { return null; }
 };
 
 const fetchOrderItems = async (orderId: string) => {
   try {
-    const data = await fetchQuery<OrderItemsQuery>(relayEnvironment, orderItemsQuery, { orderId }).toPromise();
-    return data?.order_itemsCollection?.edges?.map((e) => e.node) || [];
+    const { data } = await apolloClient.query({
+      query: ORDER_ITEMS_QUERY,
+      variables: { orderId },
+      fetchPolicy: 'cache-first',
+    });
+    return data?.order_itemsCollection?.edges?.map((e: any) => e.node) || [];
   } catch { return []; }
 };
 
@@ -111,13 +115,11 @@ const mapGraphQLOrderToOrder = async (order: GraphQLOrder, store: any, items: an
 };
 
 export const useOrder = (id: string) => {
-  const [refetchKey, setRefetchKey] = useState(0);
-
-  const data = useLazyLoadQuery<OrderQuery>(
-    orderQuery,
-    { id },
-    { fetchPolicy: 'store-and-network', fetchKey: `order-${id}-${refetchKey}` }
-  );
+  const { data, loading, error, refetch: apolloRefetch } = useQuery(ORDER_QUERY, {
+    variables: { id },
+    fetchPolicy: 'cache-and-network',
+    notifyOnNetworkStatusChange: true,
+  });
 
   const [order, setOrder] = React.useState<Order | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
@@ -149,8 +151,8 @@ export const useOrder = (id: string) => {
   }, [data]);
 
   const refetch = useCallback(async () => {
-    setRefetchKey(prev => prev + 1);
-  }, []);
+    await apolloRefetch();
+  }, [apolloRefetch]);
 
-  return { order, loading: isLoadingDetails, error: null, refetch };
+  return { order, loading: loading || isLoadingDetails, error: error ? error.message : null, refetch };
 };

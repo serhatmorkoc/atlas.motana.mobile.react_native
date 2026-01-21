@@ -1,13 +1,12 @@
-// Custom hook for fetching orders using Apollo
-import React, { useCallback, useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client/react';
+// Custom hook for fetching a single order by ID using Apollo
+import { useQuery } from '@apollo/client';
 import { apolloClient } from '@/lib/apollo/client';
-import { ORDERS_QUERY } from '@/lib/apollo/queries/OrdersQuery';
+import { ORDER_QUERY } from '@/lib/apollo/queries/OrderQuery';
 import { ORDER_ITEMS_QUERY } from '@/lib/apollo/queries/OrderItemsQuery';
 import { STORE_QUERY } from '@/lib/apollo/queries/StoreQuery';
-import { DBOrderStatus, Order, OrderItem, OrderStatus } from '@/types/order.types';
+import { DBOrderStatus, Order, OrderItem } from '@/types/order.types';
 import type { DeliveryAddress } from '@/types/address.types';
-import { useAuthUser } from './useAuthUser';
+import React, { useCallback } from 'react';
 
 interface GraphQLOrder {
   id: string; order_code: string | null; user_id: string | null; store_id: string | null;
@@ -30,10 +29,9 @@ const isDBOrderStatus = (v: string | null | undefined): v is DBOrderStatus => {
   );
 };
 
-const mapOrderStatus = (status: string | null): OrderStatus => {
+const mapOrderStatus = (status: string | null): 'delivered' | 'in_progress' | 'cancelled' => {
   if (!status) return 'in_progress';
   const s = status.toUpperCase();
-  if (['PENDING', 'CONFIRMED', 'PREPARING', 'READY', 'ON_WAY'].includes(s)) return 'in_progress';
   if (s === 'DELIVERED') return 'delivered';
   if (s === 'CANCELLED') return 'cancelled';
   return 'in_progress';
@@ -87,7 +85,7 @@ const mapGraphQLOrderToOrder = async (order: GraphQLOrder, store: any, items: an
         '';
     }
   } catch {
-    // ignore parse errors; keep empty string
+    // ignore
   }
 
   const rawStatus: DBOrderStatus | null =
@@ -116,56 +114,45 @@ const mapGraphQLOrderToOrder = async (order: GraphQLOrder, store: any, items: an
   };
 };
 
-export const useOrders = (options?: { limit?: number; offset?: number; userId?: string; }) => {
-  const { userId: authUserId, loading: authLoading } = useAuthUser();
-  const finalUserId = options?.userId || authUserId;
-  const shouldSkip = authLoading || !finalUserId;
-
-  const { data, loading, error, refetch: apolloRefetch } = useQuery(ORDERS_QUERY, {
-    variables: { userId: finalUserId || '00000000-0000-0000-0000-000000000000', first: options?.limit, offset: options?.offset },
-    skip: shouldSkip,
+export const useOrder = (id: string) => {
+  const { data, loading, error, refetch: apolloRefetch } = useQuery(ORDER_QUERY, {
+    variables: { id },
     fetchPolicy: 'cache-and-network',
     notifyOnNetworkStatusChange: true,
   });
 
-  const [orders, setOrders] = React.useState<Order[]>([]);
+  const [order, setOrder] = React.useState<Order | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
 
     const load = async () => {
-      if (shouldSkip) {
-        if (!cancelled) setOrders([]);
-        return;
-      }
-      const nodes: GraphQLOrder[] = data?.ordersCollection?.edges?.map((e: any) => e.node) ?? [];
-      if (nodes.length === 0) {
-        if (!cancelled) setOrders([]);
+      const node: GraphQLOrder | undefined = data?.ordersCollection?.edges?.[0]?.node;
+      if (!node) {
+        if (!cancelled) setOrder(null);
         return;
       }
       if (!cancelled) setIsLoadingDetails(true);
       try {
-        const res = await Promise.all(nodes.map(async (o) => {
-          const s = await fetchStore(o.store_id);
-          const i = await fetchOrderItems(o.id);
-          return mapGraphQLOrderToOrder(o, s, i);
-        }));
-        if (!cancelled) setOrders(res.filter((o): o is Order => o !== null));
+        const s = await fetchStore(node.store_id);
+        const i = await fetchOrderItems(node.id);
+        const mapped = await mapGraphQLOrderToOrder(node, s, i);
+        if (!cancelled) setOrder(mapped);
       } finally {
         if (!cancelled) setIsLoadingDetails(false);
       }
     };
-    if (data && !shouldSkip) load();
+    if (data) load();
 
     return () => {
       cancelled = true;
     };
-  }, [data, shouldSkip]);
+  }, [data]);
 
   const refetch = useCallback(async () => {
     await apolloRefetch();
   }, [apolloRefetch]);
 
-  return { orders, loading: authLoading || loading || isLoadingDetails, error: error ? error.message : null, refetch };
+  return { order, loading: loading || isLoadingDetails, error: error ? error.message : null, refetch };
 };

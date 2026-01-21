@@ -1,4 +1,4 @@
-import { useQuery } from "@apollo/client/react";
+import { useQuery } from "@apollo/client";
 import { PRODUCT_VARIATIONS_QUERY } from "@/lib/apollo/queries/ProductVariationsQuery";
 import type { MenuItemExtra } from "@/types/menu.types";
 import { useCallback, useMemo } from "react";

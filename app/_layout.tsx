@@ -1,13 +1,13 @@
 // template
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { RelayEnvironmentProvider } from "react-relay";
+import { ApolloProvider } from "@apollo/client/react";
 import { Stack } from "expo-router";
 import * as ExpoSplashScreen from "expo-splash-screen";
 import React, { Suspense, useEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { CartProvider } from "@/contexts/CartContext";
-import { relayEnvironment } from "@/lib/relay/environment";
+import { apolloClient } from "@/lib/apollo/client";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 
@@ -91,7 +91,7 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <RelayEnvironmentProvider environment={relayEnvironment}>
+    <ApolloProvider client={apolloClient}>
       <QueryClientProvider client={queryClient}>
         <CartProvider>
           <GestureHandlerRootView style={{ flex: 1 }}>
@@ -101,6 +101,6 @@ export default function RootLayout() {
           </GestureHandlerRootView>
         </CartProvider>
       </QueryClientProvider>
-    </RelayEnvironmentProvider>
+    </ApolloProvider>
   );
 }

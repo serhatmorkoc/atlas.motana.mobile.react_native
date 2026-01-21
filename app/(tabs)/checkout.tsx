@@ -13,26 +13,19 @@ import {
   TextInput,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useMutation } from "react-relay";
-import { useLazyLoadQuery } from "react-relay";
-import { relayEnvironment } from "@/lib/relay/environment";
-import { fetchQuery } from "relay-runtime";
+import { useMutation, useQuery } from "@apollo/client/react";
+import { apolloClient } from "@/lib/apollo/client";
 import { AlertModal, AlertType } from "@/components/common/AlertModal";
 import LoadingScreen from "@/components/common/LoadingScreen";
 
 import { useCart, CartItem, CartStoreGroup } from "@/contexts/CartContext";
 import { formatPrice, DELIVERY_FEE, SERVICE_FEE } from "@/utils";
-import { createOrderMutation } from "@/lib/relay/mutations/CreateOrderMutation";
-import { createOrderItemsMutation } from "@/lib/relay/mutations/CreateOrderItemsMutation";
-import { userQuery } from "@/lib/relay/queries/UserQuery";
-import { userAddressesQuery } from "@/lib/relay/queries/UserAddressesQuery";
-import { storeQuery } from "@/lib/relay/queries/StoreQuery";
+import { CREATE_ORDER_MUTATION } from "@/lib/apollo/mutations/CreateOrderMutation";
+import { CREATE_ORDER_ITEMS_MUTATION } from "@/lib/apollo/mutations/CreateOrderItemsMutation";
+import { USER_QUERY } from "@/lib/apollo/queries/UserQuery";
+import { USER_ADDRESSES_QUERY } from "@/lib/apollo/queries/UserAddressesQuery";
+import { STORE_QUERY } from "@/lib/apollo/queries/StoreQuery";
 import { useAuthUser } from "@/hooks/useAuthUser";
-import type { CreateOrderMutation } from "@/__generated__/CreateOrderMutation.graphql";
-import type { CreateOrderItemsMutation } from "@/__generated__/CreateOrderItemsMutation.graphql";
-import type { UserQuery } from "@/__generated__/UserQuery.graphql";
-import type { UserAddressesQuery } from "@/__generated__/UserAddressesQuery.graphql";
-import type { StoreQuery } from "@/__generated__/StoreQuery.graphql";
 
 type User = { id: string; name: string | null; email: string | null; phone: string | null };
 type UserAddress = {
@@ -77,30 +70,26 @@ export default function CheckoutScreen() {
   const [storeNotes, setStoreNotes] = useState<Record<string, string>>({});
   const [storeTips, setStoreTips] = useState<Record<string, number>>({});
 
-  const [commitCreateOrder] = useMutation<CreateOrderMutation>(createOrderMutation);
-  const [commitCreateOrderItems] = useMutation<CreateOrderItemsMutation>(createOrderItemsMutation);
+  const [createOrderMutation] = useMutation(CREATE_ORDER_MUTATION);
+  const [createOrderItemsMutation] = useMutation(CREATE_ORDER_ITEMS_MUTATION);
 
   // If user is logged in, we MUST have a userId. Only skip if auth is still loading
   // or if we explicitly don't have a userId (user not logged in)
   const shouldSkip = authLoading || !userId;
 
-  const userData = useLazyLoadQuery<UserQuery>(
-    userQuery,
-    { id: userId || '00000000-0000-0000-0000-000000000000' },
-    { 
-      fetchPolicy: 'store-and-network',
-      fetchKey: shouldSkip ? 'skip' : userId,
-    }
-  );
+  const { data: userData } = useQuery(USER_QUERY, {
+    variables: { id: userId || '00000000-0000-0000-0000-000000000000' },
+    skip: shouldSkip,
+    fetchPolicy: 'cache-and-network',
+    notifyOnNetworkStatusChange: true,
+  });
 
-  const addressesData = useLazyLoadQuery<UserAddressesQuery>(
-    userAddressesQuery,
-    { userId: userId || '00000000-0000-0000-0000-000000000000' },
-    { 
-      fetchPolicy: 'store-and-network',
-      fetchKey: shouldSkip ? 'skip' : userId,
-    }
-  );
+  const { data: addressesData } = useQuery(USER_ADDRESSES_QUERY, {
+    variables: { userId: userId || '00000000-0000-0000-0000-000000000000' },
+    skip: shouldSkip,
+    fetchPolicy: 'cache-and-network',
+    notifyOnNetworkStatusChange: true,
+  });
 
   if (authLoading) {
     return <LoadingScreen title="Checking authentication..." subtitle="Please wait" />;
@@ -239,11 +228,11 @@ export default function CheckoutScreen() {
       setPlacingStoreId(group.storeId);
 
       // Fetch store to get delivery_time_min and delivery_time_max for estimated_delivery_time
-      const storeData = await fetchQuery<StoreQuery>(
-        relayEnvironment,
-        storeQuery,
-        { id: group.storeId }
-      ).toPromise();
+      const { data: storeData } = await apolloClient.query({
+        query: STORE_QUERY,
+        variables: { id: group.storeId },
+        fetchPolicy: 'cache-first',
+      });
 
       const store = storeData?.storesCollection?.edges?.[0]?.node;
       
@@ -284,31 +273,27 @@ export default function CheckoutScreen() {
         console.log("deliveryAddressForMutation type:", typeof deliveryAddressForMutation);
       }
 
-      const orderRes = await new Promise<{ data?: CreateOrderMutation['response'] }>((resolve, reject) => {
-        commitCreateOrder({
-          variables: {
-            order: {
-              order_code: orderCode, // text
-              user_id: userId, // uuid
-              store_id: group.storeId, // uuid
-              courier_id: null, // uuid null - will be assigned later
-              delivery_address: deliveryAddressForMutation, // jsonb (as JSON string)
-              payment_method: paymentMethod, // text (CASH or CREDIT_CARD)
-              payment_status: "PENDING", // text (default 'PENDING')
-              order_status: "PENDING", // text (default 'PENDING')
-              sub_total: group.subtotal.toFixed(2), // numeric(10, 2) as string
-              delivery_fee: DELIVERY_FEE.toFixed(2), // numeric(10, 2) as string
-              tax_amount: "0.00", // numeric(10, 2) as string
-              tip_amount: tipAmount.toFixed(2), // numeric(10, 2) as string
-              total_amount: storeTotal.toFixed(2), // numeric(10, 2) as string
-              note_to_store: note || null, // text null
-              is_picked_up: false, // boolean (default false)
-              estimated_delivery_time: estimatedDeliveryTime, // timestamp with time zone (ISO string)
-            },
+      const orderRes = await createOrderMutation({
+        variables: {
+          order: {
+            order_code: orderCode, // text
+            user_id: userId, // uuid
+            store_id: group.storeId, // uuid
+            courier_id: null, // uuid null - will be assigned later
+            delivery_address: deliveryAddressForMutation, // jsonb (as JSON string)
+            payment_method: paymentMethod, // text (CASH or CREDIT_CARD)
+            payment_status: "PENDING", // text (default 'PENDING')
+            order_status: "PENDING", // text (default 'PENDING')
+            sub_total: group.subtotal.toFixed(2), // numeric(10, 2) as string
+            delivery_fee: DELIVERY_FEE.toFixed(2), // numeric(10, 2) as string
+            tax_amount: "0.00", // numeric(10, 2) as string
+            tip_amount: tipAmount.toFixed(2), // numeric(10, 2) as string
+            total_amount: storeTotal.toFixed(2), // numeric(10, 2) as string
+            note_to_store: note || null, // text null
+            is_picked_up: false, // boolean (default false)
+            estimated_delivery_time: estimatedDeliveryTime, // timestamp with time zone (ISO string)
           },
-          onCompleted: (response) => resolve({ data: response }),
-          onError: (error) => reject(error),
-        });
+        },
       });
 
       const created = orderRes.data?.insertIntoordersCollection?.records?.[0];
@@ -337,14 +322,10 @@ export default function CheckoutScreen() {
         };
       });
 
-      await new Promise<void>((resolve, reject) => {
-        commitCreateOrderItems({
-          variables: {
-            items: itemsPayload,
-          },
-          onCompleted: () => resolve(),
-          onError: (error) => reject(error),
-        });
+      await createOrderItemsMutation({
+        variables: {
+          items: itemsPayload,
+        },
       });
 
       // 3) Clear cart for store and navigate
