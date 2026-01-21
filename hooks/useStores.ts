@@ -3,7 +3,7 @@ import { useQuery } from '@apollo/client/react';
 import { useEffect, useState, useMemo, useCallback } from 'react';
 import { STORES_QUERY } from '@/lib/apollo/queries/StoresQuery';
 import { STORE_QUERY } from '@/lib/apollo/queries/StoreQuery';
-import { mapGraphQLStoresToStores, mapGraphQLStoreToStore, GraphQLStore } from '@/lib/relay/utils/store.mapper';
+import { mapGraphQLStoresToStores, mapGraphQLStoreToStore, GraphQLStore } from '@/lib/utils/store.mapper';
 import { Store } from '@/types/store.types';
 import { calculateDistance } from '@/utils/google_maps';
 
