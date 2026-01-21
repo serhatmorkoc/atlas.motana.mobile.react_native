@@ -18,17 +18,29 @@ try {
 }
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || '';
+const SUPABASE_GRAPHQL_URL = process.env.EXPO_PUBLIC_SUPABASE_GRAPHQL_URL || '';
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || '';
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error('❌ Error: EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY must be set');
-  console.error('   Set them in your .env file or environment variables');
+if (!SUPABASE_ANON_KEY) {
+  console.error('❌ Error: EXPO_PUBLIC_SUPABASE_ANON_KEY must be set');
+  console.error('   Set it in your .env file or environment variables');
   process.exit(1);
 }
 
-const graphqlUrl = SUPABASE_URL.endsWith('/graphql/v1') 
-  ? SUPABASE_URL 
-  : `${SUPABASE_URL.replace(/\/$/, '')}/graphql/v1`;
+// Use EXPO_PUBLIC_SUPABASE_GRAPHQL_URL if available, otherwise construct from SUPABASE_URL
+const graphqlUrl = SUPABASE_GRAPHQL_URL 
+  ? SUPABASE_GRAPHQL_URL
+  : (SUPABASE_URL 
+    ? (SUPABASE_URL.endsWith('/graphql/v1') 
+      ? SUPABASE_URL 
+      : `${SUPABASE_URL.replace(/\/$/, '')}/graphql/v1`)
+    : '');
+
+if (!graphqlUrl) {
+  console.error('❌ Error: EXPO_PUBLIC_SUPABASE_GRAPHQL_URL or EXPO_PUBLIC_SUPABASE_URL must be set');
+  console.error('   Set them in your .env file or environment variables');
+  process.exit(1);
+}
 
 const introspectionQuery = `
   query IntrospectionQuery {

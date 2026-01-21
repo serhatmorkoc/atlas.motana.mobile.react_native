@@ -14,11 +14,10 @@ const stripTrailingSlash = (url: string) => url.replace(/\/+$/, '');
 // Priority:
 // 1) EXPO_PUBLIC_SUPABASE_GRAPHQL_URL (full URL)
 // 2) EXPO_PUBLIC_SUPABASE_URL + /graphql/v1
-// 3) EXPO_PUBLIC_GRAPHQL_URL (legacy)
 const graphqlUrl = (() => {
   if (config.supabaseGraphqlUrl) return ensureHttp(config.supabaseGraphqlUrl);
   if (config.supabaseUrl) return `${stripTrailingSlash(ensureHttp(config.supabaseUrl))}/graphql/v1`;
-  return ensureHttp(config.graphqlUrl || '');
+  return '';
 })();
 
 if (!graphqlUrl) {
