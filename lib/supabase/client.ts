@@ -2,12 +2,19 @@
 import { createClient } from '@supabase/supabase-js';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { config } from '@/config/env';
+import { errorHandler } from '@/services/errorHandler';
 
+// Validate Supabase configuration
 if (!config.supabaseUrl || !config.supabaseAnonKey) {
-  console.warn(
-    '[Supabase] Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. ' +
-    'Realtime subscriptions will not work.'
+  const error = new Error(
+    'Missing EXPO_PUBLIC_SUPABASE_URL or EXPO_PUBLIC_SUPABASE_ANON_KEY. ' +
+    'Please check your EAS Build configuration and Expo Dashboard secrets.'
   );
+  
+  // Log error but don't throw immediately - let errorHandler validate on startup
+  if (__DEV__) {
+    console.warn('[Supabase]', error.message);
+  }
 }
 
 // Custom fetch with retry logic

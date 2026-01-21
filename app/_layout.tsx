@@ -8,6 +8,8 @@ import { CartProvider } from "@/contexts/CartContext";
 import { relayEnvironment } from "@/lib/relay/environment";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import NoNetworkScreen from "@/components/common/NoNetworkScreen";
+import ErrorBoundary from "@/components/common/ErrorBoundary";
+import { errorHandler } from "@/services/errorHandler";
 import useNetworkStatus from "@/hooks/useNetworkStatus";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
@@ -116,12 +118,17 @@ function AppContent() {
 
 export default function RootLayout() {
   useEffect(() => {
+    // Initialize global error handler
+    errorHandler.initialize();
+    
     ExpoSplashScreen.hideAsync();
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <AppContent />
-    </GestureHandlerRootView>
+    <ErrorBoundary>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <AppContent />
+      </GestureHandlerRootView>
+    </ErrorBoundary>
   );
 }
