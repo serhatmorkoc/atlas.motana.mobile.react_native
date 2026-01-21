@@ -1,7 +1,7 @@
-import { graphql } from 'react-relay';
+import { gql } from '@apollo/client';
 
-export const userAddressesQuery = graphql`
-  query UserAddressesQuery($userId: UUID!) {
+export const GET_USER_ADDRESSES = gql`
+  query GetUserAddresses($userId: UUID!) {
     user_addressesCollection(filter: { user_id: { eq: $userId } }) {
       edges {
         node {

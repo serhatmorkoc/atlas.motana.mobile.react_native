@@ -1,11 +1,11 @@
-import { RelayEnvironmentProvider } from "react-relay";
+import { ApolloProvider } from "@apollo/client/react";
 import { Stack } from "expo-router";
 import * as ExpoSplashScreen from "expo-splash-screen";
 import React, { Suspense, useEffect, useCallback } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { CartProvider } from "@/contexts/CartContext";
-import { relayEnvironment } from "@/lib/relay/environment";
+import { apolloClient } from "@/lib/apollo/client";
 import LoadingScreen from "@/components/common/LoadingScreen";
 import NoNetworkScreen from "@/components/common/NoNetworkScreen";
 import ErrorBoundary from "@/components/common/ErrorBoundary";
@@ -118,13 +118,13 @@ function AppContent() {
 
   // Show main app content
   return (
-    <RelayEnvironmentProvider environment={relayEnvironment}>
+    <ApolloProvider client={apolloClient}>
       <CartProvider>
         <Suspense fallback={<LoadingScreen title="Loading…" subtitle="Please wait" />}>
           <RootLayoutNav />
         </Suspense>
       </CartProvider>
-    </RelayEnvironmentProvider>
+    </ApolloProvider>
   );
 }
 

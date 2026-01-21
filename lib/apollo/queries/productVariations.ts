@@ -1,7 +1,7 @@
-import { graphql } from 'react-relay';
+import { gql } from '@apollo/client';
 
-export const productVariationsQuery = graphql`
-  query ProductVariationsQuery($productId: UUID!) {
+export const GET_PRODUCT_VARIATIONS = gql`
+  query GetProductVariations($productId: UUID!) {
     product_variationsCollection(filter: { product_id: { eq: $productId } }) {
       edges {
         node {

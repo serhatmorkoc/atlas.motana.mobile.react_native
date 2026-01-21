@@ -1,7 +1,7 @@
-import { graphql } from 'react-relay';
+import { gql } from '@apollo/client';
 
-export const storeDeliverySettingsQuery = graphql`
-  query StoreDeliverySettingsQuery($storeId: UUID!) {
+export const GET_STORE_DELIVERY_SETTINGS = gql`
+  query GetStoreDeliverySettings($storeId: UUID!) {
     store_delivery_settingsCollection(filter: { store_id: { eq: $storeId } }, first: 1) {
       edges {
         node {

@@ -16,10 +16,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useStores } from "@/hooks/useStores";
 import { useUserAddresses } from "@/hooks/useUserAddresses";
 import { Store } from "@/types/store.types";
-import { relayEnvironment } from "@/lib/relay/environment";
-import { storeProductsQuery } from "@/lib/relay/queries/StoreProductsQuery";
-import { fetchQuery } from "relay-runtime";
-import type { StoreProductsQuery } from "@/__generated__/StoreProductsQuery.graphql";
+import { apolloClient } from "@/lib/apollo/client";
+import { GET_STORE_PRODUCTS } from "@/lib/apollo/queries/products";
 import { MenuItem } from "@/types/menu.types";
 import { Image } from "expo-image";
 import { optimizeImageUrl } from "@/utils/helpers";
@@ -159,13 +157,13 @@ export default function SearchResultsScreen() {
 
     const fetchForStoreId = async (storeId: string) => {
       try {
-        const data = await fetchQuery<StoreProductsQuery>(
-          relayEnvironment,
-          storeProductsQuery,
-          { storeId, first: 8 }
-        ).toPromise();
+        const result = await apolloClient.query({
+          query: GET_STORE_PRODUCTS,
+          variables: { storeId, first: 8 },
+          fetchPolicy: 'network-only',
+        });
 
-        const products: MenuItem[] = (data?.productsCollection?.edges || []).map((edge) => {
+        const products: MenuItem[] = (result.data?.productsCollection?.edges || []).map((edge: any) => {
           const p = edge.node;
           return {
             id: p.id,

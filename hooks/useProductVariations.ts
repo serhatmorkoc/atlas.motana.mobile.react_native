@@ -1,29 +1,30 @@
-import { useLazyLoadQuery } from "react-relay";
-import { productVariationsQuery } from "@/lib/relay/queries/ProductVariationsQuery";
+import { useQuery } from "@apollo/client/react";
+import { GET_PRODUCT_VARIATIONS } from "@/lib/apollo/queries/productVariations";
 import type { MenuItemExtra } from "@/types/menu.types";
-import type { ProductVariationsQuery } from "@/__generated__/ProductVariationsQuery.graphql";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
 const safeNumber = (v: any) => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
 
 export function useProductVariations(productId?: string) {
-  const [refetchKey, setRefetchKey] = useState(0);
   const shouldSkip = !productId;
 
-  const data = useLazyLoadQuery<ProductVariationsQuery>(
-    productVariationsQuery,
-    { productId: productId || '00000000-0000-0000-0000-000000000000' },
-    { fetchPolicy: 'store-and-network', fetchKey: shouldSkip ? 'skip' : `variations-${productId}-${refetchKey}` }
-  );
+  const { data, loading, error, refetch: refetchQuery } = useQuery(GET_PRODUCT_VARIATIONS, {
+    variables: { productId: productId || '00000000-0000-0000-0000-000000000000' },
+    skip: shouldSkip,
+    fetchPolicy: 'cache-and-network',
+    errorPolicy: 'all',
+  });
 
   const extras: MenuItemExtra[] = useMemo(() => 
-    (!shouldSkip && data) ? data?.product_variationsCollection?.edges?.map(({ node }) => ({
+    (!shouldSkip && data) ? data?.product_variationsCollection?.edges?.map(({ node }: any) => ({
       id: node.id, name: node.title ?? "Option", price: safeNumber(node.discounted_price ?? node.price),
     })) : [],
     [data, productId, shouldSkip]
   );
 
-  const refetch = useCallback(async () => { setRefetchKey(prev => prev + 1); }, []);
+  const refetch = useCallback(async () => {
+    await refetchQuery();
+  }, [refetchQuery]);
 
-  return { extras, loading: false, error: null, refetch };
+  return { extras, loading, error: error as Error | null, refetch };
 }

@@ -7,10 +7,8 @@ import { User, Mail, Lock, ArrowRight } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabaseClient } from '@/lib/supabase/client';
 import { AlertModal, AlertType } from '@/components/common/AlertModal';
-import { relayEnvironment } from '@/lib/relay/environment';
-import { createUserMutation } from '@/lib/relay/mutations/CreateUserMutation';
-import { commitMutation } from 'relay-runtime';
-import type { CreateUserMutation } from '@/__generated__/CreateUserMutation.graphql';
+import { useMutation } from '@apollo/client/react';
+import { CREATE_USER } from '@/lib/apollo/mutations/user';
 
 export default function RegisterScreen() {
     const [name, setName] = useState('');
@@ -24,6 +22,8 @@ export default function RegisterScreen() {
     const [alertMessage, setAlertMessage] = useState('');
     const alertOnConfirmRef = useRef<(() => void) | undefined>(undefined);
     const fadeAnim = useRef(new Animated.Value(0)).current;
+    
+    const [createUserMutation] = useMutation(CREATE_USER);
 
     const showAlert = (type: AlertType, title: string, message: string, onConfirm?: () => void) => {
         setAlertType(type);
@@ -115,12 +115,13 @@ export default function RegisterScreen() {
                 // Create user record in users table even if email confirmation is required
                 if (data.user.id) {
                     try {
-                        commitMutation<CreateUserMutation>(relayEnvironment, {
-                            mutation: createUserMutation,
+                        await createUserMutation({
                             variables: {
-                                id: data.user.id,
-                                name: name,
-                                email: email,
+                                user: {
+                                    id: data.user.id,
+                                    full_name: name,
+                                    email: email,
+                                },
                             },
                         });
                     } catch (createUserError) {
@@ -145,12 +146,15 @@ export default function RegisterScreen() {
             if (data?.session && data?.user) {
                 // Create user record in users table with name and email
                 try {
-                    commitMutation<CreateUserMutation>(relayEnvironment, {
-                        mutation: createUserMutation,
+                    await createUserMutation({
                         variables: {
-                            id: data.user.id,
-                            name: name,
-                            email: email,
+                            user: {
+                                id: data.user.id,
+                                name: name,
+                                email: email,
+                                user_type: "CUSTOMER",
+                                is_active: true,
+                            },
                         },
                     });
                 } catch (createUserError: any) {

@@ -1,23 +1,18 @@
-// Custom hook for fetching orders using Relay
-import React, { useCallback, useMemo, useState } from 'react';
-import { useLazyLoadQuery } from 'react-relay';
-import { relayEnvironment } from '@/lib/relay/environment';
-import { ordersQuery } from '@/lib/relay/queries/OrdersQuery';
-import { orderItemsQuery } from '@/lib/relay/queries/OrderItemsQuery';
-import { storeQuery } from '@/lib/relay/queries/StoreQuery';
-import { fetchQuery } from 'relay-runtime';
+// Custom hook for fetching orders using Apollo
+import React, { useCallback, useMemo, useState, useEffect } from 'react';
+import { useQuery } from '@apollo/client/react';
+import { apolloClient } from '@/lib/apollo/client';
+import { GET_ORDERS, GET_ORDER_ITEMS } from '@/lib/apollo/queries/orders';
+import { GET_STORE } from '@/lib/apollo/queries/stores';
 import { DBOrderStatus, Order, OrderItem, OrderStatus } from '@/types/order.types';
 import type { DeliveryAddress } from '@/types/address.types';
 import { useAuthUser } from './useAuthUser';
-import type { OrdersQuery } from '@/__generated__/OrdersQuery.graphql';
-import type { OrderItemsQuery } from '@/__generated__/OrderItemsQuery.graphql';
-import type { StoreQuery } from '@/__generated__/StoreQuery.graphql';
 
 interface GraphQLOrder {
   id: string; order_code: string | null; user_id: string | null; store_id: string | null;
   delivery_address: DeliveryAddress | string | null; payment_method: string | null;
   payment_status: string | null; order_status: string | null; sub_total: string | null;
-  delivery_fee: string | null; tax_amount: string | null; tip_amount: string | null;
+  delivery_fee: string | null; service_fee: string | null; tax_amount: string | null; tip_amount: string | null;
   total_amount: string | null; created_at: string; estimated_delivery_time: string | null;
 }
 
@@ -46,8 +41,12 @@ const mapOrderStatus = (status: string | null): OrderStatus => {
 const fetchStore = async (id: string | null) => {
   if (!id) return null;
   try {
-    const data = await fetchQuery<StoreQuery>(relayEnvironment, storeQuery, { id }).toPromise();
-    return data?.storesCollection?.edges?.[0]?.node || null;
+    const result = await apolloClient.query({
+      query: GET_STORE,
+      variables: { id },
+      fetchPolicy: 'network-only',
+    });
+    return result.data?.storesCollection?.edges?.[0]?.node || null;
   } catch (error: any) {
     if (__DEV__) {
       console.error('Error fetching store:', error?.message || error);
@@ -58,8 +57,12 @@ const fetchStore = async (id: string | null) => {
 
 const fetchOrderItems = async (orderId: string) => {
   try {
-    const data = await fetchQuery<OrderItemsQuery>(relayEnvironment, orderItemsQuery, { orderId }).toPromise();
-    return data?.order_itemsCollection?.edges?.map((e) => e.node) || [];
+    const result = await apolloClient.query({
+      query: GET_ORDER_ITEMS,
+      variables: { orderId },
+      fetchPolicy: 'network-only',
+    });
+    return result.data?.order_itemsCollection?.edges?.map((e: any) => e.node) || [];
   } catch (error: any) {
     if (__DEV__) {
       console.error('Error fetching order items:', error?.message || error);
@@ -128,17 +131,20 @@ export const useOrders = (options?: { limit?: number; offset?: number; userId?: 
   const finalUserId = options?.userId || authUserId;
   const shouldSkip = authLoading || !finalUserId;
   
-  const [refetchKey, setRefetchKey] = useState(0);
   const [error, setError] = React.useState<Error | null>(null);
   const [orders, setOrders] = React.useState<Order[]>([]);
   const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
 
-  // useLazyLoadQuery will throw for Suspense - errors are caught by ErrorBoundary
-  const data = useLazyLoadQuery<OrdersQuery>(
-    ordersQuery,
-    { userId: finalUserId || '00000000-0000-0000-0000-000000000000', first: options?.limit, offset: options?.offset },
-    { fetchPolicy: 'store-and-network', fetchKey: shouldSkip ? 'skip' : `${finalUserId}-${refetchKey}` }
-  );
+  const { data, loading, refetch: refetchQuery } = useQuery(GET_ORDERS, {
+    variables: { 
+      userId: finalUserId || '00000000-0000-0000-0000-000000000000', 
+      first: options?.limit, 
+      offset: options?.offset 
+    },
+    skip: shouldSkip,
+    fetchPolicy: 'cache-and-network',
+    errorPolicy: 'all',
+  });
 
   React.useEffect(() => {
     let cancelled = false;
@@ -148,7 +154,7 @@ export const useOrders = (options?: { limit?: number; offset?: number; userId?: 
         if (!cancelled) setOrders([]);
         return;
       }
-      const nodes: GraphQLOrder[] = data?.ordersCollection?.edges?.map((e) => e.node) ?? [];
+      const nodes: GraphQLOrder[] = data?.ordersCollection?.edges?.map((e: any) => e.node) ?? [];
       if (nodes.length === 0) {
         if (!cancelled) setOrders([]);
         return;
@@ -175,7 +181,7 @@ export const useOrders = (options?: { limit?: number; offset?: number; userId?: 
         if (!cancelled) setIsLoadingDetails(false);
       }
     };
-    load();
+    if (data && !shouldSkip) load();
 
     return () => {
       cancelled = true;
@@ -184,8 +190,8 @@ export const useOrders = (options?: { limit?: number; offset?: number; userId?: 
 
   const refetch = useCallback(async () => {
     setError(null);
-    setRefetchKey(prev => prev + 1);
-  }, []);
+    await refetchQuery();
+  }, [refetchQuery]);
 
-  return { orders, loading: authLoading || isLoadingDetails, error, refetch };
+  return { orders, loading: authLoading || isLoadingDetails || loading, error, refetch };
 };

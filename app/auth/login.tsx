@@ -125,19 +125,9 @@ export default function LoginScreen() {
             }
 
             console.log('[Login] STEP 5: ✅ Session created:', data.session.user?.id);
-            errorHandler.handleError(
-                new Error(`[Login] STEP 5: Session created for user: ${data.session.user?.id}`),
-                false,
-                'Login Step 5 - Success'
-            );
 
             // STEP 6: Navigate to home
             console.log('[Login] STEP 6: Navigating to home screen...');
-            errorHandler.handleError(
-                new Error('[Login] STEP 6: About to navigate to /(tabs)/home'),
-                false,
-                'Login Step 6 - Navigation'
-            );
 
             // Small delay to ensure state is updated
             await new Promise(resolve => setTimeout(resolve, 100));

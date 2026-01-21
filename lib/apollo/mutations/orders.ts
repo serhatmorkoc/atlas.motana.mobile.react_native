@@ -1,7 +1,7 @@
-import { graphql } from 'react-relay';
+import { gql } from '@apollo/client';
 
-export const createOrderMutation = graphql`
-  mutation CreateOrderMutation($order: ordersInsertInput!) {
+export const CREATE_ORDER = gql`
+  mutation CreateOrder($order: ordersInsertInput!) {
     insertIntoordersCollection(objects: [$order]) {
       records {
         id
@@ -28,3 +28,17 @@ export const createOrderMutation = graphql`
   }
 `;
 
+export const CREATE_ORDER_ITEMS = gql`
+  mutation CreateOrderItems($items: [order_itemsInsertInput!]!) {
+    insertIntoorder_itemsCollection(objects: $items) {
+      records {
+        id
+        order_id
+        product_id
+        quantity
+        price
+        notes
+      }
+    }
+  }
+`;

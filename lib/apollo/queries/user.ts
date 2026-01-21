@@ -1,14 +1,16 @@
-import { graphql } from 'relay-runtime';
+import { gql } from '@apollo/client';
 
-export const userQuery = graphql`
-  query UserQuery($id: UUID!) {
+export const GET_USER = gql`
+  query GetUser($id: UUID!) {
     usersCollection(filter: { id: { eq: $id } }, first: 1) {
       edges {
         node {
           id
-          name
           email
+          full_name
           phone
+          avatar_url
+          created_at
         }
       }
     }

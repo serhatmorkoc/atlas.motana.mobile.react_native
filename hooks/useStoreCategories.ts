@@ -1,29 +1,27 @@
-import { useLazyLoadQuery } from 'react-relay';
-import { storeCategoriesQuery } from '@/lib/relay/queries/StoreCategoriesQuery';
-import React, { useCallback, useState } from 'react';
-import type { StoreCategoriesQuery } from '@/__generated__/StoreCategoriesQuery.graphql';
+import { useQuery } from '@apollo/client/react';
+import { GET_STORE_CATEGORIES } from '@/lib/apollo/queries/storeCategories';
+import React, { useCallback } from 'react';
 
 export interface StoreCategory {
   id: number; name: string; icon: string | null; color: string | null; is_active: boolean | null;
 }
 
 export const useStoreCategories = () => {
-  const [refetchKey, setRefetchKey] = useState(0);
-
-  const data = useLazyLoadQuery<StoreCategoriesQuery>(
-    storeCategoriesQuery,
-    {},
-    { fetchPolicy: 'store-and-network', fetchKey: `categories-${refetchKey}` }
-  );
+  const { data, loading, error, refetch } = useQuery(GET_STORE_CATEGORIES, {
+    fetchPolicy: 'cache-and-network',
+    errorPolicy: 'all',
+  });
 
   const categories = React.useMemo(() => {
-    return data?.store_categoriesCollection?.edges?.map(e => ({
+    return data?.store_categoriesCollection?.edges?.map((e: any) => ({
       id: Number(e.node.id), name: e.node.name, icon: e.node.icon,
       color: e.node.color || '#6B7280', is_active: e.node.is_active ?? true,
     })) || [];
   }, [data]);
 
-  const refetch = useCallback(async () => { setRefetchKey(prev => prev + 1); }, []);
+  const handleRefetch = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
-  return { categories, loading: false, error: null, refetch };
+  return { categories, loading, error: error as Error | null, refetch: handleRefetch };
 };
