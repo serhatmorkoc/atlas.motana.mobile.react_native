@@ -39,7 +39,7 @@ import { calculateDistance } from "@/utils/google_maps";
 const HEADER_HEIGHT = 245;
 
 export default function StoreScreen() {
-  const { id } = useLocalSearchParams();
+  const { id: rawId } = useLocalSearchParams();
   const insets = useSafeAreaInsets();
   const { addToCart, cartItems, getItemPrice } = useCart();
   const [selectedItem, setSelectedItem] = useState<MenuItem | null>(null);
@@ -49,6 +49,9 @@ export default function StoreScreen() {
   const [realDistance, setRealDistance] = useState<string | null>(null);
   const [calculatingDistance, setCalculatingDistance] = useState(false);
   const scrollY = useRef(new Animated.Value(0)).current;
+
+  // Normalize id to string
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
 
   // Fetch store from GraphQL
   const { store, loading: storeLoading, error: storeError, refetch: refetchStore } = useStore(id as string);
@@ -107,10 +110,57 @@ export default function StoreScreen() {
     calculateRealDistance();
   }, [storeCoords, addressCoords]);
 
+  // Debug logging
+  useEffect(() => {
+    if (__DEV__) {
+      console.log('[StoreScreen] Debug:', {
+        id,
+        hasStore: !!store,
+        storeLoading,
+        menuLoading,
+        categoriesCount: categories.length,
+        menuItemsCount: menuItems.length,
+        storeError: storeError?.message,
+        menuError: menuError?.message,
+      });
+    }
+  }, [id, store, storeLoading, menuLoading, categories, menuItems, storeError, menuError]);
+
   if (storeLoading || menuLoading) {
     return <LoadingScreen title="Loading store…" subtitle="Fetching menu & details" />;
   }
-  if (storeError || menuError || !store) return null;
+
+  if (storeError || menuError) {
+    console.error('[StoreScreen] Error:', storeError || menuError);
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <Text style={{ fontSize: 16, color: '#EF4444', marginBottom: 8 }}>Error loading store</Text>
+        <Text style={{ fontSize: 14, color: '#6B7280', textAlign: 'center' }}>
+          {storeError?.message || menuError?.message || 'Unknown error'}
+        </Text>
+        <TouchableOpacity 
+          onPress={onRefresh} 
+          style={{ marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#10B981', borderRadius: 8 }}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!store) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
+        <Text style={{ fontSize: 16, color: '#6B7280' }}>Store not found</Text>
+        <TouchableOpacity 
+          onPress={() => router.back()} 
+          style={{ marginTop: 16, paddingHorizontal: 20, paddingVertical: 10, backgroundColor: '#10B981', borderRadius: 8 }}
+        >
+          <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
 
   const onRefresh = async () => {
     try {
@@ -336,23 +386,32 @@ export default function StoreScreen() {
           </View>
         )}
 
-        {categories.map((category) => {
-          const items = menuItems.filter((item) => item.category === category);
+        {categories.length === 0 || menuItems.length === 0 ? (
+          <View style={styles.emptyState}>
+            <Text style={styles.emptyStateTitle}>No menu items available</Text>
+            <Text style={styles.emptyStateSubtitle}>
+              This store hasn't added any products yet
+            </Text>
+          </View>
+        ) : (
+          categories.map((category) => {
+            const items = menuItems.filter((item) => item.category === category);
 
-          return (
-            <View key={category} style={styles.categorySection}>
-              <Text style={styles.categoryTitle}>{category}</Text>
+            return (
+              <View key={category} style={styles.categorySection}>
+                <Text style={styles.categoryTitle}>{category}</Text>
 
-              {items.map((item) => (
-                <MenuItemCard
-                  key={item.id}
-                  item={item}
-                  onPress={openProductModal}
-                />
-              ))}
-            </View>
-          );
-        })}
+                {items.map((item) => (
+                  <MenuItemCard
+                    key={item.id}
+                    item={item}
+                    onPress={openProductModal}
+                  />
+                ))}
+              </View>
+            );
+          })
+        )}
 
         <View style={styles.screenLabel}>
           <Text style={styles.screenLabelText}>Store Screen</Text>
@@ -678,6 +737,24 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#D1D5DB",
     fontWeight: "500" as const,
+  },
+  emptyState: {
+    paddingVertical: 60,
+    paddingHorizontal: 40,
+    alignItems: "center" as const,
+  },
+  emptyStateTitle: {
+    fontSize: 18,
+    fontWeight: "600" as const,
+    color: "#1F2937",
+    marginBottom: 8,
+    textAlign: "center" as const,
+  },
+  emptyStateSubtitle: {
+    fontSize: 14,
+    color: "#9CA3AF",
+    textAlign: "center" as const,
+    lineHeight: 20,
   },
   cartFloatingBar: {
     position: "absolute" as const,

@@ -19,8 +19,8 @@ export const GET_STORE_CATEGORIES = gql`
 export const GET_STORE_PRODUCT_CATEGORIES = gql`
   query GetStoreProductCategories($storeId: UUID!) {
     product_categoriesCollection(
-      filter: { store_id: { eq: $storeId }, is_active: { eq: true } }
-      orderBy: { id: AscNullsLast }
+      filter: { store_id: { eq: $storeId } }
+      orderBy: { sort_order: AscNullsLast }
     ) {
       edges {
         node {

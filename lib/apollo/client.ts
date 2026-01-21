@@ -213,11 +213,33 @@ export const apolloClient = new ApolloClient({
       Query: {
         fields: {
           storesCollection: {
-            merge(existing = { edges: [] }, incoming = { edges: [] }) {
-              return {
-                ...incoming,
-                edges: [...(existing.edges || []), ...(incoming.edges || [])],
-              };
+            merge(existing, incoming) {
+              // Replace with incoming data to avoid duplicates
+              return incoming;
+            },
+          },
+          productsCollection: {
+            merge(existing, incoming) {
+              // Replace with incoming data to avoid duplicates
+              return incoming;
+            },
+          },
+          product_categoriesCollection: {
+            merge(existing, incoming) {
+              // Replace with incoming data to avoid duplicates
+              return incoming;
+            },
+          },
+          ordersCollection: {
+            merge(existing, incoming) {
+              // Replace with incoming data to avoid duplicates
+              return incoming;
+            },
+          },
+          order_itemsCollection: {
+            merge(existing, incoming) {
+              // Replace with incoming data to avoid duplicates
+              return incoming;
             },
           },
         },
