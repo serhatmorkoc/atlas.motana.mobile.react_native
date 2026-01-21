@@ -15,12 +15,14 @@ export function CrashScreen({
   error, 
   onRetry, 
   onDismiss,
-  showDetails = __DEV__ 
+  showDetails = true // Always show details in production for debugging
 }: CrashScreenProps) {
   const insets = useSafeAreaInsets();
 
   const isConfigError = error.message.includes('environment variables') || 
                         error.message.includes('EXPO_PUBLIC_');
+  
+  const isLoginError = error.message.includes('[Login]');
 
   return (
     <View style={[styles.container, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
@@ -36,7 +38,11 @@ export function CrashScreen({
           </View>
 
           <Text style={styles.title}>
-            {isConfigError ? 'Configuration Error' : 'Something Went Wrong'}
+            {isConfigError 
+              ? 'Configuration Error' 
+              : isLoginError 
+              ? 'Login Error' 
+              : 'Something Went Wrong'}
           </Text>
 
           <Text style={styles.message}>

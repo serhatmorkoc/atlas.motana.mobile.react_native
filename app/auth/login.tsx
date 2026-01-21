@@ -7,6 +7,8 @@ import { Mail, Lock, ArrowRight, Settings } from 'lucide-react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { supabaseClient } from '@/lib/supabase/client';
 import { AlertModal, AlertType } from '@/components/common/AlertModal';
+import { errorHandler } from '@/services/errorHandler';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
 
 
 
@@ -50,12 +52,23 @@ export default function LoginScreen() {
 
         setLoading(true);
         try {
+            // Log error to errorHandler for debugging
+            errorHandler.handleError(
+                new Error(`[Login] Attempting login for: ${email.substring(0, 5)}...`),
+                false,
+                'Login Attempt'
+            );
+
             const { data, error } = await supabaseClient.auth.signInWithPassword({
                 email,
                 password,
             });
 
             if (error) {
+                // Log error to errorHandler
+                const loginError = new Error(`[Login] Supabase error: ${error.message}`);
+                errorHandler.handleError(loginError, false, 'Login Supabase Error');
+                
                 // Check for specific error types
                 const errorMessage = error.message.toLowerCase();
                 if (errorMessage.includes('invalid login credentials') || 
@@ -64,17 +77,37 @@ export default function LoginScreen() {
                 } else if (errorMessage.includes('email not confirmed')) {
                     showAlert('warning', 'Email Not Confirmed', 'Please check your email and confirm your account before logging in.');
                 } else {
-                    showAlert('error', 'Login Failed', error.message);
+                    // Show detailed error in production too
+                    const detailedError = `Login failed: ${error.message}`;
+                    showAlert('error', 'Login Failed', detailedError);
                 }
                 return;
             }
 
             if (data?.session) {
+                // Success - navigate to home
                 router.replace('/(tabs)/home');
+            } else {
+                // No session but no error - this shouldn't happen
+                const noSessionError = new Error('[Login] No session returned after successful login');
+                errorHandler.handleError(noSessionError, false, 'Login No Session');
+                showAlert('error', 'Login Failed', 'No session created. Please try again.');
             }
-        } catch (error) {
-            console.error('Login error:', error);
-            showAlert('error', 'Error', 'An unexpected error occurred');
+        } catch (error: any) {
+            // Log detailed error to errorHandler
+            const crashError = new Error(
+                `[Login] Crash: ${error?.message || 'Unknown error'}\nStack: ${error?.stack || 'No stack trace'}`
+            );
+            errorHandler.handleError(crashError, true, 'Login Crash');
+            
+            // Show detailed error message
+            const errorMessage = error?.message || 'An unexpected error occurred';
+            const errorDetails = error?.stack 
+                ? `${errorMessage}\n\nDetails: ${error.stack.substring(0, 200)}...`
+                : errorMessage;
+            
+            console.error('[Login] Crash error:', error);
+            showAlert('error', 'Login Error', errorDetails);
         } finally {
             setLoading(false);
         }
@@ -89,15 +122,16 @@ export default function LoginScreen() {
     };
 
     return (
-        <View style={styles.mainContainer}>
-            <LinearGradient
-                colors={[Colors.primary, '#FF8C61', '#FF6B35']}
-                style={styles.background}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
-            />
+        <ErrorBoundary>
+            <View style={styles.mainContainer}>
+                <LinearGradient
+                    colors={[Colors.primary, '#FF8C61', '#FF6B35']}
+                    style={styles.background}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                />
 
-            <SafeAreaView style={styles.safeArea}>
+                <SafeAreaView style={styles.safeArea}>
                 <KeyboardAvoidingView
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                     style={{ flex: 1 }}
@@ -206,7 +240,8 @@ export default function LoginScreen() {
                 onClose={hideAlert}
                 fadeAnim={fadeAnim}
             />
-        </View>
+            </View>
+        </ErrorBoundary>
     );
 }
 
