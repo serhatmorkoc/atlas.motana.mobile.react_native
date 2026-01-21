@@ -1,5 +1,6 @@
 import { Environment, Network, RecordSource, Store } from 'relay-runtime';
 import { config } from '@/config/env';
+import { supabaseClient } from '@/lib/supabase/client';
 
 const ensureHttp = (url: string) => {
   const trimmed = url.trim();
@@ -29,23 +30,39 @@ if (!graphqlUrl) {
 }
 
 // Network layer for Relay
-function fetchQuery(operation: any, variables: any, cacheConfig: any, uploadables: any) {
-  return fetch(graphqlUrl, {
+async function fetchQuery(operation: any, variables: any, cacheConfig: any, uploadables: any) {
+  // Get current session token for authorization
+  let authToken: string | null = null;
+  try {
+    const { data: { session } } = await supabaseClient.auth.getSession();
+    authToken = session?.access_token || null;
+  } catch (error) {
+    // If session fetch fails, continue without auth token
+    // The query might still work if RLS allows it
+    console.debug('[Relay] Failed to get session token:', error);
+  }
+
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    // Supabase GraphQL requires apikey header (anon key) even for public queries
+    apikey: config.supabaseAnonKey || '',
+  };
+
+  // Add authorization header if we have a token
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+
+  const response = await fetch(graphqlUrl, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      // Supabase GraphQL requires apikey header (anon key) even for public queries
-      apikey: config.supabaseAnonKey || '',
-      // TODO: Add authorization header when auth is implemented
-      // authorization: token ? `Bearer ${token}` : '',
-    },
+    headers,
     body: JSON.stringify({
       query: operation.text,
       variables,
     }),
-  }).then((response) => {
-    return response.json();
   });
+
+  return response.json();
 }
 
 // Create Relay Environment
