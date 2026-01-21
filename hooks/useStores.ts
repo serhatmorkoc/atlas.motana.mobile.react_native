@@ -83,7 +83,7 @@ export const useStores = (options?: {
   return {
     stores,
     loading: calculatingDistances,
-    error: null,
+    error: null as Error | null,
     refetch,
   };
 };
@@ -110,7 +110,7 @@ export const useStore = (id: string) => {
   return {
     store,
     loading: false,
-    error: null,
+    error: null as Error | null,
     refetch,
   };
 };

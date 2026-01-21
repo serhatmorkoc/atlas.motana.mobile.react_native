@@ -1,5 +1,5 @@
 // Store type mapper - Maps GraphQL Store to Mobile App Store type
-import { Store } from '@/types/store.types';
+import { Store, StoreDeliverySettings } from '@/types/store.types';
 
 // GraphQL Store type (from Supabase)
 export interface GraphQLStore {
@@ -18,6 +18,24 @@ export interface GraphQLStore {
   review_count?: number | null;
   slug?: string | null;
   store_categories_id?: number | string | null;
+  service_fee?: string | null;
+  tax_rate?: string | null;
+}
+
+// GraphQL StoreDeliverySettings type (from Supabase)
+export interface GraphQLStoreDeliverySettings {
+  id: string;
+  store_id?: string | null;
+  earning_base_fee?: string | null;
+  earning_per_km?: string | null;
+  earning_minimum?: string | null;
+  search_radius_km?: number | null;
+  max_couriers_queue?: number | null;
+  request_timeout_seconds?: number | null;
+  use_google_maps?: boolean | null;
+  google_maps_api_key?: string | null;
+  surge_active?: boolean | null;
+  surge_multiplier?: string | null;
 }
 
 // Store category mapping (you'll need to fetch this from store-categories)
@@ -94,6 +112,9 @@ export const mapGraphQLStoreToStore = (graphQLStore: GraphQLStore): Store => {
   
   const lat = graphQLStore.latitude ? parseFloat(graphQLStore.latitude) : undefined;
   const lng = graphQLStore.longitude ? parseFloat(graphQLStore.longitude) : undefined;
+  
+  const serviceFee = parseFloat(graphQLStore.service_fee ?? '0');
+  const taxRate = parseFloat(graphQLStore.tax_rate ?? '0');
 
   return {
     id: graphQLStore.id,
@@ -110,6 +131,9 @@ export const mapGraphQLStoreToStore = (graphQLStore: GraphQLStore): Store => {
     storeCategoriesId: Number.isFinite(categoryId) ? categoryId : 0,
     latitude: Number.isFinite(lat) ? lat : undefined,
     longitude: Number.isFinite(lng) ? lng : undefined,
+    isAvailable: graphQLStore.is_available ?? true,
+    serviceFee: Number.isFinite(serviceFee) ? serviceFee : 0,
+    taxRate: Number.isFinite(taxRate) ? taxRate : 0,
   };
 };
 
@@ -118,4 +142,26 @@ export const mapGraphQLStoreToStore = (graphQLStore: GraphQLStore): Store => {
  */
 export const mapGraphQLStoresToStores = (graphQLStores: GraphQLStore[]): Store[] => {
   return graphQLStores.map(mapGraphQLStoreToStore);
+};
+
+/**
+ * Maps GraphQL StoreDeliverySettings to Mobile App type
+ */
+export const mapGraphQLStoreDeliverySettings = (
+  settings: GraphQLStoreDeliverySettings
+): StoreDeliverySettings => {
+  return {
+    id: settings.id,
+    storeId: settings.store_id ?? '',
+    earningBaseFee: parseFloat(settings.earning_base_fee ?? '0'),
+    earningPerKm: parseFloat(settings.earning_per_km ?? '0'),
+    earningMinimum: parseFloat(settings.earning_minimum ?? '0'),
+    searchRadiusKm: settings.search_radius_km ?? 0,
+    maxCouriersQueue: settings.max_couriers_queue ?? 0,
+    requestTimeoutSeconds: settings.request_timeout_seconds ?? 0,
+    useGoogleMaps: settings.use_google_maps ?? false,
+    googleMapsApiKey: settings.google_maps_api_key ?? undefined,
+    surgeActive: settings.surge_active ?? false,
+    surgeMultiplier: parseFloat(settings.surge_multiplier ?? '1'),
+  };
 };

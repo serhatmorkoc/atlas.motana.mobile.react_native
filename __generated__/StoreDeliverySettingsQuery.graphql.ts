@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<2c5adb36e7aaa2ad67a3a64135380fb1>>
+ * @generated SignedSource<<5b200162fa9e1cbd15bde8c50bc1318a>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -9,37 +9,32 @@
 // @ts-nocheck
 
 import { ConcreteRequest } from 'relay-runtime';
-export type StoreQuery$variables = {
-  id: string;
+export type StoreDeliverySettingsQuery$variables = {
+  storeId: string;
 };
-export type StoreQuery$data = {
-  readonly storesCollection: {
+export type StoreDeliverySettingsQuery$data = {
+  readonly store_delivery_settingsCollection: {
     readonly edges: ReadonlyArray<{
       readonly node: {
-        readonly address: string | null | undefined;
-        readonly delivery_time_max: number | null | undefined;
-        readonly delivery_time_min: number | null | undefined;
+        readonly earning_base_fee: string;
+        readonly earning_minimum: string;
+        readonly earning_per_km: string;
+        readonly google_maps_api_key: string | null | undefined;
         readonly id: string;
-        readonly image: string | null | undefined;
-        readonly is_active: boolean | null | undefined;
-        readonly is_available: boolean | null | undefined;
-        readonly latitude: string | null | undefined;
-        readonly longitude: string | null | undefined;
-        readonly minimum_order: string | null | undefined;
-        readonly name: string;
-        readonly rating: string | null | undefined;
-        readonly review_count: number | null | undefined;
-        readonly service_fee: string | null | undefined;
-        readonly slug: string | null | undefined;
-        readonly store_categories_id: string | null | undefined;
-        readonly tax_rate: string | null | undefined;
+        readonly max_couriers_queue: number;
+        readonly request_timeout_seconds: number;
+        readonly search_radius_km: number;
+        readonly store_id: string;
+        readonly surge_active: boolean;
+        readonly surge_multiplier: string;
+        readonly use_google_maps: boolean;
       };
     }>;
   } | null | undefined;
 };
-export type StoreQuery = {
-  response: StoreQuery$data;
-  variables: StoreQuery$variables;
+export type StoreDeliverySettingsQuery = {
+  response: StoreDeliverySettingsQuery$data;
+  variables: StoreDeliverySettingsQuery$variables;
 };
 
 const node: ConcreteRequest = (function(){
@@ -47,7 +42,7 @@ var v0 = [
   {
     "defaultValue": null,
     "kind": "LocalArgument",
-    "name": "id"
+    "name": "storeId"
   }
 ],
 v1 = [
@@ -58,11 +53,11 @@ v1 = [
           {
             "kind": "Variable",
             "name": "eq",
-            "variableName": "id"
+            "variableName": "storeId"
           }
         ],
         "kind": "ObjectValue",
-        "name": "id"
+        "name": "store_id"
       }
     ],
     "kind": "ObjectValue",
@@ -85,112 +80,77 @@ v3 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "name",
+  "name": "store_id",
   "storageKey": null
 },
 v4 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "image",
+  "name": "earning_base_fee",
   "storageKey": null
 },
 v5 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "rating",
+  "name": "earning_per_km",
   "storageKey": null
 },
 v6 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "delivery_time_min",
+  "name": "earning_minimum",
   "storageKey": null
 },
 v7 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "delivery_time_max",
+  "name": "search_radius_km",
   "storageKey": null
 },
 v8 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "address",
+  "name": "max_couriers_queue",
   "storageKey": null
 },
 v9 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "latitude",
+  "name": "request_timeout_seconds",
   "storageKey": null
 },
 v10 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "longitude",
+  "name": "use_google_maps",
   "storageKey": null
 },
 v11 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "minimum_order",
+  "name": "google_maps_api_key",
   "storageKey": null
 },
 v12 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "is_available",
+  "name": "surge_active",
   "storageKey": null
 },
 v13 = {
   "alias": null,
   "args": null,
   "kind": "ScalarField",
-  "name": "is_active",
-  "storageKey": null
-},
-v14 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "review_count",
-  "storageKey": null
-},
-v15 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "slug",
-  "storageKey": null
-},
-v16 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "store_categories_id",
-  "storageKey": null
-},
-v17 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "service_fee",
-  "storageKey": null
-},
-v18 = {
-  "alias": null,
-  "args": null,
-  "kind": "ScalarField",
-  "name": "tax_rate",
+  "name": "surge_multiplier",
   "storageKey": null
 };
 return {
@@ -198,20 +158,20 @@ return {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Fragment",
     "metadata": null,
-    "name": "StoreQuery",
+    "name": "StoreDeliverySettingsQuery",
     "selections": [
       {
         "alias": null,
         "args": (v1/*: any*/),
-        "concreteType": "storesConnection",
+        "concreteType": "store_delivery_settingsConnection",
         "kind": "LinkedField",
-        "name": "storesCollection",
+        "name": "store_delivery_settingsCollection",
         "plural": false,
         "selections": [
           {
             "alias": null,
             "args": null,
-            "concreteType": "storesEdge",
+            "concreteType": "store_delivery_settingsEdge",
             "kind": "LinkedField",
             "name": "edges",
             "plural": true,
@@ -219,7 +179,7 @@ return {
               {
                 "alias": null,
                 "args": null,
-                "concreteType": "stores",
+                "concreteType": "store_delivery_settings",
                 "kind": "LinkedField",
                 "name": "node",
                 "plural": false,
@@ -235,12 +195,7 @@ return {
                   (v10/*: any*/),
                   (v11/*: any*/),
                   (v12/*: any*/),
-                  (v13/*: any*/),
-                  (v14/*: any*/),
-                  (v15/*: any*/),
-                  (v16/*: any*/),
-                  (v17/*: any*/),
-                  (v18/*: any*/)
+                  (v13/*: any*/)
                 ],
                 "storageKey": null
               }
@@ -258,20 +213,20 @@ return {
   "operation": {
     "argumentDefinitions": (v0/*: any*/),
     "kind": "Operation",
-    "name": "StoreQuery",
+    "name": "StoreDeliverySettingsQuery",
     "selections": [
       {
         "alias": null,
         "args": (v1/*: any*/),
-        "concreteType": "storesConnection",
+        "concreteType": "store_delivery_settingsConnection",
         "kind": "LinkedField",
-        "name": "storesCollection",
+        "name": "store_delivery_settingsCollection",
         "plural": false,
         "selections": [
           {
             "alias": null,
             "args": null,
-            "concreteType": "storesEdge",
+            "concreteType": "store_delivery_settingsEdge",
             "kind": "LinkedField",
             "name": "edges",
             "plural": true,
@@ -279,7 +234,7 @@ return {
               {
                 "alias": null,
                 "args": null,
-                "concreteType": "stores",
+                "concreteType": "store_delivery_settings",
                 "kind": "LinkedField",
                 "name": "node",
                 "plural": false,
@@ -296,11 +251,6 @@ return {
                   (v11/*: any*/),
                   (v12/*: any*/),
                   (v13/*: any*/),
-                  (v14/*: any*/),
-                  (v15/*: any*/),
-                  (v16/*: any*/),
-                  (v17/*: any*/),
-                  (v18/*: any*/),
                   {
                     "alias": null,
                     "args": null,
@@ -320,16 +270,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "e05b136a7217c16e6c3dcfcf7c511102",
+    "cacheID": "ce805ec10ed50ef3491be7f5e696857a",
     "id": null,
     "metadata": {},
-    "name": "StoreQuery",
+    "name": "StoreDeliverySettingsQuery",
     "operationKind": "query",
-    "text": "query StoreQuery(\n  $id: UUID!\n) {\n  storesCollection(filter: {id: {eq: $id}}, first: 1) {\n    edges {\n      node {\n        id\n        name\n        image\n        rating\n        delivery_time_min\n        delivery_time_max\n        address\n        latitude\n        longitude\n        minimum_order\n        is_available\n        is_active\n        review_count\n        slug\n        store_categories_id\n        service_fee\n        tax_rate\n        nodeId\n      }\n    }\n  }\n}\n"
+    "text": "query StoreDeliverySettingsQuery(\n  $storeId: UUID!\n) {\n  store_delivery_settingsCollection(filter: {store_id: {eq: $storeId}}, first: 1) {\n    edges {\n      node {\n        id\n        store_id\n        earning_base_fee\n        earning_per_km\n        earning_minimum\n        search_radius_km\n        max_couriers_queue\n        request_timeout_seconds\n        use_google_maps\n        google_maps_api_key\n        surge_active\n        surge_multiplier\n        nodeId\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "4b5eedc05b8f5894c256907ec4e8df00";
+(node as any).hash = "541a6806373c6b1fb894dc0c16992698";
 
 export default node;

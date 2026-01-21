@@ -1,20 +1,17 @@
-// template
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RelayEnvironmentProvider } from "react-relay";
 import { Stack } from "expo-router";
 import * as ExpoSplashScreen from "expo-splash-screen";
-import React, { Suspense, useEffect } from "react";
+import React, { Suspense, useEffect, useCallback } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 import { CartProvider } from "@/contexts/CartContext";
 import { relayEnvironment } from "@/lib/relay/environment";
 import LoadingScreen from "@/components/common/LoadingScreen";
-
+import NoNetworkScreen from "@/components/common/NoNetworkScreen";
+import useNetworkStatus from "@/hooks/useNetworkStatus";
 
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 ExpoSplashScreen.preventAutoHideAsync();
-
-const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
@@ -23,7 +20,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="auth" options={{ headerShown: false }} />
       <Stack.Screen
-        name="search-modal"
+        name="modal"
         options={{
           presentation: "fullScreenModal",
           headerShown: false,
@@ -85,22 +82,46 @@ function RootLayoutNav() {
   );
 }
 
+function AppContent() {
+  const { isConnected, isChecking, refresh } = useNetworkStatus();
+
+  const handleRetry = useCallback(async () => {
+    const connected = await refresh();
+    if (__DEV__) {
+      console.log("[App] Network retry result:", connected);
+    }
+  }, [refresh]);
+
+  // Show loading while checking initial network status
+  if (isChecking) {
+    return <LoadingScreen title="Checking connection..." subtitle="Please wait" />;
+  }
+
+  // Show no network screen if not connected
+  if (!isConnected) {
+    return <NoNetworkScreen onRetry={handleRetry} />;
+  }
+
+  // Show main app content
+  return (
+    <RelayEnvironmentProvider environment={relayEnvironment}>
+      <CartProvider>
+        <Suspense fallback={<LoadingScreen title="Loading…" subtitle="Please wait" />}>
+          <RootLayoutNav />
+        </Suspense>
+      </CartProvider>
+    </RelayEnvironmentProvider>
+  );
+}
+
 export default function RootLayout() {
   useEffect(() => {
     ExpoSplashScreen.hideAsync();
   }, []);
 
   return (
-    <RelayEnvironmentProvider environment={relayEnvironment}>
-      <QueryClientProvider client={queryClient}>
-        <CartProvider>
-          <GestureHandlerRootView style={{ flex: 1 }}>
-            <Suspense fallback={<LoadingScreen title="Loading…" subtitle="Please wait" />}>
-              <RootLayoutNav />
-            </Suspense>
-          </GestureHandlerRootView>
-        </CartProvider>
-      </QueryClientProvider>
-    </RelayEnvironmentProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <AppContent />
+    </GestureHandlerRootView>
   );
 }

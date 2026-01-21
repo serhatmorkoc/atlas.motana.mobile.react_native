@@ -48,14 +48,24 @@ const fetchStore = async (id: string | null) => {
   try {
     const data = await fetchQuery<StoreQuery>(relayEnvironment, storeQuery, { id }).toPromise();
     return data?.storesCollection?.edges?.[0]?.node || null;
-  } catch { return null; }
+  } catch (error: any) {
+    if (__DEV__) {
+      console.error('Error fetching store:', error?.message || error);
+    }
+    return null;
+  }
 };
 
 const fetchOrderItems = async (orderId: string) => {
   try {
     const data = await fetchQuery<OrderItemsQuery>(relayEnvironment, orderItemsQuery, { orderId }).toPromise();
     return data?.order_itemsCollection?.edges?.map((e) => e.node) || [];
-  } catch { return []; }
+  } catch (error: any) {
+    if (__DEV__) {
+      console.error('Error fetching order items:', error?.message || error);
+    }
+    return [];
+  }
 };
 
 const mapGraphQLOrderToOrder = async (order: GraphQLOrder, store: any, items: any[]): Promise<Order | null> => {
@@ -119,15 +129,16 @@ export const useOrders = (options?: { limit?: number; offset?: number; userId?: 
   const shouldSkip = authLoading || !finalUserId;
   
   const [refetchKey, setRefetchKey] = useState(0);
+  const [error, setError] = React.useState<Error | null>(null);
+  const [orders, setOrders] = React.useState<Order[]>([]);
+  const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
 
+  // useLazyLoadQuery will throw for Suspense - errors are caught by ErrorBoundary
   const data = useLazyLoadQuery<OrdersQuery>(
     ordersQuery,
     { userId: finalUserId || '00000000-0000-0000-0000-000000000000', first: options?.limit, offset: options?.offset },
     { fetchPolicy: 'store-and-network', fetchKey: shouldSkip ? 'skip' : `${finalUserId}-${refetchKey}` }
   );
-
-  const [orders, setOrders] = React.useState<Order[]>([]);
-  const [isLoadingDetails, setIsLoadingDetails] = React.useState(false);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -149,12 +160,22 @@ export const useOrders = (options?: { limit?: number; offset?: number; userId?: 
           const i = await fetchOrderItems(o.id);
           return mapGraphQLOrderToOrder(o, s, i);
         }));
-        if (!cancelled) setOrders(res.filter((o): o is Order => o !== null));
+        if (!cancelled) {
+          setOrders(res.filter((o): o is Order => o !== null));
+          setError(null);
+        }
+      } catch (e: any) {
+        if (!cancelled) {
+          setError(e);
+          if (__DEV__) {
+            console.error('Error loading order details:', e?.message || e);
+          }
+        }
       } finally {
         if (!cancelled) setIsLoadingDetails(false);
       }
     };
-    if (data && !shouldSkip) load();
+    load();
 
     return () => {
       cancelled = true;
@@ -162,8 +183,9 @@ export const useOrders = (options?: { limit?: number; offset?: number; userId?: 
   }, [data, shouldSkip]);
 
   const refetch = useCallback(async () => {
+    setError(null);
     setRefetchKey(prev => prev + 1);
   }, []);
 
-  return { orders, loading: authLoading || isLoadingDetails, error: null, refetch };
+  return { orders, loading: authLoading || isLoadingDetails, error, refetch };
 };

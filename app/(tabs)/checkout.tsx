@@ -1,7 +1,7 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Minus, Plus, ShoppingBag, Trash2, CreditCard, Wallet, Check } from "lucide-react-native";
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback, Suspense } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -19,37 +19,41 @@ import { relayEnvironment } from "@/lib/relay/environment";
 import { fetchQuery } from "relay-runtime";
 import { AlertModal, AlertType } from "@/components/common/AlertModal";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 
 import { useCart, CartItem, CartStoreGroup } from "@/contexts/CartContext";
-import { formatPrice, DELIVERY_FEE, SERVICE_FEE } from "@/utils";
+import { formatPrice, calculateOrderTotal, parseDistanceToKm, DELIVERY_FEE, SERVICE_FEE } from "@/utils";
 import { createOrderMutation } from "@/lib/relay/mutations/CreateOrderMutation";
 import { createOrderItemsMutation } from "@/lib/relay/mutations/CreateOrderItemsMutation";
 import { userQuery } from "@/lib/relay/queries/UserQuery";
 import { userAddressesQuery } from "@/lib/relay/queries/UserAddressesQuery";
 import { storeQuery } from "@/lib/relay/queries/StoreQuery";
+import { storeDeliverySettingsQuery } from "@/lib/relay/queries/StoreDeliverySettingsQuery";
 import { useAuthUser } from "@/hooks/useAuthUser";
+import { mapGraphQLStoreDeliverySettings, GraphQLStoreDeliverySettings } from "@/lib/relay/utils/store.mapper";
 import type { CreateOrderMutation } from "@/__generated__/CreateOrderMutation.graphql";
 import type { CreateOrderItemsMutation } from "@/__generated__/CreateOrderItemsMutation.graphql";
 import type { UserQuery } from "@/__generated__/UserQuery.graphql";
 import type { UserAddressesQuery } from "@/__generated__/UserAddressesQuery.graphql";
 import type { StoreQuery } from "@/__generated__/StoreQuery.graphql";
+import type { StoreDeliverySettingsQuery } from "@/__generated__/StoreDeliverySettingsQuery.graphql";
 
 type User = { id: string; name: string | null; email: string | null; phone: string | null };
 type UserAddress = {
   id: string;
-  user_id: string | null;
-  label: string | null;
-  delivery_address: string | null;
-  details: string | null;
-  building: string | null;
-  floor: string | null;
-  landmark: string | null;
-  latitude: string | null;
-  longitude: string | null;
-  is_selected: boolean | null;
+  user_id?: string | null;
+  label?: string | null;
+  delivery_address?: string | null;
+  details?: string | null;
+  building?: string | null;
+  floor?: string | null;
+  landmark?: string | null;
+  latitude?: string | null;
+  longitude?: string | null;
+  is_selected?: boolean | null;
 };
 
-export default function CheckoutScreen() {
+function CheckoutContent() {
   const insets = useSafeAreaInsets();
   const { userId, loading: authLoading } = useAuthUser();
   const {
@@ -214,9 +218,6 @@ export default function CheckoutScreen() {
     const paymentMethod = storePaymentMethods[group.storeId] || 'CASH';
     const note = storeNotes[group.storeId] || '';
     const tipAmount = storeTips[group.storeId] || 0;
-    
-    const storeTotal = group.subtotal + DELIVERY_FEE + SERVICE_FEE + tipAmount;
-    const orderCode = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
 
     const addresses: UserAddress[] = shouldSkip 
       ? []
@@ -238,14 +239,63 @@ export default function CheckoutScreen() {
     try {
       setPlacingStoreId(group.storeId);
 
-      // Fetch store to get delivery_time_min and delivery_time_max for estimated_delivery_time
+      // Fetch store details (service_fee, tax_rate) via GraphQL
       const storeData = await fetchQuery<StoreQuery>(
         relayEnvironment,
         storeQuery,
         { id: group.storeId }
       ).toPromise();
-
+      
       const store = storeData?.storesCollection?.edges?.[0]?.node;
+      
+      // Fetch delivery settings for this store via GraphQL
+      const deliverySettingsData = await fetchQuery<StoreDeliverySettingsQuery>(
+        relayEnvironment,
+        storeDeliverySettingsQuery,
+        { storeId: group.storeId }
+      ).toPromise();
+      
+      const rawSettings = deliverySettingsData?.store_delivery_settingsCollection?.edges?.[0]?.node;
+      const deliverySettings = rawSettings
+        ? mapGraphQLStoreDeliverySettings(rawSettings as GraphQLStoreDeliverySettings)
+        : null;
+      
+      // Get store's service fee and tax rate (with fallbacks)
+      const serviceFee = parseFloat(store?.service_fee ?? '0');
+      const taxRate = parseFloat(store?.tax_rate ?? '0');
+      
+      // Calculate distance from selected address to store
+      let distanceKm = 2.0; // Default fallback
+      
+      // Try to get real distance if we have coordinates
+      const userLat = selectedAddress.latitude ? parseFloat(selectedAddress.latitude) : null;
+      const userLng = selectedAddress.longitude ? parseFloat(selectedAddress.longitude) : null;
+      const storeLat = store?.latitude ? parseFloat(store.latitude) : null;
+      const storeLng = store?.longitude ? parseFloat(store.longitude) : null;
+      
+      if (userLat && userLng && storeLat && storeLng) {
+        // Haversine formula for distance calculation
+        const R = 6371; // Earth's radius in km
+        const dLat = (storeLat - userLat) * Math.PI / 180;
+        const dLon = (storeLng - userLng) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+          Math.cos(userLat * Math.PI / 180) * Math.cos(storeLat * Math.PI / 180) *
+          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        distanceKm = R * c;
+      }
+      
+      // Calculate order totals using the new formula
+      const orderCalc = calculateOrderTotal(
+        group.subtotal,
+        distanceKm,
+        { serviceFee, taxRate },
+        deliverySettings,
+        tipAmount
+      );
+      
+      const orderCode = `ORD-${Math.floor(100000 + Math.random() * 900000)}`;
       
       // Calculate estimated_delivery_time: current time + delivery_time_max (in minutes)
       let estimatedDeliveryTime: string | null = null;
@@ -280,8 +330,8 @@ export default function CheckoutScreen() {
         : null; // Send null if empty instead of empty object
 
       if (__DEV__) {
+        console.log("Order calculation:", orderCalc);
         console.log("deliveryAddressForMutation (as JSON string):", deliveryAddressForMutation);
-        console.log("deliveryAddressForMutation type:", typeof deliveryAddressForMutation);
       }
 
       const orderRes = await new Promise<{ data?: CreateOrderMutation['response'] }>((resolve, reject) => {
@@ -296,11 +346,12 @@ export default function CheckoutScreen() {
               payment_method: paymentMethod, // text (CASH or CREDIT_CARD)
               payment_status: "PENDING", // text (default 'PENDING')
               order_status: "PENDING", // text (default 'PENDING')
-              sub_total: group.subtotal.toFixed(2), // numeric(10, 2) as string
-              delivery_fee: DELIVERY_FEE.toFixed(2), // numeric(10, 2) as string
-              tax_amount: "0.00", // numeric(10, 2) as string
+              sub_total: orderCalc.subTotal.toFixed(2), // numeric(10, 2) as string
+              delivery_fee: orderCalc.deliveryFee.toFixed(2), // numeric(10, 2) as string
+              service_fee: orderCalc.serviceFee.toFixed(2), // numeric(10, 2) as string - NEW!
+              tax_amount: orderCalc.taxAmount.toFixed(2), // numeric(10, 2) as string
               tip_amount: tipAmount.toFixed(2), // numeric(10, 2) as string
-              total_amount: storeTotal.toFixed(2), // numeric(10, 2) as string
+              total_amount: orderCalc.totalAmount.toFixed(2), // numeric(10, 2) as string
               note_to_store: note || null, // text null
               is_picked_up: false, // boolean (default false)
               estimated_delivery_time: estimatedDeliveryTime, // timestamp with time zone (ISO string)
@@ -363,10 +414,11 @@ export default function CheckoutScreen() {
           orderId: dbOrderId,
           orderCode: dbOrderCode || orderCode, // Use order_code instead of id
           storeName: group.storeName,
-          total: formatPrice(storeTotal).replace("₺", ""),
-          subtotal: formatPrice(group.subtotal).replace("₺", ""),
-          deliveryFee: formatPrice(DELIVERY_FEE).replace("₺", ""),
-          serviceFee: formatPrice(SERVICE_FEE).replace("₺", ""),
+          total: formatPrice(orderCalc.totalAmount).replace("₺", ""),
+          subtotal: formatPrice(orderCalc.subTotal).replace("₺", ""),
+          deliveryFee: formatPrice(orderCalc.deliveryFee).replace("₺", ""),
+          serviceFee: formatPrice(orderCalc.serviceFee).replace("₺", ""),
+          taxAmount: formatPrice(orderCalc.taxAmount).replace("₺", ""),
           itemCount: group.items.reduce((sum, i) => sum + i.quantity, 0).toString(),
           items: JSON.stringify(orderItemsForUi),
           address: selectedAddress.delivery_address,
@@ -1082,3 +1134,20 @@ const styles = StyleSheet.create({
     maxHeight: 120,
   },
 });
+
+// Wrapper component with error boundary
+export default function CheckoutScreen() {
+  const [resetKey, setResetKey] = useState(0);
+  
+  const handleReset = useCallback(() => {
+    setResetKey(prev => prev + 1);
+  }, []);
+  
+  return (
+    <ErrorBoundary key={resetKey} onReset={handleReset}>
+      <Suspense fallback={<LoadingScreen title="Loading checkout..." subtitle="Please wait" />}>
+        <CheckoutContent />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}

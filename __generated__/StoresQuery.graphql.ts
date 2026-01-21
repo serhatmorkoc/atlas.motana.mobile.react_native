@@ -1,5 +1,5 @@
 /**
- * @generated SignedSource<<7896f3a3a98532fb6d5f08bf4930881e>>
+ * @generated SignedSource<<5f36b74be0e45dae64c3783435387c71>>
  * @lightSyntaxTransform
  * @nogrep
  */
@@ -32,6 +32,7 @@ export type storesFilter = {
   owner_id?: UUIDFilter | null | undefined;
   rating?: BigFloatFilter | null | undefined;
   review_count?: IntFilter | null | undefined;
+  service_fee?: BigFloatFilter | null | undefined;
   slug?: StringFilter | null | undefined;
   store_categories_id?: BigIntFilter | null | undefined;
   tax_rate?: BigFloatFilter | null | undefined;
@@ -126,8 +127,10 @@ export type StoresQuery$data = {
         readonly name: string;
         readonly rating: string | null | undefined;
         readonly review_count: number | null | undefined;
+        readonly service_fee: string | null | undefined;
         readonly slug: string | null | undefined;
         readonly store_categories_id: string | null | undefined;
+        readonly tax_rate: string | null | undefined;
       };
     }>;
   } | null | undefined;
@@ -276,6 +279,20 @@ v16 = {
   "kind": "ScalarField",
   "name": "store_categories_id",
   "storageKey": null
+},
+v17 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "service_fee",
+  "storageKey": null
+},
+v18 = {
+  "alias": null,
+  "args": null,
+  "kind": "ScalarField",
+  "name": "tax_rate",
+  "storageKey": null
 };
 return {
   "fragment": {
@@ -322,7 +339,9 @@ return {
                   (v13/*: any*/),
                   (v14/*: any*/),
                   (v15/*: any*/),
-                  (v16/*: any*/)
+                  (v16/*: any*/),
+                  (v17/*: any*/),
+                  (v18/*: any*/)
                 ],
                 "storageKey": null
               }
@@ -381,6 +400,8 @@ return {
                   (v14/*: any*/),
                   (v15/*: any*/),
                   (v16/*: any*/),
+                  (v17/*: any*/),
+                  (v18/*: any*/),
                   {
                     "alias": null,
                     "args": null,
@@ -400,16 +421,16 @@ return {
     ]
   },
   "params": {
-    "cacheID": "e01f3ac06cb9aeac8079b0e1c2017e13",
+    "cacheID": "553ff47abc698c69ef85428c8b63c79d",
     "id": null,
     "metadata": {},
     "name": "StoresQuery",
     "operationKind": "query",
-    "text": "query StoresQuery(\n  $filter: storesFilter\n  $first: Int\n  $offset: Int\n) {\n  storesCollection(filter: $filter, first: $first, offset: $offset) {\n    edges {\n      node {\n        id\n        name\n        image\n        rating\n        delivery_time_min\n        delivery_time_max\n        address\n        latitude\n        longitude\n        minimum_order\n        is_available\n        is_active\n        review_count\n        slug\n        store_categories_id\n        nodeId\n      }\n    }\n  }\n}\n"
+    "text": "query StoresQuery(\n  $filter: storesFilter\n  $first: Int\n  $offset: Int\n) {\n  storesCollection(filter: $filter, first: $first, offset: $offset) {\n    edges {\n      node {\n        id\n        name\n        image\n        rating\n        delivery_time_min\n        delivery_time_max\n        address\n        latitude\n        longitude\n        minimum_order\n        is_available\n        is_active\n        review_count\n        slug\n        store_categories_id\n        service_fee\n        tax_rate\n        nodeId\n      }\n    }\n  }\n}\n"
   }
 };
 })();
 
-(node as any).hash = "84834aa11ea5b61d4f22c59641821639";
+(node as any).hash = "bf9da0c11b72c30418ee5a02dae2c843";
 
 export default node;

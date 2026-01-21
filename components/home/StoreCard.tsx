@@ -17,6 +17,7 @@ interface Store {
   cuisine: string;
   deliveryFee: string;
   distance: string;
+  isAvailable?: boolean;
 }
 
 interface StoreCardProps {
@@ -24,41 +25,62 @@ interface StoreCardProps {
 }
 
 export function StoreCard({ store }: StoreCardProps) {
+  const isClosed = store.isAvailable === false;
+
+  const handlePress = () => {
+    if (isClosed) return;
+    router.push(`/store/${store.id}` as any);
+  };
+
   return (
     <TouchableOpacity
-      style={styles.storeCard}
-      onPress={() => router.push(`/store/${store.id}` as any)}
-      activeOpacity={0.7}
+      style={[styles.storeCard, isClosed && styles.storeCardClosed]}
+      onPress={handlePress}
+      activeOpacity={isClosed ? 1 : 0.7}
+      disabled={isClosed}
     >
       <View style={styles.storeImageContainer}>
         <Image
           source={{ uri: optimizeImageUrl(store.image) }}
-          style={styles.storeImage}
+          style={[styles.storeImage, isClosed && styles.storeImageClosed]}
           contentFit="cover"
           placeholder="|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj["
         />
+        {isClosed && (
+          <View style={styles.closedOverlay}>
+            <View style={styles.closedBadge}>
+              <Text style={styles.closedText}>CLOSED</Text>
+            </View>
+          </View>
+        )}
         <View style={styles.ratingBadge}>
           <Text style={styles.ratingText}>⭐ {store.rating}</Text>
         </View>
       </View>
-      <View style={styles.storeInfo}>
-        <Text style={styles.storeName} numberOfLines={1}>
+      <View style={[styles.storeInfo, isClosed && styles.storeInfoClosed]}>
+        <Text style={[styles.storeName, isClosed && styles.textClosed]} numberOfLines={1}>
           {store.name}
         </Text>
-        <Text style={styles.cuisine} numberOfLines={1}>
+        <Text style={[styles.cuisine, isClosed && styles.textClosed]} numberOfLines={1}>
           {store.cuisine}
         </Text>
         <View style={styles.storeFooter}>
-          <View style={styles.deliveryBadge}>
-            <Bike size={11} color="#4A7C59" strokeWidth={2.5} />
-            <Text style={styles.deliveryBadgeText}>{store.deliveryTime} min</Text>
+          <View style={[styles.deliveryBadge, isClosed && styles.deliveryBadgeClosed]}>
+            <Bike size={11} color={isClosed ? "#9CA3AF" : "#4A7C59"} strokeWidth={2.5} />
+            <Text style={[styles.deliveryBadgeText, isClosed && styles.textClosed]}>
+              {store.deliveryTime} min
+            </Text>
           </View>
           <View style={styles.footerRight}>
-            <View style={styles.feeBadge}>
-              <Text style={styles.feeBadgeText}>{store.deliveryFee}</Text>
+            <View style={[styles.feeBadge, isClosed && styles.badgeClosed]}>
+              <Text style={[styles.feeBadgeText, isClosed && styles.textClosed]}>
+                {store.deliveryFee}
+              </Text>
             </View>
-            <View style={styles.distanceBadge}>
-              <Text style={styles.distanceBadgeText}>{store.distance}</Text>
+            <View style={[styles.distanceBadge, isClosed && styles.badgeClosed]}>
+              <Text style={[styles.distanceBadgeText, isClosed && styles.textClosed]}>
+                {store.distance}
+              </Text>
             </View>
           </View>
         </View>
@@ -166,6 +188,43 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: "600",
     color: "#374151",
+  },
+  // Closed state styles
+  storeCardClosed: {
+    opacity: 0.85,
+  },
+  storeImageClosed: {
+    opacity: 0.5,
+  },
+  closedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closedBadge: {
+    backgroundColor: "#EF4444",
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  closedText: {
+    fontSize: 14,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 1,
+  },
+  storeInfoClosed: {
+    backgroundColor: "#F3F4F6",
+  },
+  textClosed: {
+    color: "#9CA3AF",
+  },
+  deliveryBadgeClosed: {
+    backgroundColor: "#E5E7EB",
+  },
+  badgeClosed: {
+    backgroundColor: "#E5E7EB",
   },
 });
 

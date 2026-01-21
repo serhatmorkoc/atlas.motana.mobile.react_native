@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo, Suspense } from "react";
 import {
   ScrollView,
   RefreshControl,
@@ -15,11 +15,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Bike, AlertCircle } from "lucide-react-native";
 
-import { offers } from "@/mocks/offers";
+import { offers } from "@/mocks/offers"; // TODO: Replace with DB offers when table exists
 import { categories } from "@/constants/categories";
 import { useStores } from "@/hooks/useStores";
 import { Store } from "@/types/store.types";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { useUserAddresses } from "@/hooks/useUserAddresses";
 import { useFocusEffect } from "expo-router";
 
@@ -34,7 +35,7 @@ const { width } = Dimensions.get("window");
 const CARD_WIDTH = width - 32;
 const OFFER_SIDE_SPACING = 16;
 
-export default function HomeScreen() {
+function HomeContent() {
   const insets = useSafeAreaInsets();
   const offerScrollRef = useRef<ScrollView>(null);
   const [currentOfferIndex, setCurrentOfferIndex] = useState(0);
@@ -63,7 +64,7 @@ export default function HomeScreen() {
   const { stores, loading: storesLoading, error: storesError, refetch } = useStores({
     limit: 50, // Fetch more stores for filtering
     isActive: true,
-    isAvailable: true,
+    // isAvailable is NOT filtered - we want to show closed stores too (grayed out)
     userLocation, // Pass selected address coordinates for distance calculation
   });
 
@@ -539,36 +540,70 @@ export default function HomeScreen() {
   );
 }
 
+// Wrapper component with error boundary
+export default function HomeScreen() {
+  const [resetKey, setResetKey] = useState(0);
+  
+  const handleReset = useCallback(() => {
+    setResetKey(prev => prev + 1);
+  }, []);
+  
+  return (
+    <ErrorBoundary key={resetKey} onReset={handleReset}>
+      <Suspense fallback={<LoadingScreen title="Loading home..." subtitle="Preparing your feed" />}>
+        <HomeContent />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
 function GridStoreCard({ store }: { store: Store }) {
+  const isClosed = store.isAvailable === false;
+
+  const handlePress = () => {
+    if (isClosed) return;
+    router.push(`/store/${store.id}` as any);
+  };
+
   return (
     <TouchableOpacity 
-      style={styles.gridCard}
-      onPress={() => router.push(`/store/${store.id}` as any)}
-      activeOpacity={0.7}
+      style={[styles.gridCard, isClosed && styles.gridCardClosed]}
+      onPress={handlePress}
+      activeOpacity={isClosed ? 1 : 0.7}
+      disabled={isClosed}
     >
-      <Image
-        source={{ uri: store.image }}
-        style={styles.gridImage}
-        contentFit="cover"
-        placeholder="|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj["
-      />
-      <View style={styles.gridContent}>
-        <Text style={styles.gridName} numberOfLines={1}>
+      <View style={styles.gridImageContainer}>
+        <Image
+          source={{ uri: store.image }}
+          style={[styles.gridImage, isClosed && styles.gridImageClosed]}
+          contentFit="cover"
+          placeholder="|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj["
+        />
+        {isClosed && (
+          <View style={styles.gridClosedOverlay}>
+            <View style={styles.gridClosedBadge}>
+              <Text style={styles.gridClosedText}>CLOSED</Text>
+            </View>
+          </View>
+        )}
+      </View>
+      <View style={[styles.gridContent, isClosed && styles.gridContentClosed]}>
+        <Text style={[styles.gridName, isClosed && styles.textClosed]} numberOfLines={1}>
           {store.name}
         </Text>
-        <Text style={styles.gridCuisine} numberOfLines={1}>
+        <Text style={[styles.gridCuisine, isClosed && styles.textClosed]} numberOfLines={1}>
           {store.cuisine}
         </Text>
         <View style={styles.gridMetaRow}>
-          <Text style={styles.gridRating}>⭐ {store.rating}</Text>
+          <Text style={[styles.gridRating, isClosed && styles.textClosed]}>⭐ {store.rating}</Text>
           <View style={styles.gridTimeContainer}>
-            <Bike size={10} color="#6B7280" strokeWidth={2} />
-            <Text style={styles.gridTime}>{store.deliveryTime}</Text>
+            <Bike size={10} color={isClosed ? "#D1D5DB" : "#6B7280"} strokeWidth={2} />
+            <Text style={[styles.gridTime, isClosed && styles.textClosed]}>{store.deliveryTime}</Text>
           </View>
         </View>
         <View style={styles.gridFooter}>
-          <Text style={styles.gridFee}>{store.deliveryFee}</Text>
-          <Text style={styles.gridDistance}>{store.distance}</Text>
+          <Text style={[styles.gridFee, isClosed && styles.textClosed]}>{store.deliveryFee}</Text>
+          <Text style={[styles.gridDistance, isClosed && styles.textClosed]}>{store.distance}</Text>
         </View>
       </View>
     </TouchableOpacity>
@@ -800,5 +835,43 @@ const styles = StyleSheet.create({
     fontSize: 10,
     color: "#D1D5DB",
     fontWeight: "500" as const,
+  },
+  // Grid card closed state styles
+  gridCardClosed: {
+    opacity: 0.85,
+  },
+  gridImageContainer: {
+    position: "relative" as const,
+  },
+  gridImageClosed: {
+    opacity: 0.4,
+  },
+  gridClosedOverlay: {
+    position: "absolute" as const,
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0, 0, 0, 0.4)",
+    justifyContent: "center" as const,
+    alignItems: "center" as const,
+  },
+  gridClosedBadge: {
+    backgroundColor: "#EF4444",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 8,
+  },
+  gridClosedText: {
+    fontSize: 12,
+    fontWeight: "800" as const,
+    color: "#FFFFFF",
+    letterSpacing: 1,
+  },
+  gridContentClosed: {
+    backgroundColor: "#F9FAFB",
+  },
+  textClosed: {
+    color: "#9CA3AF",
   },
 });

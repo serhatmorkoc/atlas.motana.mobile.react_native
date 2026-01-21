@@ -17,6 +17,7 @@ interface Store {
   cuisine: string;
   deliveryFee: string;
   distance: string;
+  isAvailable?: boolean;
 }
 
 interface StoreListCardProps {
@@ -26,59 +27,76 @@ interface StoreListCardProps {
 }
 
 export function StoreListCard({ store, menuItems = [], loadingMenuItems = false }: StoreListCardProps) {
+  const isClosed = store.isAvailable === false;
+
   const handleHeaderPress = () => {
+    if (isClosed) return;
     router.push(`/store/${store.id}` as any);
   };
 
   const handleMenuItemPress = () => {
+    if (isClosed) return;
     router.push(`/store/${store.id}` as any);
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, isClosed && styles.containerClosed]}>
       <TouchableOpacity
-        style={styles.header}
+        style={[styles.header, isClosed && styles.headerClosed]}
         onPress={handleHeaderPress}
-        activeOpacity={0.8}
+        activeOpacity={isClosed ? 1 : 0.8}
+        disabled={isClosed}
       >
         <View style={styles.headerLeft}>
-          <View style={styles.logoContainer}>
+          <View style={[styles.logoContainer, isClosed && styles.logoContainerClosed]}>
             <Image
               source={{ uri: optimizeImageUrl(store.image) }}
-              style={styles.logo}
+              style={[styles.logo, isClosed && styles.logoClosed]}
               contentFit="cover"
               cachePolicy="memory-disk"
               transition={200}
               placeholder="|rF?hV%2WCj[ayj[a|j[az_NaeWBj@ayfRayfQfQM{M|azj[azf6fQfQfQIpWXofj[ayj[j[fQayWCoeoeaya}j[ayfQa{oLj?j[WVj[ayayj[fQoff7azayj[ayj[j[ayofayayayj[fQj[ayayj[ayfjj[j[ayjuayj["
             />
+            {isClosed && (
+              <View style={styles.closedOverlay}>
+                <Text style={styles.closedMiniText}>✕</Text>
+              </View>
+            )}
           </View>
           <View style={styles.headerContent}>
-            <Text style={styles.name} numberOfLines={1}>
-              {store.name}
-            </Text>
-            <Text style={styles.cuisine} numberOfLines={1}>
+            <View style={styles.nameRow}>
+              <Text style={[styles.name, isClosed && styles.textClosed]} numberOfLines={1}>
+                {store.name}
+              </Text>
+              {isClosed && (
+                <View style={styles.closedBadge}>
+                  <Text style={styles.closedBadgeText}>CLOSED</Text>
+                </View>
+              )}
+            </View>
+            <Text style={[styles.cuisine, isClosed && styles.textClosed]} numberOfLines={1}>
               {store.cuisine}
             </Text>
             <View style={styles.headerInfo}>
-              <View style={styles.ratingBadge}>
+              <View style={[styles.ratingBadge, isClosed && styles.ratingBadgeClosed]}>
                 <Star size={11} color="#FFFFFF" fill="#FFFFFF" strokeWidth={0} />
                 <Text style={styles.ratingText}>{store.rating}</Text>
               </View>
               <View style={styles.infoDot} />
               <View style={styles.infoItem}>
-                <MapPin size={12} color="#64748B" strokeWidth={2.5} />
-                <Text style={styles.infoText}>{store.distance}</Text>
+                <MapPin size={12} color={isClosed ? "#9CA3AF" : "#64748B"} strokeWidth={2.5} />
+                <Text style={[styles.infoText, isClosed && styles.textClosed]}>{store.distance}</Text>
               </View>
               <View style={styles.infoDot} />
               <View style={styles.infoItem}>
-                <Clock size={12} color="#64748B" strokeWidth={2.5} />
-                <Text style={styles.infoText}>{store.deliveryTime} dk</Text>
+                <Clock size={12} color={isClosed ? "#9CA3AF" : "#64748B"} strokeWidth={2.5} />
+                <Text style={[styles.infoText, isClosed && styles.textClosed]}>{store.deliveryTime} dk</Text>
               </View>
             </View>
           </View>
         </View>
         <View style={styles.arrowContainer}>
-          <ChevronRight size={20} color="#94A3B8" strokeWidth={2} />
+          <ChevronRight size={20} color={isClosed ? "#D1D5DB" : "#94A3B8"} strokeWidth={2} />
         </View>
       </TouchableOpacity>
 
@@ -297,6 +315,54 @@ const styles = StyleSheet.create({
   skeletonLineShort: {
     width: "65%",
     marginBottom: 0,
+  },
+  // Closed state styles
+  containerClosed: {
+    opacity: 0.9,
+  },
+  headerClosed: {
+    backgroundColor: "#F3F4F6",
+  },
+  logoContainerClosed: {
+    position: "relative",
+  },
+  logoClosed: {
+    opacity: 0.4,
+  },
+  closedOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: 12,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closedMiniText: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: "#FFFFFF",
+  },
+  nameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  closedBadge: {
+    backgroundColor: "#EF4444",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
+  },
+  closedBadgeText: {
+    fontSize: 9,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    letterSpacing: 0.5,
+  },
+  textClosed: {
+    color: "#9CA3AF",
+  },
+  ratingBadgeClosed: {
+    backgroundColor: "#9CA3AF",
   },
 });
 

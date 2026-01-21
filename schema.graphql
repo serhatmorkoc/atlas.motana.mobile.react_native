@@ -212,6 +212,17 @@ type Mutation {
     atMost: Int! = 1
   ): couriersDeleteResponse!
 
+  """Deletes zero or more records from the `delivery_requests` collection"""
+  deleteFromdelivery_requestsCollection(
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: delivery_requestsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): delivery_requestsDeleteResponse!
+
   """Deletes zero or more records from the `order_items` collection"""
   deleteFromorder_itemsCollection(
     """Restricts the mutation's impact to records matching the criteria"""
@@ -278,6 +289,19 @@ type Mutation {
     atMost: Int! = 1
   ): store_categoriesDeleteResponse!
 
+  """
+  Deletes zero or more records from the `store_delivery_settings` collection
+  """
+  deleteFromstore_delivery_settingsCollection(
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: store_delivery_settingsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): store_delivery_settingsDeleteResponse!
+
   """Deletes zero or more records from the `store_opening_times` collection"""
   deleteFromstore_opening_timesCollection(
     """Restricts the mutation's impact to records matching the criteria"""
@@ -325,6 +349,9 @@ type Mutation {
   """Adds one or more `couriers` records to the collection"""
   insertIntocouriersCollection(objects: [couriersInsertInput!]!): couriersInsertResponse
 
+  """Adds one or more `delivery_requests` records to the collection"""
+  insertIntodelivery_requestsCollection(objects: [delivery_requestsInsertInput!]!): delivery_requestsInsertResponse
+
   """Adds one or more `order_items` records to the collection"""
   insertIntoorder_itemsCollection(objects: [order_itemsInsertInput!]!): order_itemsInsertResponse
 
@@ -343,6 +370,9 @@ type Mutation {
   """Adds one or more `store_categories` records to the collection"""
   insertIntostore_categoriesCollection(objects: [store_categoriesInsertInput!]!): store_categoriesInsertResponse
 
+  """Adds one or more `store_delivery_settings` records to the collection"""
+  insertIntostore_delivery_settingsCollection(objects: [store_delivery_settingsInsertInput!]!): store_delivery_settingsInsertResponse
+
   """Adds one or more `store_opening_times` records to the collection"""
   insertIntostore_opening_timesCollection(objects: [store_opening_timesInsertInput!]!): store_opening_timesInsertResponse
 
@@ -354,6 +384,7 @@ type Mutation {
 
   """Adds one or more `users` records to the collection"""
   insertIntousersCollection(objects: [usersInsertInput!]!): usersInsertResponse
+  update_fcm_token(token: String!): Opaque
 
   """Updates zero or more records in the `couriers` collection"""
   updatecouriersCollection(
@@ -370,6 +401,22 @@ type Mutation {
     """
     atMost: Int! = 1
   ): couriersUpdateResponse!
+
+  """Updates zero or more records in the `delivery_requests` collection"""
+  updatedelivery_requestsCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: delivery_requestsUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: delivery_requestsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): delivery_requestsUpdateResponse!
 
   """Updates zero or more records in the `order_items` collection"""
   updateorder_itemsCollection(
@@ -466,6 +513,24 @@ type Mutation {
     """
     atMost: Int! = 1
   ): store_categoriesUpdateResponse!
+
+  """
+  Updates zero or more records in the `store_delivery_settings` collection
+  """
+  updatestore_delivery_settingsCollection(
+    """
+    Fields that are set will be updated for all records matching the `filter`
+    """
+    set: store_delivery_settingsUpdateInput!
+
+    """Restricts the mutation's impact to records matching the criteria"""
+    filter: store_delivery_settingsFilter
+
+    """
+    The maximum number of records in the collection permitted to be affected
+    """
+    atMost: Int! = 1
+  ): store_delivery_settingsUpdateResponse!
 
   """Updates zero or more records in the `store_opening_times` collection"""
   updatestore_opening_timesCollection(
@@ -572,6 +637,8 @@ type PageInfo {
 
 """The root type for querying data"""
 type Query {
+  calculate_distance_km(lat1: BigFloat!, lon1: BigFloat!, lat2: BigFloat!, lon2: BigFloat!): BigFloat
+
   """A pagable collection of type `couriers`"""
   couriersCollection(
     """Query the first `n` records in the collection"""
@@ -597,6 +664,32 @@ type Query {
     """Sort order to apply to the collection"""
     orderBy: [couriersOrderBy!]
   ): couriersConnection
+
+  """A pagable collection of type `delivery_requests`"""
+  delivery_requestsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: delivery_requestsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [delivery_requestsOrderBy!]
+  ): delivery_requestsConnection
 
   """Retrieve a record by its `ID`"""
   node(
@@ -759,6 +852,32 @@ type Query {
     """Sort order to apply to the collection"""
     orderBy: [store_categoriesOrderBy!]
   ): store_categoriesConnection
+
+  """A pagable collection of type `store_delivery_settings`"""
+  store_delivery_settingsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: store_delivery_settingsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [store_delivery_settingsOrderBy!]
+  ): store_delivery_settingsConnection
 
   """A pagable collection of type `store_opening_times`"""
   store_opening_timesCollection(
@@ -985,6 +1104,30 @@ type couriers implements Node {
     """Sort order to apply to the collection"""
     orderBy: [ordersOrderBy!]
   ): ordersConnection
+  delivery_requestsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: delivery_requestsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [delivery_requestsOrderBy!]
+  ): delivery_requestsConnection
 }
 
 type couriersConnection {
@@ -1089,6 +1232,124 @@ type couriersUpdateResponse {
 
   """Array of records impacted by the mutation"""
   records: [couriers!]!
+}
+
+type delivery_requests implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  order_id: UUID!
+  courier_id: UUID!
+  store_id: UUID!
+  status: String!
+  distance_km: BigFloat
+  estimated_earning: BigFloat
+  created_at: Datetime
+  responded_at: Datetime
+  expires_at: Datetime
+  orders: orders!
+  couriers: couriers!
+  stores: stores!
+}
+
+type delivery_requestsConnection {
+  edges: [delivery_requestsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type delivery_requestsDeleteResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [delivery_requests!]!
+}
+
+type delivery_requestsEdge {
+  cursor: String!
+  node: delivery_requests!
+}
+
+input delivery_requestsFilter {
+  id: UUIDFilter
+  order_id: UUIDFilter
+  courier_id: UUIDFilter
+  store_id: UUIDFilter
+  status: StringFilter
+  distance_km: BigFloatFilter
+  estimated_earning: BigFloatFilter
+  created_at: DatetimeFilter
+  responded_at: DatetimeFilter
+  expires_at: DatetimeFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [delivery_requestsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [delivery_requestsFilter!]
+
+  """Negates a filter"""
+  not: delivery_requestsFilter
+}
+
+input delivery_requestsInsertInput {
+  id: UUID
+  order_id: UUID
+  courier_id: UUID
+  store_id: UUID
+  status: String
+  distance_km: BigFloat
+  estimated_earning: BigFloat
+  created_at: Datetime
+  responded_at: Datetime
+  expires_at: Datetime
+}
+
+type delivery_requestsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [delivery_requests!]!
+}
+
+input delivery_requestsOrderBy {
+  id: OrderByDirection
+  order_id: OrderByDirection
+  courier_id: OrderByDirection
+  store_id: OrderByDirection
+  status: OrderByDirection
+  distance_km: OrderByDirection
+  estimated_earning: OrderByDirection
+  created_at: OrderByDirection
+  responded_at: OrderByDirection
+  expires_at: OrderByDirection
+}
+
+input delivery_requestsUpdateInput {
+  id: UUID
+  order_id: UUID
+  courier_id: UUID
+  store_id: UUID
+  status: String
+  distance_km: BigFloat
+  estimated_earning: BigFloat
+  created_at: Datetime
+  responded_at: Datetime
+  expires_at: Datetime
+}
+
+type delivery_requestsUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [delivery_requests!]!
 }
 
 type order_items implements Node {
@@ -1219,6 +1480,8 @@ type orders implements Node {
   is_picked_up: Boolean
   created_at: Datetime
   estimated_delivery_time: Datetime
+  courier_queue: [UUID]
+  service_fee: BigFloat
   users: users
   stores: stores
   couriers: couriers
@@ -1246,6 +1509,30 @@ type orders implements Node {
     """Sort order to apply to the collection"""
     orderBy: [order_itemsOrderBy!]
   ): order_itemsConnection
+  delivery_requestsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: delivery_requestsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [delivery_requestsOrderBy!]
+  ): delivery_requestsConnection
 }
 
 type ordersConnection {
@@ -1284,6 +1571,8 @@ input ordersFilter {
   is_picked_up: BooleanFilter
   created_at: DatetimeFilter
   estimated_delivery_time: DatetimeFilter
+  courier_queue: UUIDListFilter
+  service_fee: BigFloatFilter
   nodeId: IDFilter
 
   """
@@ -1319,6 +1608,8 @@ input ordersInsertInput {
   is_picked_up: Boolean
   created_at: Datetime
   estimated_delivery_time: Datetime
+  courier_queue: [UUID]
+  service_fee: BigFloat
 }
 
 type ordersInsertResponse {
@@ -1347,6 +1638,7 @@ input ordersOrderBy {
   is_picked_up: OrderByDirection
   created_at: OrderByDirection
   estimated_delivery_time: OrderByDirection
+  service_fee: OrderByDirection
 }
 
 input ordersUpdateInput {
@@ -1368,6 +1660,8 @@ input ordersUpdateInput {
   is_picked_up: Boolean
   created_at: Datetime
   estimated_delivery_time: Datetime
+  courier_queue: [UUID]
+  service_fee: BigFloat
 }
 
 type ordersUpdateResponse {
@@ -1881,6 +2175,142 @@ type store_categoriesUpdateResponse {
   records: [store_categories!]!
 }
 
+type store_delivery_settings implements Node {
+  """Globally Unique Record Identifier"""
+  nodeId: ID!
+  id: UUID!
+  store_id: UUID!
+  earning_base_fee: BigFloat!
+  earning_per_km: BigFloat!
+  earning_minimum: BigFloat!
+  search_radius_km: Int!
+  max_couriers_queue: Int!
+  request_timeout_seconds: Int!
+  use_google_maps: Boolean!
+  google_maps_api_key: String
+  created_at: Datetime
+  updated_at: Datetime
+  surge_active: Boolean!
+  surge_multiplier: BigFloat!
+  stores: stores!
+}
+
+type store_delivery_settingsConnection {
+  edges: [store_delivery_settingsEdge!]!
+  pageInfo: PageInfo!
+}
+
+type store_delivery_settingsDeleteResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [store_delivery_settings!]!
+}
+
+type store_delivery_settingsEdge {
+  cursor: String!
+  node: store_delivery_settings!
+}
+
+input store_delivery_settingsFilter {
+  id: UUIDFilter
+  store_id: UUIDFilter
+  earning_base_fee: BigFloatFilter
+  earning_per_km: BigFloatFilter
+  earning_minimum: BigFloatFilter
+  search_radius_km: IntFilter
+  max_couriers_queue: IntFilter
+  request_timeout_seconds: IntFilter
+  use_google_maps: BooleanFilter
+  google_maps_api_key: StringFilter
+  created_at: DatetimeFilter
+  updated_at: DatetimeFilter
+  surge_active: BooleanFilter
+  surge_multiplier: BigFloatFilter
+  nodeId: IDFilter
+
+  """
+  Returns true only if all its inner filters are true, otherwise returns false
+  """
+  and: [store_delivery_settingsFilter!]
+
+  """
+  Returns true if at least one of its inner filters is true, otherwise returns false
+  """
+  or: [store_delivery_settingsFilter!]
+
+  """Negates a filter"""
+  not: store_delivery_settingsFilter
+}
+
+input store_delivery_settingsInsertInput {
+  id: UUID
+  store_id: UUID
+  earning_base_fee: BigFloat
+  earning_per_km: BigFloat
+  earning_minimum: BigFloat
+  search_radius_km: Int
+  max_couriers_queue: Int
+  request_timeout_seconds: Int
+  use_google_maps: Boolean
+  google_maps_api_key: String
+  created_at: Datetime
+  updated_at: Datetime
+  surge_active: Boolean
+  surge_multiplier: BigFloat
+}
+
+type store_delivery_settingsInsertResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [store_delivery_settings!]!
+}
+
+input store_delivery_settingsOrderBy {
+  id: OrderByDirection
+  store_id: OrderByDirection
+  earning_base_fee: OrderByDirection
+  earning_per_km: OrderByDirection
+  earning_minimum: OrderByDirection
+  search_radius_km: OrderByDirection
+  max_couriers_queue: OrderByDirection
+  request_timeout_seconds: OrderByDirection
+  use_google_maps: OrderByDirection
+  google_maps_api_key: OrderByDirection
+  created_at: OrderByDirection
+  updated_at: OrderByDirection
+  surge_active: OrderByDirection
+  surge_multiplier: OrderByDirection
+}
+
+input store_delivery_settingsUpdateInput {
+  id: UUID
+  store_id: UUID
+  earning_base_fee: BigFloat
+  earning_per_km: BigFloat
+  earning_minimum: BigFloat
+  search_radius_km: Int
+  max_couriers_queue: Int
+  request_timeout_seconds: Int
+  use_google_maps: Boolean
+  google_maps_api_key: String
+  created_at: Datetime
+  updated_at: Datetime
+  surge_active: Boolean
+  surge_multiplier: BigFloat
+}
+
+type store_delivery_settingsUpdateResponse {
+  """Count of the records impacted by the mutation"""
+  affectedCount: Int!
+
+  """Array of records impacted by the mutation"""
+  records: [store_delivery_settings!]!
+}
+
 type store_opening_times implements Node {
   """Globally Unique Record Identifier"""
   nodeId: ID!
@@ -1993,6 +2423,7 @@ type stores implements Node {
   rating: BigFloat
   review_count: Int
   created_at: Datetime
+  service_fee: BigFloat
   users: users
   store_categories: store_categories
   store_opening_timesCollection(
@@ -2091,6 +2522,31 @@ type stores implements Node {
     """Sort order to apply to the collection"""
     orderBy: [ordersOrderBy!]
   ): ordersConnection
+  delivery_requestsCollection(
+    """Query the first `n` records in the collection"""
+    first: Int
+
+    """Query the last `n` records in the collection"""
+    last: Int
+
+    """Query values in the collection before the provided cursor"""
+    before: Cursor
+
+    """Query values in the collection after the provided cursor"""
+    after: Cursor
+
+    """
+    Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.
+    """
+    offset: Int
+
+    """Filters to apply to the results set when querying from the collection"""
+    filter: delivery_requestsFilter
+
+    """Sort order to apply to the collection"""
+    orderBy: [delivery_requestsOrderBy!]
+  ): delivery_requestsConnection
+  store_delivery_settings: store_delivery_settings
 }
 
 type storesConnection {
@@ -2132,6 +2588,7 @@ input storesFilter {
   rating: BigFloatFilter
   review_count: IntFilter
   created_at: DatetimeFilter
+  service_fee: BigFloatFilter
   nodeId: IDFilter
 
   """
@@ -2169,6 +2626,7 @@ input storesInsertInput {
   rating: BigFloat
   review_count: Int
   created_at: Datetime
+  service_fee: BigFloat
 }
 
 type storesInsertResponse {
@@ -2200,6 +2658,7 @@ input storesOrderBy {
   rating: OrderByDirection
   review_count: OrderByDirection
   created_at: OrderByDirection
+  service_fee: OrderByDirection
 }
 
 input storesUpdateInput {
@@ -2223,6 +2682,7 @@ input storesUpdateInput {
   rating: BigFloat
   review_count: Int
   created_at: Datetime
+  service_fee: BigFloat
 }
 
 type storesUpdateResponse {

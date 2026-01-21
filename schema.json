@@ -1472,6 +1472,47 @@
                 "name": "filter",
                 "type": {
                   "kind": "INPUT_OBJECT",
+                  "name": "delivery_requestsFilter",
+                  "ofType": null
+                },
+                "description": "Restricts the mutation's impact to records matching the criteria",
+                "defaultValue": null
+              },
+              {
+                "name": "atMost",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "description": "The maximum number of records in the collection permitted to be affected",
+                "defaultValue": "1"
+              }
+            ],
+            "name": "deleteFromdelivery_requestsCollection",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "delivery_requestsDeleteResponse",
+                "ofType": null
+              }
+            },
+            "description": "Deletes zero or more records from the `delivery_requests` collection",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "filter",
+                "type": {
+                  "kind": "INPUT_OBJECT",
                   "name": "order_itemsFilter",
                   "ofType": null
                 },
@@ -1718,6 +1759,47 @@
                 "name": "filter",
                 "type": {
                   "kind": "INPUT_OBJECT",
+                  "name": "store_delivery_settingsFilter",
+                  "ofType": null
+                },
+                "description": "Restricts the mutation's impact to records matching the criteria",
+                "defaultValue": null
+              },
+              {
+                "name": "atMost",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "description": "The maximum number of records in the collection permitted to be affected",
+                "defaultValue": "1"
+              }
+            ],
+            "name": "deleteFromstore_delivery_settingsCollection",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "store_delivery_settingsDeleteResponse",
+                "ofType": null
+              }
+            },
+            "description": "Deletes zero or more records from the `store_delivery_settings` collection",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "filter",
+                "type": {
+                  "kind": "INPUT_OBJECT",
                   "name": "store_opening_timesFilter",
                   "ofType": null
                 },
@@ -1908,6 +1990,41 @@
               "ofType": null
             },
             "description": "Adds one or more `couriers` records to the collection",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "objects",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
+                        "name": "delivery_requestsInsertInput",
+                        "ofType": null
+                      }
+                    }
+                  }
+                },
+                "description": null,
+                "defaultValue": null
+              }
+            ],
+            "name": "insertIntodelivery_requestsCollection",
+            "type": {
+              "kind": "OBJECT",
+              "name": "delivery_requestsInsertResponse",
+              "ofType": null
+            },
+            "description": "Adds one or more `delivery_requests` records to the collection",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -2136,6 +2253,41 @@
                       "name": null,
                       "ofType": {
                         "kind": "INPUT_OBJECT",
+                        "name": "store_delivery_settingsInsertInput",
+                        "ofType": null
+                      }
+                    }
+                  }
+                },
+                "description": null,
+                "defaultValue": null
+              }
+            ],
+            "name": "insertIntostore_delivery_settingsCollection",
+            "type": {
+              "kind": "OBJECT",
+              "name": "store_delivery_settingsInsertResponse",
+              "ofType": null
+            },
+            "description": "Adds one or more `store_delivery_settings` records to the collection",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "objects",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "LIST",
+                    "name": null,
+                    "ofType": {
+                      "kind": "NON_NULL",
+                      "name": null,
+                      "ofType": {
+                        "kind": "INPUT_OBJECT",
                         "name": "store_opening_timesInsertInput",
                         "ofType": null
                       }
@@ -2264,6 +2416,33 @@
           {
             "args": [
               {
+                "name": "token",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "String",
+                    "ofType": null
+                  }
+                },
+                "description": null,
+                "defaultValue": null
+              }
+            ],
+            "name": "update_fcm_token",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Opaque",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
                 "name": "set",
                 "type": {
                   "kind": "NON_NULL",
@@ -2313,6 +2492,61 @@
               }
             },
             "description": "Updates zero or more records in the `couriers` collection",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "set",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
+                    "name": "delivery_requestsUpdateInput",
+                    "ofType": null
+                  }
+                },
+                "description": "Fields that are set will be updated for all records matching the `filter`",
+                "defaultValue": null
+              },
+              {
+                "name": "filter",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "delivery_requestsFilter",
+                  "ofType": null
+                },
+                "description": "Restricts the mutation's impact to records matching the criteria",
+                "defaultValue": null
+              },
+              {
+                "name": "atMost",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "description": "The maximum number of records in the collection permitted to be affected",
+                "defaultValue": "1"
+              }
+            ],
+            "name": "updatedelivery_requestsCollection",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "delivery_requestsUpdateResponse",
+                "ofType": null
+              }
+            },
+            "description": "Updates zero or more records in the `delivery_requests` collection",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -2655,6 +2889,61 @@
                   "name": null,
                   "ofType": {
                     "kind": "INPUT_OBJECT",
+                    "name": "store_delivery_settingsUpdateInput",
+                    "ofType": null
+                  }
+                },
+                "description": "Fields that are set will be updated for all records matching the `filter`",
+                "defaultValue": null
+              },
+              {
+                "name": "filter",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "store_delivery_settingsFilter",
+                  "ofType": null
+                },
+                "description": "Restricts the mutation's impact to records matching the criteria",
+                "defaultValue": null
+              },
+              {
+                "name": "atMost",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "Int",
+                    "ofType": null
+                  }
+                },
+                "description": "The maximum number of records in the collection permitted to be affected",
+                "defaultValue": "1"
+              }
+            ],
+            "name": "updatestore_delivery_settingsCollection",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "store_delivery_settingsUpdateResponse",
+                "ofType": null
+              }
+            },
+            "description": "Updates zero or more records in the `store_delivery_settings` collection",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "set",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "INPUT_OBJECT",
                     "name": "store_opening_timesUpdateInput",
                     "ofType": null
                   }
@@ -2906,6 +3195,11 @@
           },
           {
             "kind": "OBJECT",
+            "name": "delivery_requests",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
             "name": "order_items",
             "ofType": null
           },
@@ -2932,6 +3226,11 @@
           {
             "kind": "OBJECT",
             "name": "store_categories",
+            "ofType": null
+          },
+          {
+            "kind": "OBJECT",
+            "name": "store_delivery_settings",
             "ofType": null
           },
           {
@@ -3106,6 +3405,75 @@
           {
             "args": [
               {
+                "name": "lat1",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "BigFloat",
+                    "ofType": null
+                  }
+                },
+                "description": null,
+                "defaultValue": null
+              },
+              {
+                "name": "lon1",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "BigFloat",
+                    "ofType": null
+                  }
+                },
+                "description": null,
+                "defaultValue": null
+              },
+              {
+                "name": "lat2",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "BigFloat",
+                    "ofType": null
+                  }
+                },
+                "description": null,
+                "defaultValue": null
+              },
+              {
+                "name": "lon2",
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "SCALAR",
+                    "name": "BigFloat",
+                    "ofType": null
+                  }
+                },
+                "description": null,
+                "defaultValue": null
+              }
+            ],
+            "name": "calculate_distance_km",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
                 "name": "first",
                 "type": {
                   "kind": "SCALAR",
@@ -3191,6 +3559,97 @@
               "ofType": null
             },
             "description": "A pagable collection of type `couriers`",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "first",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the first `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "last",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the last `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "before",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection before the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "after",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection after the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "offset",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                "defaultValue": null
+              },
+              {
+                "name": "filter",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "delivery_requestsFilter",
+                  "ofType": null
+                },
+                "description": "Filters to apply to the results set when querying from the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "orderBy",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "delivery_requestsOrderBy",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "Sort order to apply to the collection",
+                "defaultValue": null
+              }
+            ],
+            "name": "delivery_requestsCollection",
+            "type": {
+              "kind": "OBJECT",
+              "name": "delivery_requestsConnection",
+              "ofType": null
+            },
+            "description": "A pagable collection of type `delivery_requests`",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -3764,6 +4223,97 @@
               "ofType": null
             },
             "description": "A pagable collection of type `store_categories`",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "first",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the first `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "last",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the last `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "before",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection before the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "after",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection after the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "offset",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                "defaultValue": null
+              },
+              {
+                "name": "filter",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "store_delivery_settingsFilter",
+                  "ofType": null
+                },
+                "description": "Filters to apply to the results set when querying from the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "orderBy",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "store_delivery_settingsOrderBy",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "Sort order to apply to the collection",
+                "defaultValue": null
+              }
+            ],
+            "name": "store_delivery_settingsCollection",
+            "type": {
+              "kind": "OBJECT",
+              "name": "store_delivery_settingsConnection",
+              "ofType": null
+            },
+            "description": "A pagable collection of type `store_delivery_settings`",
             "isDeprecated": false,
             "deprecationReason": null
           },
@@ -5908,6 +6458,97 @@
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "first",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the first `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "last",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the last `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "before",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection before the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "after",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection after the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "offset",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                "defaultValue": null
+              },
+              {
+                "name": "filter",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "delivery_requestsFilter",
+                  "ofType": null
+                },
+                "description": "Filters to apply to the results set when querying from the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "orderBy",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "delivery_requestsOrderBy",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "Sort order to apply to the collection",
+                "defaultValue": null
+              }
+            ],
+            "name": "delivery_requestsCollection",
+            "type": {
+              "kind": "OBJECT",
+              "name": "delivery_requestsConnection",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "enumValues": [],
@@ -6693,6 +7334,974 @@
                   "ofType": {
                     "kind": "OBJECT",
                     "name": "couriers",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "Array of records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "delivery_requests",
+        "fields": [
+          {
+            "args": [],
+            "name": "nodeId",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "description": "Globally Unique Record Identifier",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "order_id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "courier_id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "store_id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "status",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "distance_km",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "estimated_earning",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "created_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "responded_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "expires_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "orders",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "orders",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "couriers",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "couriers",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "stores",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "stores",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Node",
+            "ofType": null
+          }
+        ],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "delivery_requestsConnection",
+        "fields": [
+          {
+            "args": [],
+            "name": "edges",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "delivery_requestsEdge",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "pageInfo",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "PageInfo",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "delivery_requestsDeleteResponse",
+        "fields": [
+          {
+            "args": [],
+            "name": "affectedCount",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "description": "Count of the records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "records",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "delivery_requests",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "Array of records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "delivery_requestsEdge",
+        "fields": [
+          {
+            "args": [],
+            "name": "cursor",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "node",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "delivery_requests",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "delivery_requestsFilter",
+        "fields": null,
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "UUIDFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "order_id",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "UUIDFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "courier_id",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "UUIDFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "store_id",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "UUIDFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "status",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "StringFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "distance_km",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BigFloatFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "estimated_earning",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BigFloatFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "created_at",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "DatetimeFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "responded_at",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "DatetimeFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "expires_at",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "DatetimeFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "nodeId",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "IDFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "and",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "delivery_requestsFilter",
+                  "ofType": null
+                }
+              }
+            },
+            "description": "Returns true only if all its inner filters are true, otherwise returns false",
+            "defaultValue": null
+          },
+          {
+            "name": "or",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "delivery_requestsFilter",
+                  "ofType": null
+                }
+              }
+            },
+            "description": "Returns true if at least one of its inner filters is true, otherwise returns false",
+            "defaultValue": null
+          },
+          {
+            "name": "not",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "delivery_requestsFilter",
+              "ofType": null
+            },
+            "description": "Negates a filter",
+            "defaultValue": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "delivery_requestsInsertInput",
+        "fields": null,
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "order_id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "courier_id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "store_id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "status",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "distance_km",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "estimated_earning",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "created_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "responded_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "expires_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "delivery_requestsInsertResponse",
+        "fields": [
+          {
+            "args": [],
+            "name": "affectedCount",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "description": "Count of the records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "records",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "delivery_requests",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "Array of records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "delivery_requestsOrderBy",
+        "fields": null,
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "order_id",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "courier_id",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "store_id",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "status",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "distance_km",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "estimated_earning",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "created_at",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "responded_at",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "expires_at",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "delivery_requestsUpdateInput",
+        "fields": null,
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "order_id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "courier_id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "store_id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "status",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "distance_km",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "estimated_earning",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "created_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "responded_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "expires_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "delivery_requestsUpdateResponse",
+        "fields": [
+          {
+            "args": [],
+            "name": "affectedCount",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "description": "Count of the records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "records",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "delivery_requests",
                     "ofType": null
                   }
                 }
@@ -7775,6 +9384,34 @@
           },
           {
             "args": [],
+            "name": "courier_queue",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "service_fee",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
             "name": "users",
             "type": {
               "kind": "OBJECT",
@@ -7894,6 +9531,97 @@
             "type": {
               "kind": "OBJECT",
               "name": "order_itemsConnection",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "first",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the first `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "last",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the last `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "before",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection before the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "after",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection after the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "offset",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                "defaultValue": null
+              },
+              {
+                "name": "filter",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "delivery_requestsFilter",
+                  "ofType": null
+                },
+                "description": "Filters to apply to the results set when querying from the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "orderBy",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "delivery_requestsOrderBy",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "Sort order to apply to the collection",
+                "defaultValue": null
+              }
+            ],
+            "name": "delivery_requestsCollection",
+            "type": {
+              "kind": "OBJECT",
+              "name": "delivery_requestsConnection",
               "ofType": null
             },
             "description": null,
@@ -8237,6 +9965,26 @@
             "defaultValue": null
           },
           {
+            "name": "courier_queue",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "UUIDListFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "service_fee",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BigFloatFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
             "name": "nodeId",
             "type": {
               "kind": "INPUT_OBJECT",
@@ -8482,6 +10230,30 @@
             },
             "description": null,
             "defaultValue": null
+          },
+          {
+            "name": "courier_queue",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "service_fee",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
           }
         ],
         "possibleTypes": null
@@ -8714,6 +10486,16 @@
             },
             "description": null,
             "defaultValue": null
+          },
+          {
+            "name": "service_fee",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
           }
         ],
         "possibleTypes": null
@@ -8901,6 +10683,30 @@
             "type": {
               "kind": "SCALAR",
               "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "courier_queue",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "service_fee",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
               "ofType": null
             },
             "description": null,
@@ -12406,6 +14212,1174 @@
       },
       {
         "kind": "OBJECT",
+        "name": "store_delivery_settings",
+        "fields": [
+          {
+            "args": [],
+            "name": "nodeId",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "ID",
+                "ofType": null
+              }
+            },
+            "description": "Globally Unique Record Identifier",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "store_id",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "UUID",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "earning_base_fee",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "BigFloat",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "earning_per_km",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "BigFloat",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "earning_minimum",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "BigFloat",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "search_radius_km",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "max_couriers_queue",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "request_timeout_seconds",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "use_google_maps",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "google_maps_api_key",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "created_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "updated_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "surge_active",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Boolean",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "surge_multiplier",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "BigFloat",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "stores",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "stores",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [
+          {
+            "kind": "INTERFACE",
+            "name": "Node",
+            "ofType": null
+          }
+        ],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "store_delivery_settingsConnection",
+        "fields": [
+          {
+            "args": [],
+            "name": "edges",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "store_delivery_settingsEdge",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "pageInfo",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "PageInfo",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "store_delivery_settingsDeleteResponse",
+        "fields": [
+          {
+            "args": [],
+            "name": "affectedCount",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "description": "Count of the records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "records",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "store_delivery_settings",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "Array of records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "store_delivery_settingsEdge",
+        "fields": [
+          {
+            "args": [],
+            "name": "cursor",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "String",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "node",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "OBJECT",
+                "name": "store_delivery_settings",
+                "ofType": null
+              }
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "store_delivery_settingsFilter",
+        "fields": null,
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "UUIDFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "store_id",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "UUIDFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_base_fee",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BigFloatFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_per_km",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BigFloatFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_minimum",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BigFloatFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "search_radius_km",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "IntFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "max_couriers_queue",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "IntFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "request_timeout_seconds",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "IntFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "use_google_maps",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BooleanFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "google_maps_api_key",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "StringFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "created_at",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "DatetimeFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "updated_at",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "DatetimeFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "surge_active",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BooleanFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "surge_multiplier",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BigFloatFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "nodeId",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "IDFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "and",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "store_delivery_settingsFilter",
+                  "ofType": null
+                }
+              }
+            },
+            "description": "Returns true only if all its inner filters are true, otherwise returns false",
+            "defaultValue": null
+          },
+          {
+            "name": "or",
+            "type": {
+              "kind": "LIST",
+              "name": null,
+              "ofType": {
+                "kind": "NON_NULL",
+                "name": null,
+                "ofType": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "store_delivery_settingsFilter",
+                  "ofType": null
+                }
+              }
+            },
+            "description": "Returns true if at least one of its inner filters is true, otherwise returns false",
+            "defaultValue": null
+          },
+          {
+            "name": "not",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "store_delivery_settingsFilter",
+              "ofType": null
+            },
+            "description": "Negates a filter",
+            "defaultValue": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "store_delivery_settingsInsertInput",
+        "fields": null,
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "store_id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_base_fee",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_per_km",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_minimum",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "search_radius_km",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "max_couriers_queue",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "request_timeout_seconds",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "use_google_maps",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "google_maps_api_key",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "created_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "updated_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "surge_active",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "surge_multiplier",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "store_delivery_settingsInsertResponse",
+        "fields": [
+          {
+            "args": [],
+            "name": "affectedCount",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "description": "Count of the records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "records",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "store_delivery_settings",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "Array of records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "store_delivery_settingsOrderBy",
+        "fields": null,
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "store_id",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_base_fee",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_per_km",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_minimum",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "search_radius_km",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "max_couriers_queue",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "request_timeout_seconds",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "use_google_maps",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "google_maps_api_key",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "created_at",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "updated_at",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "surge_active",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "surge_multiplier",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "store_delivery_settingsUpdateInput",
+        "fields": null,
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": [
+          {
+            "name": "id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "store_id",
+            "type": {
+              "kind": "SCALAR",
+              "name": "UUID",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_base_fee",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_per_km",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "earning_minimum",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "search_radius_km",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "max_couriers_queue",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "request_timeout_seconds",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Int",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "use_google_maps",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "google_maps_api_key",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "created_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "updated_at",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "surge_active",
+            "type": {
+              "kind": "SCALAR",
+              "name": "Boolean",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "surge_multiplier",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          }
+        ],
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "store_delivery_settingsUpdateResponse",
+        "fields": [
+          {
+            "args": [],
+            "name": "affectedCount",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "SCALAR",
+                "name": "Int",
+                "ofType": null
+              }
+            },
+            "description": "Count of the records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "records",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "kind": "LIST",
+                "name": null,
+                "ofType": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "kind": "OBJECT",
+                    "name": "store_delivery_settings",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "description": "Array of records impacted by the mutation",
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "enumValues": [],
+        "interfaces": [],
+        "description": null,
+        "inputFields": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "store_opening_times",
         "fields": [
           {
@@ -13310,6 +16284,18 @@
           },
           {
             "args": [],
+            "name": "service_fee",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
             "name": "users",
             "type": {
               "kind": "OBJECT",
@@ -13695,6 +16681,109 @@
             "description": null,
             "isDeprecated": false,
             "deprecationReason": null
+          },
+          {
+            "args": [
+              {
+                "name": "first",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the first `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "last",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Query the last `n` records in the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "before",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection before the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "after",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Cursor",
+                  "ofType": null
+                },
+                "description": "Query values in the collection after the provided cursor",
+                "defaultValue": null
+              },
+              {
+                "name": "offset",
+                "type": {
+                  "kind": "SCALAR",
+                  "name": "Int",
+                  "ofType": null
+                },
+                "description": "Skip n values from the after cursor. Alternative to cursor pagination. Backward pagination not supported.",
+                "defaultValue": null
+              },
+              {
+                "name": "filter",
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "delivery_requestsFilter",
+                  "ofType": null
+                },
+                "description": "Filters to apply to the results set when querying from the collection",
+                "defaultValue": null
+              },
+              {
+                "name": "orderBy",
+                "type": {
+                  "kind": "LIST",
+                  "name": null,
+                  "ofType": {
+                    "kind": "NON_NULL",
+                    "name": null,
+                    "ofType": {
+                      "kind": "INPUT_OBJECT",
+                      "name": "delivery_requestsOrderBy",
+                      "ofType": null
+                    }
+                  }
+                },
+                "description": "Sort order to apply to the collection",
+                "defaultValue": null
+              }
+            ],
+            "name": "delivery_requestsCollection",
+            "type": {
+              "kind": "OBJECT",
+              "name": "delivery_requestsConnection",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "args": [],
+            "name": "store_delivery_settings",
+            "type": {
+              "kind": "OBJECT",
+              "name": "store_delivery_settings",
+              "ofType": null
+            },
+            "description": null,
+            "isDeprecated": false,
+            "deprecationReason": null
           }
         ],
         "enumValues": [],
@@ -14063,6 +17152,16 @@
             "defaultValue": null
           },
           {
+            "name": "service_fee",
+            "type": {
+              "kind": "INPUT_OBJECT",
+              "name": "BigFloatFilter",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
             "name": "nodeId",
             "type": {
               "kind": "INPUT_OBJECT",
@@ -14324,6 +17423,16 @@
             "type": {
               "kind": "SCALAR",
               "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "service_fee",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
               "ofType": null
             },
             "description": null,
@@ -14590,6 +17699,16 @@
             },
             "description": null,
             "defaultValue": null
+          },
+          {
+            "name": "service_fee",
+            "type": {
+              "kind": "ENUM",
+              "name": "OrderByDirection",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
           }
         ],
         "possibleTypes": null
@@ -14797,6 +17916,16 @@
             "type": {
               "kind": "SCALAR",
               "name": "Datetime",
+              "ofType": null
+            },
+            "description": null,
+            "defaultValue": null
+          },
+          {
+            "name": "service_fee",
+            "type": {
+              "kind": "SCALAR",
+              "name": "BigFloat",
               "ofType": null
             },
             "description": null,

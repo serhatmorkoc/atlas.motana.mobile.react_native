@@ -15,6 +15,7 @@ export const createOrderMutation = graphql`
         order_status
         sub_total
         delivery_fee
+        service_fee
         tax_amount
         tip_amount
         total_amount
@@ -26,3 +27,4 @@ export const createOrderMutation = graphql`
     }
   }
 `;
+

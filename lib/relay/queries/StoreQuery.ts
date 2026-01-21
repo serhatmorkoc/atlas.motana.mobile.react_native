@@ -20,6 +20,8 @@ export const storeQuery = graphql`
           review_count
           slug
           store_categories_id
+          service_fee
+          tax_rate
         }
       }
     }

@@ -17,6 +17,28 @@ export interface Store {
   storeCategoriesId?: number;
   latitude?: number;
   longitude?: number;
+  // New fields
+  isAvailable?: boolean;
+  serviceFee?: number;
+  taxRate?: number;
+}
+
+/**
+ * Store delivery settings for fee calculation
+ */
+export interface StoreDeliverySettings {
+  id: string;
+  storeId: string;
+  earningBaseFee: number;
+  earningPerKm: number;
+  earningMinimum: number;
+  searchRadiusKm: number;
+  maxCouriersQueue: number;
+  requestTimeoutSeconds: number;
+  useGoogleMaps: boolean;
+  googleMapsApiKey?: string;
+  surgeActive: boolean;
+  surgeMultiplier: number;
 }
 
 export interface StoreDetails extends Store {

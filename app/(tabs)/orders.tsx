@@ -8,7 +8,7 @@ import {
   Package,
   RotateCcw,
 } from "lucide-react-native";
-import React, { useState, useCallback, useEffect } from "react";
+import React, { useState, useCallback, useEffect, Suspense } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -23,6 +23,7 @@ import { formatDate } from "@/utils/formatters";
 import { useOrders } from "@/hooks/useOrders";
 import { useOrdersSubscription } from "@/hooks/useOrdersSubscription";
 import LoadingScreen from "@/components/common/LoadingScreen";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { RefreshControl } from "react-native";
 import { ORDER_STATUS_COLORS } from "@/constants/orderStatus";
 import { optimizeImageUrl } from "@/utils/helpers";
@@ -36,7 +37,7 @@ const filterOptions: { key: FilterType; label: string }[] = [
   { key: "cancelled", label: "Cancelled" },
 ];
 
-export default function OrdersScreen() {
+function OrdersContent() {
   const insets = useSafeAreaInsets();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
   
@@ -59,15 +60,20 @@ export default function OrdersScreen() {
     enabled: true,
   });
 
-  // Subscribe when screen is focused, unsubscribe when blurred
+  // Combined focus effect: subscribe to realtime + refetch on focus
   useFocusEffect(
     useCallback(() => {
       // Setup subscription when tab is focused
       const cleanup = setupSubscription();
 
+      // Silently refetch in background after initial load (for tab switches)
+      if (!isInitialLoad) {
+        refetch();
+      }
+
       // Cleanup subscription when tab loses focus
       return cleanup;
-    }, [setupSubscription])
+    }, [setupSubscription, isInitialLoad, refetch])
   );
 
   // Minimum loading duration to prevent flash (300ms)
@@ -79,17 +85,6 @@ export default function OrdersScreen() {
       return () => clearTimeout(timer);
     }
   }, [loading, isInitialLoad]);
-
-  // Refetch orders when screen comes into focus (tab navigation)
-  // This ensures status changes are visible without requiring pull-to-refresh
-  useFocusEffect(
-    useCallback(() => {
-      if (!isInitialLoad) {
-        // Silently refetch in background after initial load
-        refetch();
-      }
-    }, [isInitialLoad, refetch])
-  );
 
   // Mark initial load as complete when data is ready
   useEffect(() => {
@@ -250,7 +245,7 @@ export default function OrdersScreen() {
             source={{ uri: optimizeImageUrl(order.storeImage) }}
             style={styles.storeImage}
             contentFit="cover"
-            cachePolicy="none"
+            cachePolicy="memory-disk"
           />
           <View style={styles.orderHeaderInfo}>
             <View style={styles.storeNameRow}>
@@ -379,6 +374,23 @@ export default function OrdersScreen() {
         )}
       </ScrollView>
     </View>
+  );
+}
+
+// Wrapper component with error handling
+export default function OrdersScreen() {
+  const [resetKey, setResetKey] = useState(0);
+  
+  const handleReset = useCallback(() => {
+    setResetKey(prev => prev + 1);
+  }, []);
+  
+  return (
+    <ErrorBoundary key={resetKey} onReset={handleReset}>
+      <Suspense fallback={<LoadingScreen title="Loading orders..." subtitle="Please wait" />}>
+        <OrdersContent />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

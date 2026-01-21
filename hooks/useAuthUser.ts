@@ -11,31 +11,54 @@ export const useAuthUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    let mounted = true;
+    
     // Get initial session
     const getInitialSession = async () => {
       try {
-        const { data: { session } } = await supabaseClient.auth.getSession();
-        setUser(session?.user ?? null);
-      } catch (error) {
-        console.error('Error getting session:', error);
-        setUser(null);
+        const { data: { session }, error } = await supabaseClient.auth.getSession();
+        if (error) {
+          if (__DEV__) {
+            console.error('Error getting session:', error.message);
+          }
+          if (mounted) setUser(null);
+        } else {
+          if (mounted) setUser(session?.user ?? null);
+        }
+      } catch (error: any) {
+        // Handle network errors gracefully
+        if (__DEV__) {
+          console.error('Auth network error:', error?.message || error);
+        }
+        if (mounted) setUser(null);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     };
 
     getInitialSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabaseClient.auth.onAuthStateChange(
-      (_event, session) => {
-        setUser(session?.user ?? null);
-        setLoading(false);
+    let subscription: { unsubscribe: () => void } | null = null;
+    try {
+      const { data } = supabaseClient.auth.onAuthStateChange(
+        (_event, session) => {
+          if (mounted) {
+            setUser(session?.user ?? null);
+            setLoading(false);
+          }
+        }
+      );
+      subscription = data.subscription;
+    } catch (error: any) {
+      if (__DEV__) {
+        console.error('Auth listener error:', error?.message || error);
       }
-    );
+    }
 
     return () => {
-      subscription.unsubscribe();
+      mounted = false;
+      subscription?.unsubscribe();
     };
   }, []);
 

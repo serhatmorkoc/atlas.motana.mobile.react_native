@@ -36,9 +36,9 @@ export const useUser = (userId?: string) => {
     setRefetchKey(prev => prev + 1);
   }, []);
 
-  const updateProfile = useCallback(async (updates: any) => {
+  const updateProfile = useCallback(async (updates: { name?: string; phone?: string; avatar?: string }) => {
     if (!finalUserId) return { success: false, error: 'User ID is required' };
-    return new Promise<{ success: boolean; error?: string; user?: any }>((resolve) => {
+    return new Promise<{ success: boolean; error?: string; user?: unknown }>((resolve) => {
       commitUpdateProfile({
         variables: { id: finalUserId, ...updates },
         onCompleted: (response) => {
