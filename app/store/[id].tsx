@@ -31,7 +31,7 @@ import LoadingScreen from "@/components/common/LoadingScreen";
 import { useCart, CartItem } from "@/contexts/CartContext";
 import { useStore } from "@/hooks/useStores";
 import { useStoreMenu } from "@/hooks/useStoreMenu";
-import { useUserAddresses } from "@/hooks/useUserAddresses";
+import { useUserAddresses, Address } from "@/hooks/useUserAddresses";
 import { MenuItem } from "@/types/menu.types";
 import { formatPrice } from "@/utils/formatters";
 import { calculateDistance } from "@/utils/google_maps";
@@ -63,7 +63,7 @@ export default function StoreScreen() {
   // Fetch selected address for distance calculation
   const { addresses } = useUserAddresses();
   const selectedAddress = useMemo(() => {
-    return addresses.find((addr: any) => addr.selected);
+    return addresses.find((addr: Address) => addr.selected);
   }, [addresses]);
 
   // Memoize store coordinates to prevent unnecessary recalculations
