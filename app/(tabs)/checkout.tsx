@@ -209,7 +209,7 @@ export default function CheckoutScreen() {
 
     const addresses: UserAddress[] = shouldSkip 
       ? []
-      : addressesData?.user_addressesCollection?.edges?.map((e: any) => e.node) ?? [];
+      : (addressesData as any)?.user_addressesCollection?.edges?.map((e: any) => e.node) ?? [];
 
     const selectedAddress =
       addresses.find((a) => a.is_selected) ??
