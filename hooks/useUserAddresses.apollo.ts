@@ -12,7 +12,7 @@ import {
 import {
   SET_SELECTED_ADDRESS_MUTATION,
 } from '@/lib/apollo/mutations/SetSelectedAddressMutation';
-import React, { useCallback, useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { useAuthUser } from './useAuthUser';
 
 export interface Address {
@@ -145,7 +145,7 @@ export const useUserAddresses = (userId?: string) => {
 
   const addresses = useMemo(() => {
     if (shouldSkip) return [];
-    return data?.user_addressesCollection?.edges?.map((edge: any) => mapAddressToUI(edge.node)) || [];
+    return (data as any)?.user_addressesCollection?.edges?.map((edge: any) => mapAddressToUI(edge.node)) || [];
   }, [data, shouldSkip]);
 
   const refetch = useCallback(async () => {
@@ -173,8 +173,8 @@ export const useUserAddresses = (userId?: string) => {
           is_selected: addressData.is_selected || false,
         },
       });
-      if (response.data?.insertIntouser_addressesCollection?.records?.[0]) {
-        return { success: true, address: mapAddressToUI(response.data.insertIntouser_addressesCollection.records[0]) };
+      if ((response.data as any)?.insertIntouser_addressesCollection?.records?.[0]) {
+        return { success: true, address: mapAddressToUI((response.data as any).insertIntouser_addressesCollection.records[0]) };
       } else {
         return { success: false, error: 'Failed to create address' };
       }
@@ -202,8 +202,8 @@ export const useUserAddresses = (userId?: string) => {
           longitude: addressData.longitude ? addressData.longitude.toString() : null,
         },
       });
-      if (response.data?.updateuser_addressesCollection?.records?.[0]) {
-        return { success: true, address: mapAddressToUI(response.data.updateuser_addressesCollection.records[0]) };
+      if ((response.data as any)?.updateuser_addressesCollection?.records?.[0]) {
+        return { success: true, address: mapAddressToUI((response.data as any).updateuser_addressesCollection.records[0]) };
       } else {
         return { success: false, error: 'Failed to update address' };
       }
@@ -217,7 +217,7 @@ export const useUserAddresses = (userId?: string) => {
       const response = await deleteAddressMutation({
         variables: { id: addressId },
       });
-      if (response.data?.deleteFromuser_addressesCollection?.records?.[0]) {
+      if ((response.data as any)?.deleteFromuser_addressesCollection?.records?.[0]) {
         return { success: true };
       } else {
         return { success: false, error: 'Failed to delete address' };
@@ -228,7 +228,7 @@ export const useUserAddresses = (userId?: string) => {
   }, [deleteAddressMutation]);
 
   const setSelectedAddress = useCallback(async (addressId: string) => {
-    const currentlySelected = addresses.find(addr => addr.selected && addr.id !== addressId);
+    const currentlySelected = addresses.find((addr: Address) => addr.selected && addr.id !== addressId);
     try {
       if (currentlySelected) {
         await setSelectedMutation({

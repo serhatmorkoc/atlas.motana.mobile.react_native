@@ -45,7 +45,7 @@ const fetchStore = async (id: string | null) => {
       variables: { id },
       fetchPolicy: 'cache-first',
     });
-    return data?.storesCollection?.edges?.[0]?.node || null;
+    return (data as any)?.storesCollection?.edges?.[0]?.node || null;
   } catch { return null; }
 };
 
@@ -56,7 +56,7 @@ const fetchOrderItems = async (orderId: string) => {
       variables: { orderId },
       fetchPolicy: 'cache-first',
     });
-    return data?.order_itemsCollection?.edges?.map((e: any) => e.node) || [];
+    return (data as any)?.order_itemsCollection?.edges?.map((e: any) => e.node) || [];
   } catch { return []; }
 };
 
@@ -128,7 +128,7 @@ export const useOrder = (id: string) => {
     let cancelled = false;
 
     const load = async () => {
-      const node: GraphQLOrder | undefined = data?.ordersCollection?.edges?.[0]?.node;
+      const node: GraphQLOrder | undefined = (data as any)?.ordersCollection?.edges?.[0]?.node;
       if (!node) {
         if (!cancelled) setOrder(null);
         return;

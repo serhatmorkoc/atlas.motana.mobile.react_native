@@ -36,10 +36,10 @@ export function useStoreMenu(storeId: string, options?: { first?: number; offset
 
   const { categories, menuItems } = useMemo(() => {
     if (shouldSkip || !productsData || !categoriesData) return { categories: [], menuItems: [] };
-    const cats = (categoriesData?.product_categoriesCollection?.edges ?? [])
+    const cats = ((categoriesData as any)?.product_categoriesCollection?.edges ?? [])
       .map((e: any) => e.node).filter((c: any) => !!c.title).sort((a: any, b: any) => (a.sort_order ?? 999) - (b.sort_order ?? 999));
     const catMap = new Map(cats.map((c: any) => [c.id, c.title!]));
-    const prods = (productsData?.productsCollection?.edges ?? []).map((e: any) => e.node);
+    const prods = ((productsData as any)?.productsCollection?.edges ?? []).map((e: any) => e.node);
     const search = (options?.search ?? "").trim().toLowerCase();
     const filtered = search ? prods.filter((p: any) => (p.title || "").toLowerCase().includes(search) || (p.description || "").toLowerCase().includes(search)) : prods;
     const mapped: MenuItem[] = filtered.map((p: any) => ({

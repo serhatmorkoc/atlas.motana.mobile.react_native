@@ -16,10 +16,10 @@ export function useProductVariations(productId?: string) {
   });
 
   const extras: MenuItemExtra[] = useMemo(() => 
-    (!shouldSkip && data) ? data?.product_variationsCollection?.edges?.map(({ node }: any) => ({
+    (!shouldSkip && data) ? (data as any)?.product_variationsCollection?.edges?.map(({ node }: any) => ({
       id: node.id, name: node.title ?? "Option", price: safeNumber(node.discounted_price ?? node.price),
     })) : [],
-    [data, productId, shouldSkip]
+    [data, shouldSkip]
   );
 
   const refetch = useCallback(async () => {

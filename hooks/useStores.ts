@@ -28,13 +28,16 @@ export const useStores = (options?: {
     notifyOnNetworkStatusChange: true,
   });
 
-  const nodes: GraphQLStore[] = data?.storesCollection?.edges?.map((e) => e.node) ?? [];
-  const baseStores: Store[] = useMemo(() => nodes.length ? mapGraphQLStoresToStores(nodes) : [], [nodes.length, nodes.map(n => n.id).join(',')]);
+  const baseStores: Store[] = useMemo(() => {
+    const nodes: GraphQLStore[] = (data as any)?.storesCollection?.edges?.map((e: any) => e.node) ?? [];
+    return nodes.length ? mapGraphQLStoresToStores(nodes) : [];
+  }, [data]);
   
   const userLocation = useMemo(() => {
-    if (!options?.userLocation) return null;
-    return { latitude: options.userLocation.latitude, longitude: options.userLocation.longitude };
-  }, [options?.userLocation?.latitude, options?.userLocation?.longitude]);
+    const loc = options?.userLocation;
+    if (!loc) return null;
+    return { latitude: loc.latitude, longitude: loc.longitude };
+  }, [options?.userLocation]);
 
   const [stores, setStores] = useState<Store[]>(baseStores);
   const [calculatingDistances, setCalculatingDistances] = useState(false);
@@ -86,7 +89,7 @@ export const useStore = (id: string) => {
     notifyOnNetworkStatusChange: true,
   });
 
-  const node: GraphQLStore | undefined = data?.storesCollection?.edges?.[0]?.node;
+  const node: GraphQLStore | undefined = (data as any)?.storesCollection?.edges?.[0]?.node;
   const store: Store | null = node ? mapGraphQLStoreToStore(node) : null;
 
   const refetch = useCallback(async () => {

@@ -25,7 +25,7 @@ export const useUser = (userId?: string) => {
 
   const user = useMemo(() => {
     if (shouldSkip) return null;
-    return data?.usersCollection?.edges?.[0]?.node || null;
+    return (data as any)?.usersCollection?.edges?.[0]?.node || null;
   }, [data, shouldSkip]);
 
   const refetch = useCallback(async () => {
@@ -38,8 +38,8 @@ export const useUser = (userId?: string) => {
       const response = await updateProfileMutation({
         variables: { id: finalUserId, ...updates },
       });
-      if (response.data?.updateusersCollection?.records?.[0]) {
-        return { success: true, user: response.data.updateusersCollection.records[0] };
+      if ((response.data as any)?.updateusersCollection?.records?.[0]) {
+        return { success: true, user: (response.data as any).updateusersCollection.records[0] };
       } else {
         return { success: false, error: 'Failed to update profile' };
       }
