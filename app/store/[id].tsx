@@ -63,7 +63,7 @@ export default function StoreScreen() {
   // Fetch selected address for distance calculation
   const { addresses } = useUserAddresses();
   const selectedAddress = useMemo(() => {
-    return addresses.find(addr => addr.selected);
+    return addresses.find((addr: any) => addr.selected);
   }, [addresses]);
 
   // Memoize store coordinates to prevent unnecessary recalculations
@@ -336,7 +336,7 @@ export default function StoreScreen() {
           </View>
         )}
 
-        {categories.map((category) => {
+        {categories.map((category: string) => {
           const items = menuItems.filter((item) => item.category === category);
 
           return (

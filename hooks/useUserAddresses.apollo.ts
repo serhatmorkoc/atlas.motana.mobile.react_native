@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from '@apollo/client';
+import { useQuery, useMutation } from '@apollo/client/react';
 import { USER_ADDRESSES_QUERY } from '@/lib/apollo/queries/UserAddressesQuery';
 import {
   CREATE_USER_ADDRESS_MUTATION,

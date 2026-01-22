@@ -1,4 +1,4 @@
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { STORE_CATEGORIES_QUERY } from '@/lib/apollo/queries/StoreCategoriesQuery';
 import React, { useCallback, useMemo } from 'react';
 

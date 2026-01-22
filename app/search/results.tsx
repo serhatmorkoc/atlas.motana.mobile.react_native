@@ -64,7 +64,7 @@ export default function SearchResultsScreen() {
   // Fetch selected address for distance calculation
   const { addresses, loading: addressesLoading } = useUserAddresses();
   const userLocation = React.useMemo(() => {
-    const found = addresses.find(addr => addr.selected);
+    const found = addresses.find((addr: any) => addr.selected);
     if (found && found.latitude && found.longitude) {
       return { latitude: found.latitude, longitude: found.longitude };
     }
@@ -163,7 +163,7 @@ export default function SearchResultsScreen() {
           fetchPolicy: 'cache-first',
         });
 
-        const products: MenuItem[] = (data?.productsCollection?.edges || []).map((edge: any) => {
+        const products: MenuItem[] = ((data as any)?.productsCollection?.edges || []).map((edge: any) => {
           const p = edge.node;
           return {
             id: p.id,

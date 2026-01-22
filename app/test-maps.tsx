@@ -41,7 +41,7 @@ export default function TestMapsScreen() {
 
   // Find selected address from database (is_selected: true)
   const selectedAddressFromDB = useMemo(() => {
-    return addresses.find(addr => addr.selected) || null;
+    return addresses.find((addr: any) => addr.selected) || null;
   }, [addresses]);
 
   // Origin: Delivery Address (selected address)

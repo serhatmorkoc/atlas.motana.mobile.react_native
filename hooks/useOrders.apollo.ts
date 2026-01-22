@@ -1,6 +1,6 @@
 // Custom hook for fetching orders using Apollo
 import React, { useCallback, useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { apolloClient } from '@/lib/apollo/client';
 import { ORDERS_QUERY } from '@/lib/apollo/queries/OrdersQuery';
 import { ORDER_ITEMS_QUERY } from '@/lib/apollo/queries/OrderItemsQuery';
@@ -47,7 +47,7 @@ const fetchStore = async (id: string | null) => {
       variables: { id },
       fetchPolicy: 'cache-first',
     });
-    return data?.storesCollection?.edges?.[0]?.node || null;
+    return (data as any)?.storesCollection?.edges?.[0]?.node || null;
   } catch { return null; }
 };
 
@@ -58,7 +58,7 @@ const fetchOrderItems = async (orderId: string) => {
       variables: { orderId },
       fetchPolicy: 'cache-first',
     });
-    return data?.order_itemsCollection?.edges?.map((e: any) => e.node) || [];
+    return (data as any)?.order_itemsCollection?.edges?.map((e: any) => e.node) || [];
   } catch { return []; }
 };
 
@@ -139,7 +139,7 @@ export const useOrders = (options?: { limit?: number; offset?: number; userId?: 
         if (!cancelled) setOrders([]);
         return;
       }
-      const nodes: GraphQLOrder[] = data?.ordersCollection?.edges?.map((e: any) => e.node) ?? [];
+      const nodes: GraphQLOrder[] = (data as any)?.ordersCollection?.edges?.map((e: any) => e.node) ?? [];
       if (nodes.length === 0) {
         if (!cancelled) setOrders([]);
         return;

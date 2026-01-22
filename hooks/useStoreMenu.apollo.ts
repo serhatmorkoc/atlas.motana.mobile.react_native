@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { useQuery } from "@apollo/client";
+import { useQuery } from "@apollo/client/react";
 import { STORE_PRODUCTS_QUERY } from "@/lib/apollo/queries/StoreProductsQuery";
 import { STORE_PRODUCT_CATEGORIES_QUERY } from "@/lib/apollo/queries/StoreProductCategoriesQuery";
 import { MenuItem } from "@/types/menu.types";

@@ -47,13 +47,13 @@ export default function HomeScreen() {
   // Fetch selected address
   const { addresses, loading: addressesLoading, refetch: refetchAddresses } = useUserAddresses();
   const selectedAddress = React.useMemo(() => {
-    const found = addresses.find(addr => addr.selected);
+    const found = addresses.find((addr: any) => addr.selected);
     return found ? { title: found.title, address: found.address } : null;
   }, [addresses]);
 
   // Get selected address coordinates for distance calculation
   const userLocation = React.useMemo(() => {
-    const found = addresses.find(addr => addr.selected);
+    const found = addresses.find((addr: any) => addr.selected);
     if (found && found.latitude && found.longitude) {
       return { latitude: found.latitude, longitude: found.longitude };
     }
@@ -252,7 +252,7 @@ export default function HomeScreen() {
         <View style={{ paddingHorizontal: 16, paddingTop: 24 }}>
           <Text style={{ color: "#DC2626", fontWeight: "700" }}>Failed to load stores</Text>
           <Text style={{ color: "#6B7280", marginTop: 6 }}>
-            {String(storesError.message || storesError)}
+            {typeof storesError === 'string' ? storesError : (storesError as any)?.message || 'Unknown error'}
           </Text>
           <TouchableOpacity
             onPress={onRefresh}

@@ -89,7 +89,7 @@ export default function OrderTrackingScreen() {
   }>();
 
   // Fetch order data from DB
-  const { order, loading, error, refetch } = useOrder(params.orderId || null);
+  const { order, loading, error, refetch } = useOrder(params.orderId || '');
 
   // Refetch order when screen comes into focus (e.g., navigating back from another screen)
   useFocusEffect(

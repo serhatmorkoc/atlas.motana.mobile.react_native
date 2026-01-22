@@ -51,7 +51,7 @@ export default function AddressesScreen() {
   const handleSelectAddress = async (id: string) => {
     // Optimistic update - update UI immediately
     setOptimisticAddresses(
-      addresses.map((addr) => ({
+      addresses.map((addr: Address) => ({
         ...addr,
         selected: addr.id === id,
       }))
@@ -180,7 +180,7 @@ export default function AddressesScreen() {
     );
   }
 
-  const filteredAddresses = addresses.filter((addr) =>
+  const filteredAddresses = addresses.filter((addr: Address) =>
     addr.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
     addr.title.toLowerCase().includes(searchQuery.toLowerCase())
   );

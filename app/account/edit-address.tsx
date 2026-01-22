@@ -303,7 +303,7 @@ export default function EditAddressScreen() {
                 <TouchableOpacity
                   key={type.id}
                   style={[styles.typeCard, isSelected && styles.typeCardSelected]}
-                  onPress={() => setSelectedType(type.id)}
+                  onPress={() => setSelectedType(type.id as "home" | "work" | "other")}
                   activeOpacity={0.7}
                 >
                   <View style={[styles.typeIconBg, isSelected && styles.typeIconBgSelected]}>

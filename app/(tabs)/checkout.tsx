@@ -209,7 +209,7 @@ export default function CheckoutScreen() {
 
     const addresses: UserAddress[] = shouldSkip 
       ? []
-      : addressesData?.user_addressesCollection?.edges?.map((e) => e.node) ?? [];
+      : addressesData?.user_addressesCollection?.edges?.map((e: any) => e.node) ?? [];
 
     const selectedAddress =
       addresses.find((a) => a.is_selected) ??
@@ -234,7 +234,7 @@ export default function CheckoutScreen() {
         fetchPolicy: 'cache-first',
       });
 
-      const store = storeData?.storesCollection?.edges?.[0]?.node;
+      const store = (storeData as any)?.storesCollection?.edges?.[0]?.node;
       
       // Calculate estimated_delivery_time: current time + delivery_time_max (in minutes)
       let estimatedDeliveryTime: string | null = null;
@@ -296,7 +296,7 @@ export default function CheckoutScreen() {
         },
       });
 
-      const created = orderRes.data?.insertIntoordersCollection?.records?.[0];
+      const created = (orderRes.data as any)?.insertIntoordersCollection?.records?.[0];
       const dbOrderId: string | undefined = created?.id;
       const dbOrderCode: string | null = created?.order_code || orderCode;
 

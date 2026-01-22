@@ -1,5 +1,5 @@
 // Custom hook for fetching a single order by ID using Apollo
-import { useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client/react';
 import { apolloClient } from '@/lib/apollo/client';
 import { ORDER_QUERY } from '@/lib/apollo/queries/OrderQuery';
 import { ORDER_ITEMS_QUERY } from '@/lib/apollo/queries/OrderItemsQuery';
