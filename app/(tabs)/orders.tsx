@@ -103,6 +103,9 @@ export default function OrdersScreen() {
     }
   }, [isInitialLoad, loading]);
 
+  // Note: Order status change notifications are now handled globally in _layout.tsx
+  // This ensures notifications work from any screen, not just the orders screen
+
   const filteredOrders = orders.filter((order) => {
     if (activeFilter === "all") return true;
     return order.status === activeFilter;

@@ -42,12 +42,10 @@ export function HomeHeader({ insets, selectedAddress }: HomeHeaderProps) {
           <ChevronDown color="#FFFFFF" size={14} />
         </TouchableOpacity>
 
-        <TouchableOpacity 
-          style={styles.headerIcon}
-          onPress={() => router.push("/notifications-modal" as any)}
-        >
+        {/* Notification button removed - using system notifications instead */}
+        <View style={styles.headerIcon}>
           <Bell color="#FFFFFF" size={20} />
-        </TouchableOpacity>
+        </View>
       </View>
     </View>
   );
